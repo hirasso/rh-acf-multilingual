@@ -1,0 +1,6 @@
+@mixin hoverSupport {
+ @media screen and (hover: hover), screen and (min--moz-device-pixel-ratio: 0), screen and (-ms-high-contrast:none) { @content; }
+}
+@mixin hover {
+ @media screen and (hover: hover), screen and (min--moz-device-pixel-ratio: 0), screen and (-ms-high-contrast:none) { &:hover { @content; } }
+}

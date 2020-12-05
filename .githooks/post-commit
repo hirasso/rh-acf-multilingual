@@ -1,0 +1,7 @@
+#!/bin/sh
+IS_AMEND=$(ps -ocommand= -p $PPID | grep -e '--amend');
+if ! [ -n "$IS_AMEND" ]; then
+  node ./changelog.js
+  git add ./changelog.md
+  git commit --amend -C HEAD --no-verify changelog.md
+fi

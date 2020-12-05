@@ -1,0 +1,50 @@
+{
+  "name": "build-frontend-assets",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Build process for frontend assets",
+  "main": "index.js",
+  "scripts": {
+    "preinstall": "git config core.hooksPath .githooks",
+    "bundle": "node parcel-bundler.js -f \"assets-src/*.js\" -o \"assets\"",
+    "watch": "npm run bundle",
+    "build": "npm run bundle -- --production"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ],
+    "plugins": [
+      [
+        "@babel/plugin-proposal-class-properties",
+        {},
+        "class-properties"
+      ],
+      "@babel/plugin-transform-runtime"
+    ]
+  },
+  "watchreload": {
+    "files": "**/*.php"
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": true
+    }
+  },
+  "author": "Rasso Hilber",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.9.6",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-transform-runtime": "^7.9.6",
+    "autoprefixer": "^9.7.6",
+    "find-parent-dir": "^0.3.0",
+    "glob": "^7.1.6",
+    "minimist": "^1.2.5",
+    "parcel-bundler": "^1.12.4",
+    "parcel-plugin-watch-reload": "^1.0.0",
+    "rimraf": "^3.0.2",
+    "sass": "^1.26.5"
+  },
+  "dependencies": {}
+}
