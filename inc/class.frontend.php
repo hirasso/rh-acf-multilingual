@@ -9,7 +9,7 @@ class Frontend extends Singleton {
   public function __construct() {
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX);
     add_action('init', [$this, 'flush']);
-    add_action('plugins_loaded', [$this, 'detect_language']);
+    add_action('plugins_loaded', [$this, 'detect_language_in_url']); // maybe a better plpace is 'request' ?
     add_filter('locale', [$this, 'locale']);
   }
 
@@ -49,7 +49,7 @@ class Frontend extends Singleton {
    *
    * @return String the detecte language
    */
-  public function detect_language($locale) {
+  public function detect_language_in_url($locale) {
     if( is_admin() && !wp_doing_ajax() ) return $locale;
     $default_language = ml()->get_default_language();
     preg_match('/\/(de|en)(\/|$|\?|#)/', $_SERVER['REQUEST_URI'], $matches);
