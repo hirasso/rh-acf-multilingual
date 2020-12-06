@@ -36,11 +36,8 @@ class Frontend extends Singleton {
     $new_rules["(?:$regex_languages)?/?$"] = 'index.php';
 
     foreach ($rules as $key => $val) {
-        
         $key = "(?:$regex_languages)?/?" . ltrim($key, '^');
-
         $new_rules[$key] = $val;
-
     }
 
     return $new_rules;
