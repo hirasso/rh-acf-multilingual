@@ -16,12 +16,14 @@ require_once(__DIR__ . '/inc/class.singleton.php');
 class MultiLang extends Singleton {
 
   private $prefix = 'rhml';
+  private $locales = [];
 
   public function __construct() {
     
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
     add_action('admin_notices', [$this, 'show_admin_notices']);
+    
     
   }
 
@@ -156,14 +158,34 @@ class MultiLang extends Singleton {
       <?php echo ob_get_clean();
     }
   }
-
+  
   /**
    * Get all activated languages
    *
    * @return Array
    */
-  public function get_languages() {
-    return apply_filters('rh/multilang/languages', ['de', 'en']);
+  public function get_enabled_languages( $format = 'full' ) {
+    $languages = [
+      'en' => [
+        'locale' => 'en_US',
+        'name' => 'English'
+      ],
+      'de' => [
+        'locale' => 'de_DE',
+        'name' => 'Deutsch'
+      ]
+    ];
+    if( $format === 'keys' ) $languages = array_keys($languages);
+    return apply_filters('rh/multilang/languages', $languages);
+  }
+
+  /**
+   * Get default language
+   *
+   * @return String
+   */
+  public function get_default_language() {
+    return apply_filters('rh/multilang/default_language', 'en');
   }
 
 }
@@ -185,8 +207,10 @@ function ml() {
  * Require util classes
  */
 require_once(__DIR__ . '/inc/class.multilang-acf-field.php');
+require_once(__DIR__ . '/inc/class.frontend.php');
 
 /**
  * Initialize util classes
  */
 MultiLangAcfField::getInstance();
+Frontend::getInstance();

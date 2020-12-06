@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 class MultiLangAcfField extends Singleton {
 
   private $translatable_field_types = [
-    'text', 'textarea', 'url', 'image', 'file', 'wysiwyg'
+    'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object'
   ];
 
   public function __construct() {
@@ -16,8 +16,9 @@ class MultiLangAcfField extends Singleton {
 
 
   private function setup() {
+    // add_action("acf/render_field_settings/", [$this, 'render_field_settings']);
     foreach( $this->translatable_field_types as $field_type ) {
-      add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings']);
+      add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
       add_filter("acf/load_field/type=$field_type", [$this, 'load_field']);
     }
   }
@@ -29,8 +30,9 @@ class MultiLangAcfField extends Singleton {
    * @return void
    */
   function render_field_settings( $field ) {
+    // pre_dump($field);
 
-    if( !in_array($field['type'], $this->translatable_field_types ) ) return;
+    // if( !in_array($field['type'], $this->translatable_field_types ) ) return;
 
     acf_render_field_setting( $field, array(
       'label'			=> __('Translatable?'),
@@ -55,7 +57,7 @@ class MultiLangAcfField extends Singleton {
     // bail early if field is empty or not translatable
     if( !is_array($field) || empty($field['is_translatable']) ) return $field;
     $sub_fields = [];
-    foreach( ml()->get_languages() as $lang ) {
+    foreach( ml()->get_enabled_languages() as $lang ) {
       $sub_fields[] = array_merge($field, [
         'key' => "{$field['key']}_{$lang}",
         'label' => "{$field['label']} ({$lang})",
