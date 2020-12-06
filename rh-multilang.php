@@ -175,7 +175,7 @@ class MultiLang extends Singleton {
         'name' => 'Deutsch'
       ]
     ];
-    if( $format === 'keys' ) $languages = array_keys($languages);
+    if( $format === 'iso' ) $languages = array_keys($languages);
     return apply_filters('rh/multilang/languages', $languages);
   }
 

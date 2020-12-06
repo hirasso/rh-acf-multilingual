@@ -30,7 +30,7 @@ class Frontend extends Singleton {
    * @return Array
    */
   public function rewrite_rules_array($rules) {
-    $languages = ml()->get_enabled_languages('keys');
+    $languages = ml()->get_enabled_languages('iso');
     $new_rules = array();
     $regex_languages = implode('|', $languages);
     $new_rules["(?:$regex_languages)?/?$"] = 'index.php';
