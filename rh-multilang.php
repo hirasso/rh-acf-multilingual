@@ -214,3 +214,12 @@ require_once(__DIR__ . '/inc/class.frontend.php');
  */
 MultiLangAcfField::getInstance();
 Frontend::getInstance();
+
+/**
+ * Make Frontend available for calls
+ *
+ * @return Frontend
+ */
+function frontend() {
+  return Frontend::getInstance();
+}
