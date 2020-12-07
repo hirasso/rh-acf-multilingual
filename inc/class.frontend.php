@@ -77,7 +77,7 @@ class Frontend extends Singleton {
    * @return String
    */
   public function set_language() {
-    if( $this->is_frontend() ) return;
+    if( !$this->is_frontend() ) return;
     $language = $this->get_language_in_url($this->get_current_url());
     if( !$language ) $language = ml()->get_default_language();
     $this->language = $language;
