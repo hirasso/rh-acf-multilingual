@@ -84,6 +84,15 @@ class Frontend extends Singleton {
   }
 
   /**
+   * Get language
+   *
+   * @return String
+   */
+  public function get_language() {
+    return $this->language ?: ml()->get_default_language();
+  }
+
+  /**
    * Get current URL from $_SERVER
    *
    * @return String $url
@@ -124,7 +133,7 @@ class Frontend extends Singleton {
    *
    * @return Boolean
    */
-  private function is_frontend() {
+  public function is_frontend() {
     return !is_admin() && !wp_doing_ajax();
   }
 

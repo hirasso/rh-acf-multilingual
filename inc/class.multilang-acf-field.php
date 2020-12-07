@@ -19,6 +19,7 @@ class MultiLangAcfField extends Singleton {
     foreach( $this->translatable_field_types as $field_type ) {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
       add_filter("acf/load_field/type=$field_type", [$this, 'load_field']);
+      add_filter("acf/format_value/type=group", [$this, 'format_value'], 11, 3);
     }
   }
 
@@ -70,6 +71,22 @@ class MultiLangAcfField extends Singleton {
       'required' => false
     ]);
     return $field;
-  } 
+  }
+
+  /**
+   * Formats a fields value
+   *
+   * @param [type] $value
+   * @param [type] $post_id
+   * @param [type] $field
+   * @return void
+   */
+  function format_value( $value, $post_id, $field ) {
+    if( !is_array($value) || empty($field['is_translatable']) ) return $value;
+    $language = frontend()->get_language();
+    $default_language = ml()->get_default_language();
+    $value = !empty($value[$language]) ? $value[$language] : ($value[$default_language] ?? null);
+    return $value;
+  }
   
 }
