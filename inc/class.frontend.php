@@ -145,9 +145,7 @@ class Frontend extends Singleton {
     }
     // append url language to the search if present
     if( $language_in_url ) $search_home_url .= "/$language_in_url";
-    
     $url = str_replace($search_home_url, $new_home_url, $url);
-    
     return $url;
   }
 }

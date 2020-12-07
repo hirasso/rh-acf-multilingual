@@ -16,7 +16,6 @@ class MultiLangAcfField extends Singleton {
 
 
   private function setup() {
-    // add_action("acf/render_field_settings/", [$this, 'render_field_settings']);
     foreach( $this->translatable_field_types as $field_type ) {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
       add_filter("acf/load_field/type=$field_type", [$this, 'load_field']);
@@ -30,9 +29,6 @@ class MultiLangAcfField extends Singleton {
    * @return void
    */
   function render_field_settings( $field ) {
-    // pre_dump($field);
-
-    // if( !in_array($field['type'], $this->translatable_field_types ) ) return;
 
     acf_render_field_setting( $field, array(
       'label'			=> __('Translatable?'),
@@ -40,7 +36,7 @@ class MultiLangAcfField extends Singleton {
       'name'			=> 'is_translatable',
       'type'			=> 'true_false',
       'ui'			=> 1,
-    ), true);
+    ), false);
 
   }
 
