@@ -77,7 +77,7 @@ class Frontend extends Singleton {
    * @return String
    */
   public function set_language() {
-    if( is_admin() && !wp_doing_ajax() ) return null;
+    if( $this->is_frontend() ) return;
     $language = $this->get_language_in_url($this->get_current_url());
     if( !$language ) $language = ml()->get_default_language();
     $this->language = $language;
@@ -115,8 +115,17 @@ class Frontend extends Singleton {
    * @return String
    */
   public function filter_home_url($url, $path, $orig_scheme, $blog_id) {
-    // $url = $this->convert_url($url, $this->language);
+    $url = $this->convert_url($url, $this->language);
     return $url;
+  }
+
+  /**
+   * Detect if on frontend
+   *
+   * @return Boolean
+   */
+  private function is_frontend() {
+    return !is_admin() && !wp_doing_ajax();
   }
 
   /**
@@ -129,6 +138,7 @@ class Frontend extends Singleton {
   public function convert_url($url = null, $language = null) {
     if( !$url ) $url = $this->get_current_url();
     if( !$language ) $language = $this->language;
+    if( !$this->is_frontend() ) return $url;
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
     // get language from requested URL
