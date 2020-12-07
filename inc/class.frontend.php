@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class Frontend extends Singleton {
 
+  private $language = null;
+  
   public function __construct() {
     add_filter('home_url', [$this, 'filter_home_url'], 10, 4);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX);
@@ -124,7 +126,7 @@ class Frontend extends Singleton {
    * @return String
    */
   public function filter_home_url($url, $path, $orig_scheme, $blog_id) {
-    $url = $this->convert_url($url, $this->language);
+    $url = $this->convert_url($url, $this->get_language());
     return $url;
   }
 

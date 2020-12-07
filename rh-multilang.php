@@ -24,7 +24,6 @@ class MultiLang extends Singleton {
     add_action('admin_init', [$this, 'admin_init'], 11);
     add_action('admin_notices', [$this, 'show_admin_notices']);
     
-    
   }
 
   /**
@@ -162,6 +161,7 @@ class MultiLang extends Singleton {
   /**
    * Get all activated languages
    *
+   * @param String $format    'full' or 'iso'
    * @return Array
    */
   public function get_enabled_languages( $format = 'full' ) {
