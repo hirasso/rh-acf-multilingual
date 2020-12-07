@@ -55,7 +55,7 @@ class MultiLangAcfField extends Singleton {
     if( !is_array($field) || empty($field['is_translatable']) ) return $field;
     $sub_fields = [];
     $default_language = ml()->get_default_language();
-    foreach( ml()->get_enabled_languages('iso') as $lang ) {
+    foreach( ml()->get_languages('iso') as $lang ) {
       $sub_fields[] = array_merge($field, [
         'key' => "{$field['key']}_{$lang}",
         'label' => "{$field['label']} ({$lang})",

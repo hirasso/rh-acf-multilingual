@@ -164,7 +164,7 @@ class MultiLang extends Singleton {
    * @param String $format    'full' or 'iso'
    * @return Array
    */
-  public function get_enabled_languages( $format = 'full' ) {
+  public function get_languages( $format = 'full' ) {
     $languages = [
       'en' => [
         'locale' => 'en_US',
@@ -207,12 +207,14 @@ function ml() {
  * Require util classes
  */
 require_once(__DIR__ . '/inc/class.multilang-acf-field.php');
+require_once(__DIR__ . '/inc/class.backend.php');
 require_once(__DIR__ . '/inc/class.frontend.php');
 
 /**
  * Initialize util classes
  */
 MultiLangAcfField::getInstance();
+Backend::getInstance();
 Frontend::getInstance();
 
 /**
