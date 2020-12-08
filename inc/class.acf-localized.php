@@ -183,7 +183,12 @@ class AcfLocalized extends Singleton {
         'iso' => 'de',
         'locale' => 'de_DE',
         'name' => 'Deutsch'
-      ]
+      ],
+      [
+        'iso' => 'fi',
+        'locale' => 'fi',
+        'name' => 'Finski'
+      ],
     ];
     $default_language = $this->get_default_language();
     foreach( $languages as &$language ) {
@@ -286,7 +291,8 @@ class AcfLocalized extends Singleton {
     $url = untrailingslashit($url);
     $home_url = untrailingslashit($this->get_raw_home_url());
     $path = trailingslashit(str_replace($home_url, '', $url));
-    preg_match("%/(de|en)(/|$|\?|#)%", $path, $matches);
+    $regex_languages = implode('|', $this->get_languages('iso'));
+    preg_match("%/($regex_languages)(/|$|\?|#)%", $path, $matches);
     $language = $matches[1] ?? null;
     return $language;
   }
@@ -355,9 +361,8 @@ class AcfLocalized extends Singleton {
    * @return Array
    */
   public function rewrite_rules_array($rules) {
-    $languages = $this->get_languages('iso');
     $new_rules = array();
-    $regex_languages = implode('|', $languages);
+    $regex_languages = implode('|', $this->get_languages('iso'));
     $new_rules["(?:$regex_languages)?/?$"] = 'index.php';
 
     foreach ($rules as $key => $val) {
