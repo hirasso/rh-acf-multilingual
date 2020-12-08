@@ -18,7 +18,8 @@ class AcfLocalized extends Singleton {
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX);
     add_action('init', [$this, 'init']);
     add_filter('locale', [$this, 'filter_frontend_locale']);
-    
+    add_filter('redirect_canonical', [$this, 'filter_canonical_url'], 10, 2 );
+
   }
 
   /**
@@ -347,4 +348,15 @@ class AcfLocalized extends Singleton {
     return $new_rules;
   }
 
+
+  function filter_canonical_url( $redirect_url, $requested_url ) {
+      global $q_config;
+      $lang = $q_config['language'];
+      // fix canonical conflicts with language urls
+      $redirect_url_lang = qtranxf_convertURL( $redirect_url, $lang );
+
+      return $redirect_url_lang;
+  }
+
+  
 }

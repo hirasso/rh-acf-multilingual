@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: RH Multilang
+ * Plugin Name: RH ACF Localized
  * Version: 0.0.1
  * Author: Rasso Hilber
  * Description: A lightweight solution to support multiple languages with WordPress and Advanced Custom Fields
