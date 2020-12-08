@@ -1,10 +1,10 @@
 <?php 
 
-namespace R\MultiLang;
+namespace R\ACFL;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Backend extends Singleton {
+class Admin extends Singleton {
   
   public function __construct() {
     add_filter('wp_unique_post_slug', [$this, 'unique_post_slug'], 10, 6);
@@ -23,7 +23,7 @@ class Backend extends Singleton {
    */
   public function unique_post_slug( $slug, $post_ID, $post_status, $post_type, $post_parent, $original_slug ) {
     if( !in_array($post_type, ['post', 'page']) || $post_parent ) return $slug;
-    if( $slug === ml()->get_default_language() ) $slug .= '-1';
+    if( $slug === acfl()->get_default_language() ) $slug .= '-1';
     return $slug;
   }
 

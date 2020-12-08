@@ -1,6 +1,6 @@
 <?php 
 
-namespace R\MultiLang;
+namespace R\ACFL;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 

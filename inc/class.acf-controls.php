@@ -1,10 +1,10 @@
 <?php 
 
-namespace R\MultiLang;
+namespace R\ACFL;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class MultiLangAcfField extends Singleton {
+class AcfControls extends Singleton {
 
   private $translatable_field_types = [
     'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object'
@@ -54,8 +54,8 @@ class MultiLangAcfField extends Singleton {
     // bail early if field is empty or not translatable
     if( !is_array($field) || empty($field['is_translatable']) ) return $field;
     $sub_fields = [];
-    $default_language = ml()->get_default_language();
-    foreach( ml()->get_languages('iso') as $lang ) {
+    $default_language = acfl()->get_default_language();
+    foreach( acfl()->get_languages('iso') as $lang ) {
       $sub_fields[] = array_merge($field, [
         'key' => "{$field['key']}_{$lang}",
         'label' => "{$field['label']} ({$lang})",
@@ -83,8 +83,8 @@ class MultiLangAcfField extends Singleton {
    */
   function format_value( $value, $post_id, $field ) {
     if( !is_array($value) || empty($field['is_translatable']) ) return $value;
-    $language = frontend()->get_language();
-    $default_language = ml()->get_default_language();
+    $language = acfl()->get_language();
+    $default_language = acfl()->get_default_language();
     $value = !empty($value[$language]) ? $value[$language] : ($value[$default_language] ?? null);
     return $value;
   }
