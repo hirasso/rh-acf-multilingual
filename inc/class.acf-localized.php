@@ -7,19 +7,20 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 class AcfLocalized extends Singleton {
 
   private $prefix = 'rhml';
+  private $debug = false;
 
   public function __construct() {
     
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
     add_action('admin_notices', [$this, 'show_admin_notices']);
-    add_action('plugins_loaded', [$this, 'set_language']); // maybe a better plpace is 'request' ?
+    add_action('plugins_loaded', [$this, 'detect_language']); // maybe a better plpace is 'request' ?
     add_filter('home_url', [$this, 'filter_home_url'], 10, 4);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX);
     add_action('init', [$this, 'init']);
     add_filter('locale', [$this, 'filter_frontend_locale']);
-    add_filter('redirect_canonical', [$this, 'filter_canonical_url'], 10, 2 );
-
+    add_action('template_redirect', [$this, 'redirect_default_language']);
+    add_action('wp_head', [$this, 'wp_head']);
   }
 
   /**
@@ -73,7 +74,7 @@ class AcfLocalized extends Singleton {
    */
   function get_plugin_path( $path ) {
     $path = ltrim( $path, '/' );
-    $file = plugin_dir_path( __FILE__ ) . $path;
+    $file = dirname(__DIR__) . "/$path";
     return $file;
   }
 
@@ -91,7 +92,9 @@ class AcfLocalized extends Singleton {
    * Helper function to detect a development environment
    */
   private function is_dev() {
-    return defined('WP_ENV') && WP_ENV === 'development';
+    if( defined('WP_ENV') && WP_ENV === 'development' ) return true;
+    if( wp_get_environment_type() === 'development' ) return true;
+    return false;
   }
 
   /**
@@ -107,7 +110,7 @@ class AcfLocalized extends Singleton {
     $path = apply_filters("$this->prefix/template/$template_name", $path);
     if( !file_exists($path) ) return "<p>$template_name: Template doesn't exist</p>";
     ob_start();
-    if( $this->is_dev() ) echo "<!-- Template Path: $path -->";
+    if( $this->is_dev() ) echo "<!-- Template Path: $path -->\n";
     include( $path );
     return ob_get_clean();
   }
@@ -171,17 +174,36 @@ class AcfLocalized extends Singleton {
    */
   public function get_languages( $format = 'full' ) {
     $languages = [
-      'en' => [
+      [
+        'iso' => 'en',
         'locale' => 'en_US',
         'name' => 'English'
       ],
-      'de' => [
+      [
+        'iso' => 'de',
         'locale' => 'de_DE',
         'name' => 'Deutsch'
       ]
     ];
-    if( $format === 'iso' ) $languages = array_keys($languages);
+    $default_language = $this->get_default_language();
+    foreach( $languages as &$language ) {
+      $language['is_default'] = $language['iso'] === $default_language;
+    }
+    if( $format === 'iso' ) $languages = array_column($languages, 'iso');
     return apply_filters('rh/multilang/languages', $languages);
+  }
+
+  /**
+   * Get information for a language iso key
+   *
+   * @param String $lang_iso    e.g. 'en' or 'de'
+   * @return void
+   */
+  private function get_language_information($lang_iso) {
+    foreach( $this->get_languages() as $language ) {
+      if( $language['iso'] === $lang_iso ) return $language;
+    }
+    return null;
   }
 
   /**
@@ -198,14 +220,14 @@ class AcfLocalized extends Singleton {
    *
    * @return String
    */
-  public function set_language() {
+  public function detect_language() {
     if( $this->is_frontend() ) {
       $language = $this->get_language_in_url($this->get_current_url());
     } else {
       $locale = get_user_locale();
       $language = explode('_', $locale)[0];
     }
-    if( !$language ) $language = acfl()->get_default_language();
+    if( !$language ) $language = $this->get_default_language();
     $this->language = $language;
   }
 
@@ -226,18 +248,17 @@ class AcfLocalized extends Singleton {
    * @return void
    */
   public function convert_url($url, $requested_language) {
+    
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
     // get language from requested URL
     $language_in_url = $this->get_language_in_url($url);
-    // bail early if the URL language is already the same as the requested language
-    if( $language_in_url === $requested_language ) return $url;
     // get the unfiltered home url
     $raw_home_url = $this->get_raw_home_url();
     $search_home_url = $raw_home_url;
     $new_home_url = $raw_home_url;
     // add the $requested_language to the new URL, if it's not the default
-    if( $requested_language !== acfl()->get_default_language() ) {
+    if( $requested_language !== $this->get_default_language() ) {
       $new_home_url = trailingslashit($raw_home_url) . $requested_language;
     }
     // append url language to the search if present
@@ -300,8 +321,7 @@ class AcfLocalized extends Singleton {
    */
   public function filter_frontend_locale($locale) {
     if( !$this->is_frontend() ) return $locale;
-    $languages = acfl()->get_languages();
-    return str_replace('_', '-', $languages[$this->language]['locale']);
+    return str_replace('_', '-', $this->get_language_information($this->get_language())['locale']);
   }
 
   /**
@@ -314,7 +334,7 @@ class AcfLocalized extends Singleton {
    * @return String
    */
   public function filter_home_url($url, $path, $orig_scheme, $blog_id) {
-    $url = $this->convert_url($url, acfl()->get_language());
+    $url = $this->convert_url($url, $this->get_language());
     return $url;
   }
 
@@ -335,7 +355,7 @@ class AcfLocalized extends Singleton {
    * @return Array
    */
   public function rewrite_rules_array($rules) {
-    $languages = acfl()->get_languages('iso');
+    $languages = $this->get_languages('iso');
     $new_rules = array();
     $regex_languages = implode('|', $languages);
     $new_rules["(?:$regex_languages)?/?$"] = 'index.php';
@@ -349,14 +369,37 @@ class AcfLocalized extends Singleton {
   }
 
 
-  function filter_canonical_url( $redirect_url, $requested_url ) {
-      global $q_config;
-      $lang = $q_config['language'];
-      // fix canonical conflicts with language urls
-      $redirect_url_lang = qtranxf_convertURL( $redirect_url, $lang );
-
-      return $redirect_url_lang;
+  /**
+   * Redirects URLs for default language to language-agnostic URLs
+   * e.g. https://my-site.com/en/my-post/ to https://my-site.com/my-post/
+   *
+   * @return void
+   */
+  public function redirect_default_language() {
+    $language_in_url = $this->get_language_in_url($this->get_current_url()); 
+    if( $language_in_url && $language_in_url === $this->get_default_language() ) {
+      $new_url = $this->convert_url($this->get_current_url(), $this->get_default_language());
+      wp_redirect($new_url);
+      exit;
+    }
   }
+
+  /**
+   * Hooks into wp_head and prints out hreflang tags
+   *
+   * @return void
+   */
+  public function wp_head() {
+    $default_language = $this->get_default_language();
+    $languages = $this->get_languages();
+    foreach( $languages as &$language ) {
+      $language['url'] = $this->convert_current_url($language['iso']);
+    }
+    echo $this->get_template('meta-tags', [
+      'languages' => $languages,
+    ]);
+  }
+
 
   
 }
