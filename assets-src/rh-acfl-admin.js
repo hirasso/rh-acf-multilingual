@@ -8,7 +8,7 @@ export default class ACFL {
 
   constructor() {
     $(document).ready(() => this.onDocReady());
-    Cookie.set('rh-acfl-admin-language', 'en');
+    // Cookie.set('rh-acfl-admin-language', 'en');
   }
 
   /**

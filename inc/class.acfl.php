@@ -22,6 +22,9 @@ class ACFL extends Singleton {
     add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
     add_action('admin_head', [$this, 'admin_head']);
+    // add_filter('pre_get_posts', [$this, 'prepare_query']);
+    add_action('request', [$this, 'filter_request'], 5);
+    add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
   }
 
   /**
@@ -458,6 +461,85 @@ class ACFL extends Singleton {
     ]);
   }
 
+  /**
+   * Filter the request (inspired by qtranslate-slug)
+   *
+   * @param Array $query
+   * @return void
+   */
+  public function filter_request($query) {
+    global $wp;
+    if( is_admin() ) return $query;
+    
+    $save_query = $query;
+    if( isset($wp->matched_query) || empty($query) ) {
+      $query = wp_parse_args($wp->matched_query, $save_query);
+    }
+
+    $custom_post_type = null;
+
+    // Adds custom post types to the query if present
+    foreach (get_post_types() as $post_type) {
+      if ( array_key_exists($post_type, $query) && !in_array($post_type, array('post', 'page') ) ) {
+        $custom_post_type = $post_type;
+      }
+    }
+
+    $language = $this->get_language();
+    // return early if default language
+    if( $language === $this->get_default_language() ) return $query;
+
+    // alter query for custom post types
+    if ( $custom_post_type && $post = $this->get_post_by_slug($custom_post_type, $language, $query[$custom_post_type]) ) {
+      $query[$custom_post_type] = $post->post_name;
+      $query['name'] = $post->post_name;
+    } elseif ( isset($query['name']) ) { // Built-in posts
+      if( $post = $this->get_post_by_slug(['page', 'post'], $language, $query['name']) ) {
+        $query['name'] = $post->post_name;
+      }
+    }
+
+    return $query;
+  }
+
+  /**
+   * Get a post by it's custom slug.
+   *
+   * @param String $post_type
+   * @param String $language
+   * @param String $slug
+   * @return WP_Post|Null
+   */
+  private function get_post_by_slug($post_type, $language, $slug ) {
+    $args = [
+      "post_type" => $post_type,
+      "meta_query" => [
+        [
+          "key" => "slug_$language",
+          "value" => $slug
+        ],
+      ],
+      'posts_per_page' => 1
+    ];
+    $posts = get_posts($args);
+    return count($posts) ? array_shift($posts) : null;
+  }
+
+  /**
+   * Filter title
+   *
+   * @param String $title
+   * @param Int $post_id
+   * @return String
+   */
+  public function filter_post_title($title, $post_id) {
+    $language = $this->get_language();
+    if( $language === $this->get_default_language() ) return $title;
+    if( $translated_title = get_field("title_$language", $post_id) ) {
+      $title = $translated_title;
+    }
+    return $title;
+  }
 
   
 }
