@@ -15,14 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  * Require classes
  */
 require_once(__DIR__ . '/inc/class.singleton.php');
-require_once(__DIR__ . '/inc/class.acf-localized.php');
+require_once(__DIR__ . '/inc/class.acfl.php');
 require_once(__DIR__ . '/inc/class.acf-controls.php');
 require_once(__DIR__ . '/inc/class.admin.php');
 
 /**
  * Initialize classes
  */
-AcfLocalized::getInstance();
+ACFL::getInstance();
 AcfControls::getInstance();
 Admin::getInstance();
 
@@ -32,5 +32,5 @@ Admin::getInstance();
  * @return AcfLocalized
  */
 function acfl() { 
-  return AcfLocalized::getInstance(); 
+  return ACFL::getInstance(); 
 }

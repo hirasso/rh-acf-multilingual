@@ -1,5 +1,5 @@
 
-var jQuery = $ = global.jQuery;
+const $ = window.jQuery;
 
 export default class Cookie {
 

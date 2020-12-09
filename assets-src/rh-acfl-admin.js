@@ -1,12 +1,14 @@
 
-var jQuery = $ = global.jQuery;
+const $ = global.jQuery;
 
+import Cookie from './js/cookie';
 import './scss/rh-acfl-admin.scss';
 
 export default class ACFL {
 
   constructor() {
-    jQuery(document).ready(() => this.onDocReady());
+    $(document).ready(() => this.onDocReady());
+    Cookie.set('rh-acfl-admin-language', 'en');
   }
 
   /**
@@ -53,4 +55,4 @@ export default class ACFL {
 
 }
 
-new RHAU();
+new ACFL();

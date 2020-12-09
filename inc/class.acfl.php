@@ -4,7 +4,7 @@ namespace R\ACFL;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class AcfLocalized extends Singleton {
+class ACFL extends Singleton {
 
   private $prefix = 'rh-acfl';
   private $debug = false;
@@ -21,6 +21,7 @@ class AcfLocalized extends Singleton {
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
+    add_action('admin_head', [$this, 'admin_head']);
   }
 
   /**
@@ -47,8 +48,47 @@ class AcfLocalized extends Singleton {
    * @return void
    */
   public function enqueue_admin_assets() {
-    wp_enqueue_style( "$this->prefix-admin", $this->asset_uri("assets/$this->prefix-admin.css"), [], null );
-    wp_enqueue_script( "$this->prefix-admin", $this->asset_uri("assets/$this->prefix-admin.js"), ['jquery'], null, true );
+    wp_enqueue_style("$this->prefix-admin", $this->asset_uri("assets/$this->prefix-admin.css"), [], null);
+    wp_enqueue_script("$this->prefix-admin", $this->asset_uri("assets/$this->prefix-admin.js"), ['jquery'], null, true);
+    wp_add_inline_script("$this->prefix-admin", $this->get_admin_inline_script(), "before");
+  }
+
+  /**
+   * Add an inline script
+   *
+   * @return String
+   */
+  private function get_admin_inline_script() {
+    ?><script><?php ob_start() ?>
+    var ACFL = {
+      foo: 'bar'
+    };
+    <?php $script = ob_get_clean(); ?></script><?php return $script;
+  }
+
+  /**
+   * Hook for admin_head
+   *
+   * @return void
+   */
+  public function admin_head() {
+    echo $this->get_admin_inline_style();
+  }
+
+  /**
+   * Get admin inline style
+   *
+   * @return String
+   */
+  private function get_admin_inline_style() {
+    $admin_language = $this->get_admin_language();
+    ob_start() ?>
+    <style id="<?= $this->prefix ?>-admin-style">
+      .acf-field[data-name=<?= $admin_language ?>] {
+        display: block !important;
+      }
+    </style>
+    <?php return ob_get_clean();
   }
 
   /**
@@ -58,7 +98,7 @@ class AcfLocalized extends Singleton {
    * @return void
    */
   private function asset_uri( $path ) {
-    $uri = plugins_url( $path, __FILE__ );
+    $uri = plugins_url( $path, __DIR__ );
     $file = $this->get_plugin_path( $path );
     if( file_exists( $file ) ) {
       $version = filemtime( $file );
@@ -228,12 +268,25 @@ class AcfLocalized extends Singleton {
   public function detect_language() {
     if( $this->is_frontend() ) {
       $language = $this->get_language_in_url($this->get_current_url());
+      if( !$language ) $language = $this->get_default_language();
     } else {
+      $language = $this->get_admin_language();
+    }
+    $this->language = $language;
+  }
+
+  /**
+   * Get admin language. First checks for a Cookie, falls back to user langguae
+   * 
+   * @return void
+   */
+  public function get_admin_language() {
+    $language = $_COOKIE["$this->prefix-admin-language"] ?? null;
+    if( !$language ) {
       $locale = get_user_locale();
       $language = explode('_', $locale)[0];
     }
-    if( !$language ) $language = $this->get_default_language();
-    $this->language = $language;
+    return $language;
   }
 
   /**
