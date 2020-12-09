@@ -87,7 +87,7 @@ class ACFL extends Singleton {
     $admin_language = $this->get_admin_language();
     ob_start() ?>
     <style id="<?= $this->prefix ?>-admin-style">
-      .acf-field[data-name=<?= $admin_language ?>] {
+      .acfl-field[data-name=<?= $admin_language ?>] {
         display: block !important;
       }
     </style>
@@ -469,8 +469,9 @@ class ACFL extends Singleton {
    */
   public function filter_request($query) {
     global $wp;
-    if( is_admin() ) return $query;
     
+    if( is_admin() ) return $query;
+    pre_dump($query);
     $save_query = $query;
     if( isset($wp->matched_query) || empty($query) ) {
       $query = wp_parse_args($wp->matched_query, $save_query);

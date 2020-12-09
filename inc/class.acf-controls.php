@@ -67,7 +67,7 @@ class AcfControls extends Singleton {
         'is_translatable' => 0,
         'wrapper' => [
           'width' => '',
-          'class' => $field['class'] ?? '',
+          'class' => ($field['class'] ?? '') . ' acfl-field',
           'id' => $field['wrapper']['id'] ?  "{$field['wrapper']['id']}--{$lang}" : ''
         ]
       ]);
@@ -79,7 +79,7 @@ class AcfControls extends Singleton {
       'required' => false,
       'wrapper' => [
         'width' >= $field['wrapper']['width'],
-        'class' => $field['wrapper']['class'] . " acfl-is-translatable",
+        'class' => $field['wrapper']['class'] . " acfl-group",
         'id' >= $field['wrapper']['id'],
       ],
     ]);
@@ -113,11 +113,13 @@ class AcfControls extends Singleton {
     $current_language = acfl()->get_admin_language();
     $languages = acfl()->get_languages();
     ob_start(); ?>
+    <div class="acfl-tabs">
     <?php foreach( $languages as $language ) : ?>
-    <button class="acfl-language-tab <?= $language['iso'] === $current_language ? 'is-active' : '' ?>" data-language="<?= $language['iso'] ?>">
+    <a href="##" class="acfl-tab <?= $language['iso'] === $current_language ? 'is-active' : '' ?>" data-language="<?= $language['iso'] ?>">
       <?= $language['name'] ?>
-    </button>
+    </a>
     <?php endforeach; ?>
+    </div>
     <?php echo ob_get_clean();
   }
 

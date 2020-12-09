@@ -15,7 +15,21 @@ export default class ACFL {
    * This runs on doc ready
    */
   onDocReady() {
-    
+    this.initLanguageTabs();
+  }
+
+  initLanguageTabs() {
+    $(document).on('click', '.acfl-tab', e => {
+      e.preventDefault();
+      const $el = $(e.target);
+      const language = $el.attr('data-language');
+      const $fields = $el.parents('.acf-input:first').find(".acfl-field");
+      const $tabs = $el.siblings().add($el);
+      $tabs.removeClass('is-active');
+      $el.addClass('is-active');
+      $fields.removeClass('is-visible');
+      $fields.filter(`[data-name="${language}"]`).addClass('is-visible');
+    });
   }
 
   /**
