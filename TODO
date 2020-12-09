@@ -2,5 +2,9 @@
   ❍ Filter for canonical_redirect
   ❍ Generator for Language Selector
   ❍ Admin-JS and Styles
-  ❍ Add acf filter for loading values in the frontend
-  ❍ Maybe rename the whole thing
+  ✔ Add acf filter for loading values in the frontend
+  ✔ Maybe rename the whole thing
+  ❍ Make Post Titles translatable
+  ❍ Optional: Generate slugs for each translatated title
+    ❍ Filter Permalinks for custom slugs
+    ❍ Filter request for custom slugs
