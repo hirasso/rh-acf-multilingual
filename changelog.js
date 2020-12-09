@@ -3,7 +3,7 @@ const child = require('child_process');
 const argv = require('minimist')(process.argv.slice(2));
 
 const pluginFiles = ['rh-multilang.php'];
-const blacklist = ['Merge branch ', 'prepare-commit-msg', 'pre-commit-msg', '#ignore'];
+const blacklist = ['Merge branch ', 'prepare-commit-msg', 'pre-commit-msg', '#ignore', 'update TODO'];
 
 /**
  * Get the plugin version from a file
