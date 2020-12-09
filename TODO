@@ -5,6 +5,8 @@
   ✔ Add acf filter for loading values in the frontend
   ✔ Maybe rename the whole thing
   ❍ Make Post Titles translatable
-  ❍ Optional: Generate slugs for each translatated title
+  ❍ Optional: Localized slugs
+    ❍ Generate slugs for each translated title
+    ❍ Unique Post Slugs
     ❍ Filter Permalinks for custom slugs
     ❍ Filter request for custom slugs
