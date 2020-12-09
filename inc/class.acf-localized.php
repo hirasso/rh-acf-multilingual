@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class AcfLocalized extends Singleton {
 
-  private $prefix = 'rhml';
+  private $prefix = 'rh-acfl';
   private $debug = false;
 
   public function __construct() {

@@ -18,7 +18,7 @@ class AcfControls extends Singleton {
   private function setup() {
     foreach( $this->translatable_field_types as $field_type ) {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
-      add_filter("acf/load_field/type=$field_type", [$this, 'load_field']);
+      add_filter("acf/load_field/type=$field_type", [$this, 'load_field'], 20);
       add_filter("acf/format_value/type=group", [$this, 'format_value'], 11, 3);
     }
   }
@@ -53,6 +53,7 @@ class AcfControls extends Singleton {
     if( $post_type === 'acf-field-group' ) return $field;
     // bail early if field is empty or not translatable
     if( !is_array($field) || empty($field['is_translatable']) ) return $field;
+    
     $sub_fields = [];
     $default_language = acfl()->get_default_language();
     foreach( acfl()->get_languages('iso') as $lang ) {
@@ -62,6 +63,11 @@ class AcfControls extends Singleton {
         'name' => "{$field['name']}_{$lang}",
         '_name' => $lang,
         'required' => $lang === $default_language && $field['required'],
+        'wrapper' => [
+          'width' => '',
+          'class' => $field['class'] ?? '',
+          'id' => $field['wrapper']['id'] ?  "{$field['wrapper']['id']}--{$lang}" : ''
+        ]
       ]);
     }
     $field = array_merge( $field, [
