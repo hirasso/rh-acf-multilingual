@@ -2,7 +2,7 @@ const fs = require('fs');
 const child = require('child_process');
 const argv = require('minimist')(process.argv.slice(2));
 
-const pluginFiles = ['rh-multilang.php'];
+const pluginFiles = ['rh-multilang.php', 'rh-acf-localized.php'];
 const blacklist = ['Merge branch ', 'prepare-commit-msg', 'pre-commit-msg', '#ignore', 'update TODO'];
 
 /**
@@ -36,7 +36,7 @@ function addCommitMessageToChangelog( pluginVersion, message, changelog = {}, da
  */
 function isMessageBlacklisted(message) {
   for( const substring of blacklist ) {
-    if( message.indexOf(substring) !== -1 ) return true;
+    if( message.indexOf(substring.toLowerCase()) !== -1 ) return true;
   }
   return false;
 }
