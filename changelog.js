@@ -36,7 +36,7 @@ function addCommitMessageToChangelog( pluginVersion, message, changelog = {}, da
  */
 function isMessageBlacklisted(message) {
   for( const substring of blacklist ) {
-    if( message.indexOf(substring.toLowerCase()) !== -1 ) return true;
+    if( message.toLowerCase().indexOf(substring.toLowerCase()) !== -1 ) return true;
   }
   return false;
 }
