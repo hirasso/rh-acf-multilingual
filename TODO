@@ -10,3 +10,4 @@
     ❍ Unique Post Slugs
     ❍ Filter Permalinks for custom slugs
     ❍ Filter request for custom slugs
+    ❍ Filter wp_old_slug_redirect

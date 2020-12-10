@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class ACFL extends Singleton {
 
-  private $prefix = 'rh-acfl';
+  public $prefix = 'rh-acfl';
   private $debug = false;
 
   public function __construct() {
@@ -75,7 +75,7 @@ class ACFL extends Singleton {
    * @return void
    */
   public function admin_head() {
-    echo $this->get_admin_inline_style();
+    // echo $this->get_admin_inline_style();
   }
 
   /**

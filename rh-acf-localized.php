@@ -29,7 +29,7 @@ Admin::getInstance();
 /**
  * Make main instance available API calls
  *
- * @return AcfLocalized
+ * @return ACFL
  */
 function acfl() { 
   return ACFL::getInstance(); 

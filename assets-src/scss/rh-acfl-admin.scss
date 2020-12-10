@@ -3,22 +3,23 @@
 .acfl-group > .acf-input > .acf-fields {
   border: none;
 }
-.acfl-group > .acf-input > .acf-fields > .acf-field {
+.acfl-group > .acf-input > .acf-fields > .acfl-field {
   padding-left: 0;
   padding-right: 0;
   padding-top: 10px;
-}
-.acfl-field {
   display: none;
-}
-.acfl-field.is-visible {
-  display: block;
+  border: none;
+  &.is-visible {
+    display: block;
+  }
 }
 .acfl-field > .acf-label {
   display: none;
 }
 .acfl-tabs {
   display: flex;
+  flex-wrap: wrap;
+  padding: 0 0 0.2rem 0;
 }
 .acfl-tab {
   cursor: pointer;
@@ -32,5 +33,11 @@
 }
 .acfl-tab.is-active {
   font-weight: bold;
-
+}
+.acfl-info-icon {
+  color: rgba(0,0,0,0.3);
+  cursor: help;
+  @include hover {
+    color: rgba(0,0,0,0.5);
+  }
 }
