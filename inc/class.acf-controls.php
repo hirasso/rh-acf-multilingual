@@ -105,7 +105,7 @@ class AcfControls extends Singleton {
   public function load_translatable_field_value( $value, $post_id, $field ) {
     // bail early if field is empty or not translatable
     if( !$this->is_acfl_group($field) ) return $value;
-    if( $value && !is_array($value) ) {
+    if( is_string($value) && strlen($value) > 0 ) {
       update_field($field['key'], [
         "{$field['key']}_en" => $value
       ], $post_id);
