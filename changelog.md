@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-11)
 
-- acf_field_wrapper_attributes (#e2afd05)
+- Prepare translatable WYSIWYG fields (#d2156dc)
+- acf_field_wrapper_attributes (#f9d0d29)
 - Fix load_value for previously non-translatable fields (#2bfbe65)
 - load_translatable_field_value (#e8f2c29)
 - Admin GUI (#72031ed)

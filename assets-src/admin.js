@@ -8,6 +8,7 @@ export default class ACFL {
 
   constructor() {
     $(document).ready(() => this.onDocReady());
+    this.acfWysiwyg();
     // Cookie.set('rh-acfl-admin-language', 'en');
   }
 
@@ -49,6 +50,33 @@ export default class ACFL {
     $tabs.filter(`[data-language=${language}]`).addClass('is-active');
     $fields.removeClass('is-visible');
     $fields.filter(`[data-name=${language}]`).addClass('is-visible');
+  }
+
+  /**
+   * Prepare translatable WYSIWYG fields
+   */
+  acfWysiwyg() {
+    acf.addAction('wysiwyg_tinymce_init',(editor, id, mceInit, field) => {
+      // add a slug class on all wysiwyg fields (for editor-styles.css)
+      editor.on('init', () => this.addClassToAcfWysiwyg(field))
+    });
+  }
+
+  /**
+   * add the acf field's name slug a data-attribute to the iframe body
+   * @param {object} $field the acf field as a jQuery object
+   */
+  addClassToAcfWysiwyg(field) {
+    const $parent = field.$el.parents('.acfl-group');
+    if( !$parent.length ) return;
+    const fieldName = $parent.attr('data-name');
+    const fieldLanguage = field.$el.attr('data-name');
+    const $iframe = $('iframe', field.$el).contents();
+    const $html = $iframe.find('html');
+    const $body = $iframe.find('body');
+    $html.attr('lang', fieldLanguage);
+    $body.attr('data-field-name', fieldName);
+    $body.attr('data-language', fieldLanguage);
   }
 
   /**
