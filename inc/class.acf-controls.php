@@ -32,6 +32,8 @@ class AcfControls extends Singleton {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
       add_filter("acf/load_field/type=$field_type", [$this, 'load_translatable_field'], 20);
     }
+    // filter field wrapper attributes
+    add_filter("acf/field_wrapper_attributes", [$this, 'acf_field_wrapper_attributes'], 10, 2);
     // add hooks for generated translatable fields (type of those will be 'group')
     add_filter("acf/format_value/type=group", [$this, 'format_translatable_field_value'], 11, 3);
     add_filter("acf/render_field/type=group", [$this, 'render_translatable_field'], 5);
@@ -75,6 +77,7 @@ class AcfControls extends Singleton {
     $admin_language = acfl()->get_admin_language();
     $default_language = acfl()->get_default_language();
     $sub_fields = [];
+    
     foreach( acfl()->get_languages('iso') as $lang ) {
       // prepare wrapper
       $wrapper = $field['wrapper'];
@@ -88,7 +91,7 @@ class AcfControls extends Singleton {
         'key' => "{$field['key']}_{$lang}",
         'label' => "{$field['label']} ({$lang})",
         'name' => "{$field['name']}_{$lang}",
-        '_name' => $lang,
+        '_name' => "{$field['_name']}_$lang",
         // Only the default language of a sub-field should be required
         'required' => $lang === $default_language && $field['required'],
         'is_translatable' => 0,
@@ -185,6 +188,11 @@ class AcfControls extends Singleton {
    */
   private function is_acfl_group($field) {
     return is_array($field) && $field['type'] === 'group' && !empty($field['is_translatable']);
+  }
+
+  public function acf_field_wrapper_attributes($atts, $field) {
+    // pre_dump([$atts, $field]);
+    return $atts;
   }
   
 }
