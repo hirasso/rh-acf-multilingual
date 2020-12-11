@@ -95,7 +95,8 @@ class AcfControls extends Singleton {
   }
 
   /**
-   * Automatically parses possible value of previously non-translatable field
+   * Automatically loads possible value of previously non-translatable field
+   * to the sub_field assigned to the default language
    *
    * @param Mixed $value
    * @param Int $post_id
@@ -105,10 +106,11 @@ class AcfControls extends Singleton {
   public function load_translatable_field_value( $value, $post_id, $field ) {
     // bail early if field is empty or not translatable
     if( !$this->is_acfl_group($field) ) return $value;
+    $default_language = acfl()->get_default_language();
     if( is_string($value) && strlen($value) > 0 ) {
-      update_field($field['key'], [
-        "{$field['key']}_en" => $value
-      ], $post_id);
+      add_filter("acf/load_value/key={$field['key']}_$default_language", function() use ($value) {
+        return $value;
+      });
     }
     return $value;
   }

@@ -1,5 +1,6 @@
-#### 0.0.1 (2020-12-10)
+#### 0.0.1 (2020-12-11)
 
+- Fix load_value for previously non-translatable fields (#b187180)
 - load_translatable_field_value (#e8f2c29)
 - Admin GUI (#72031ed)
 - add admin js (#a3a2e93)
