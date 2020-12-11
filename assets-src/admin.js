@@ -2,7 +2,7 @@
 const $ = global.jQuery;
 
 import Cookie from './js/cookie';
-import './scss/rh-acfl-admin.scss';
+import './scss/admin.scss';
 
 export default class ACFL {
 

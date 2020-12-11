@@ -6,23 +6,36 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class AcfControls extends Singleton {
 
+  // for which field types should 'is_translatable' be available?
   private $translatable_field_types = [
     'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object'
   ];
 
+  /**
+   * Constructor
+   */
   public function __construct() {
-    $this->setup();
+    $this->prefix = acfl()->prefix;
+    $this->add_hooks();
   }
 
-
-  private function setup() {
-    foreach( $this->translatable_field_types as $field_type ) {
+  /**
+   * Add hooks to ACF
+   *
+   * @return void
+   */
+  private function add_hooks() {
+    // allow custom field types to be translatable, as well
+    $translatable_field_types = apply_filters("$this->prefix/translatable_field_types", $this->translatable_field_types);
+    // add hooks to translatable field types
+    foreach( $translatable_field_types as $field_type ) {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
       add_filter("acf/load_field/type=$field_type", [$this, 'load_translatable_field'], 20);
-      add_filter("acf/format_value/type=group", [$this, 'format_translatable_field_value'], 11, 3);
-      add_filter("acf/render_field/type=group", [$this, 'render_translatable_field'], 5);
-      add_filter("acf/load_value/type=group", [$this, 'load_translatable_field_value'], 10, 3);
     }
+    // add hooks for generated translatable fields (type of those will be 'group')
+    add_filter("acf/format_value/type=group", [$this, 'format_translatable_field_value'], 11, 3);
+    add_filter("acf/render_field/type=group", [$this, 'render_translatable_field'], 5);
+    add_filter("acf/load_value/type=group", [$this, 'load_translatable_field_value'], 10, 3);
   }
 
   /**
@@ -44,7 +57,12 @@ class AcfControls extends Singleton {
   }
 
   /**
-   * Load translatable fields
+   * Load translatable fields. If a fields 'is_translatable' setting is set to 'true', then:
+   * 
+   *    - create one sub-field for each language with the same type of the field (e.g. text, textarea, ...)
+   *    - create a field with type 'group' that will hold the different sub-fields
+   *    – if the field is set to 'required', set the sub-field for the default language to required,
+   *      but not the group itself
    *
    * @param Array $field
    * @return void
@@ -61,6 +79,7 @@ class AcfControls extends Singleton {
       // prepare wrapper
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfl-field';
+      // if the current sub-field is the same as the $admin_language, show it by default
       if( $lang === $admin_language ) $wrapper['class'] .= ' is-visible';
       if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang}";
       $wrapper['width'] = '';
@@ -70,6 +89,7 @@ class AcfControls extends Singleton {
         'label' => "{$field['label']} ({$lang})",
         'name' => "{$field['name']}_{$lang}",
         '_name' => $lang,
+        // Only the default language of a sub-field should be required
         'required' => $lang === $default_language && $field['required'],
         'is_translatable' => 0,
         'wrapper' => $wrapper
@@ -77,8 +97,10 @@ class AcfControls extends Singleton {
       // add the subfield
       $sub_fields[] = $sub_field;
     }
+    // Add 'required'-indicator to the groups label, if it is set to required
     $label = $field['label'];
     if( $field['required'] ) $label .= " <span class=\"acf-required\">*</span>";
+    // Change the $field to a group that will hold all sub-fields for all languages
     $field = array_merge( $field, [
       'label' => $label,
       'type' => 'group',
@@ -118,10 +140,10 @@ class AcfControls extends Singleton {
   /**
    * Formats a fields value
    *
-   * @param [type] $value
-   * @param [type] $post_id
-   * @param [type] $field
-   * @return void
+   * @param Mixed $value
+   * @param Int $post_id
+   * @param Array $field
+   * @return Mixed formatted value
    */
   public function format_translatable_field_value( $value, $post_id, $field ) {
     if( !$this->is_acfl_group($field) ) return $value;
@@ -149,7 +171,7 @@ class AcfControls extends Singleton {
     </a>
     <?php endforeach; ?>
     <span class="dashicons dashicons-info acf-js-tooltip acfl-info-icon" 
-      title="<?= __('Double-click a language to switch all translatable fields', acfl()->prefix) ?>">
+      title="<?= __('Double-click a language to switch all translatable fields', $this->prefix) ?>">
     </span>
     </div>
     <?php echo ob_get_clean();

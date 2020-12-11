@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class ACFL extends Singleton {
 
-  public $prefix = 'rh-acfl';
+  public $prefix = 'acfl';
   private $debug = false;
 
   public function __construct() {
@@ -51,8 +51,8 @@ class ACFL extends Singleton {
    * @return void
    */
   public function enqueue_admin_assets() {
-    wp_enqueue_style("$this->prefix-admin", $this->asset_uri("assets/$this->prefix-admin.css"), [], null);
-    wp_enqueue_script("$this->prefix-admin", $this->asset_uri("assets/$this->prefix-admin.js"), ['jquery'], null, true);
+    wp_enqueue_style("$this->prefix-admin", $this->asset_uri("assets/admin.css"), [], null);
+    wp_enqueue_script("$this->prefix-admin", $this->asset_uri("assets/admin.js"), ['jquery'], null, true);
     wp_add_inline_script("$this->prefix-admin", $this->get_admin_inline_script(), "before");
   }
 
@@ -238,7 +238,7 @@ class ACFL extends Singleton {
       $language['is_default'] = $language['iso'] === $default_language;
     }
     if( $format === 'iso' ) $languages = array_column($languages, 'iso');
-    return apply_filters('rh/multilang/languages', $languages);
+    return apply_filters("$this->prefix/languages", $languages);
   }
 
   /**
@@ -260,7 +260,7 @@ class ACFL extends Singleton {
    * @return String
    */
   public function get_default_language() {
-    return apply_filters('rh/multilang/default_language', 'en');
+    return apply_filters("$this->prefix/default_language", 'en');
   }
 
   /**

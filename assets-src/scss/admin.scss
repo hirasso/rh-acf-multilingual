@@ -7,10 +7,9 @@
   padding-left: 0;
   padding-right: 0;
   padding-top: 10px;
-  display: none;
   border: none;
-  &.is-visible {
-    display: block;
+  &:not(.is-visible) {
+    @include visually-hidden;
   }
 }
 .acfl-field > .acf-label {
