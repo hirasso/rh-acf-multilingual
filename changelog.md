@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-13)
 
-- rename from 'acfl' to 'acfml' (#ab77ae6)
+- wp_insert_post_data inject acfml_title (#bd38aa9)
+- rename from 'acfl' to 'acfml' (#2f0823b)
 - add documentation (#5be7a68)
 - add post_type_support `acfl-title` (#13b6768)
 - minor fixes (#29534e7)

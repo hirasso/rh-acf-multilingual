@@ -9,7 +9,6 @@ export default class ACFML {
   constructor() {
     $(document).ready(() => this.onDocReady());
     this.acfWysiwyg();
-    $('body').toggleClass('supports-acfml-title', $('.acfml-title').length > 0 );
     // $('#edit-slug-box').clone(true).appendTo($('.acfml-title .acf-fields .acf-input:first'));
     // Cookie.set('rh-acfml-admin-language', 'en');
   }

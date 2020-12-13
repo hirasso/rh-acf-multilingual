@@ -7,15 +7,21 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 class Titles extends Singleton {
   
   private $prefix;
+  private $default_language;
 
   public function __construct() {
     $this->prefix = acfml()->get_prefix();
+    $this->default_language = acfml()->get_default_language();
     add_action('init', [$this, 'init'], PHP_INT_MAX);
     add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
+    add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
+    add_action("acf/render_field/key=field_{$this->prefix}_title_$this->default_language", [$this, 'render_slug_input']);
+    add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
   }
 
   public function init() {
     $this->add_title_field_group();
+    
   }
 
   /**
@@ -60,11 +66,23 @@ class Titles extends Singleton {
       'name' => "{$this->prefix}_title",
       'type' => 'text',
       'is_translatable' => true,
+      'required' => true,
       'parent' => $field_group_key,
       'wrapper' => [
         'class' => "$this->prefix-title"
       ]
     ));
+
+  }
+
+  /**
+   * Renders the slug input
+   *
+   * @param Array $field
+   * @return void
+   */
+  public function render_slug_input($field) {
+    echo 'TODO: render slug input';
   }
 
   /**
@@ -77,11 +95,30 @@ class Titles extends Singleton {
   public function filter_post_title($title, $post_id) {
     $acfml_title = get_field('acfml_title', $post_id);
     return $acfml_title ? $acfml_title : $title;
-    // $language = $this->get_language();
-    // if( $language === $this->get_default_language() ) return $title;
-    // if( $translated_title = get_field("title_$language", $post_id) ) {
-    //   $title = $translated_title;
-    // }
-    // return $title;
+  }
+
+  /**
+   * Filter Admin Body Class
+   *
+   * @param String $class
+   * @return String
+   */
+  public function admin_body_class($class) {
+    global $pagenow, $typenow;
+    if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return $class;
+    if( post_type_supports( $typenow, "$this->prefix-title" ) ) $class .= " supports-$this->prefix-title";
+    return $class;
+  }
+
+  /**
+   * Save post title of default language
+   *
+   * @param [type] $post_id
+   * @return void
+   */
+  public function wp_insert_post_data($data , $_post) {
+    $default_language_title = $_post["acf"]["field_{$this->prefix}_title"]["field_{$this->prefix}_title_{$this->default_language}"] ?? null;
+    if( $default_language_title ) $data['post_title'] = $default_language_title;
+    return $data;
   }
 }

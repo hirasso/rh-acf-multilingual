@@ -2,7 +2,7 @@ const fs = require('fs');
 const child = require('child_process');
 const argv = require('minimist')(process.argv.slice(2));
 
-const pluginFiles = ['rh-multilang.php', 'rh-acf-localized.php'];
+const pluginFiles = ['rh-multilang.php', 'rh-acf-localized.php', 'rh-acf-multilingual.php'];
 const blacklist = ['Merge branch ', 'prepare-commit-msg', 'pre-commit-msg', '#ignore', 'update TODO'];
 
 /**

@@ -71,8 +71,11 @@
 /*
 * Title
 */
+.acf-field-acfml-title .acf-label {
+  display: none;
+}
 .post-php, .post-new-php {
-  .acfml-title .acf-input input {
+  .acf-field-acfml-title input {
     padding: 3px 8px;
     font-size: 1.7em;
     line-height: 100%;
@@ -83,6 +86,14 @@
     background-color: #fff;
   }
 }
+
 .supports-acfml-title #post-body-content #acf_after_title-sortables {
   margin-top: 0 !important;
+}
+.supports-acfml-title #titlediv {
+  pointer-events: none;
+  opacity: 0.5;
+}
+#acf-acfml_title_group > .acf-fields > .acf-field {
+  padding-top: 0;
 }

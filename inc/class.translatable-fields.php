@@ -38,7 +38,7 @@ class TranslatableFields extends Singleton {
     // add_filter("acf/field_wrapper_attributes", [$this, 'acf_field_wrapper_attributes'], 10, 2);
     // add hooks for generated translatable fields (type of those will be 'group')
     add_filter("acf/format_value/type=group", [$this, 'format_translatable_field_value'], 11, 3);
-    add_filter("acf/render_field/type=group", [$this, 'render_translatable_field'], 5);
+    add_action("acf/render_field/type=group", [$this, 'render_translatable_field'], 5);
     add_filter("acf/load_value/type=group", [$this, 'load_translatable_field_value'], 10, 3);
   }
 
