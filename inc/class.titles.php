@@ -18,6 +18,12 @@ class Titles extends Singleton {
     $this->add_title_field_group();
   }
 
+  /**
+   * Adds a custom field group for the  title
+   * for each post_type that supports `acfl-title`
+   *
+   * @return void
+   */
   private function add_title_field_group() {
     $field_group_key = "{$this->prefix}_title_group";
     // find all post types that support `translatable-title`

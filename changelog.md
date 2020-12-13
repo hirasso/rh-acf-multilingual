@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-13)
 
-- add post_type_support `acfl-title` (#8c054f2)
+- add documentation (#af95ed2)
+- add post_type_support `acfl-title` (#13b6768)
 - minor fixes (#29534e7)
 - Add support for translated titles (#330040d)
 - Prepare translatable WYSIWYG fields (#24fda11)
