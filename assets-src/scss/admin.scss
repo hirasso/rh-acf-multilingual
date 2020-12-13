@@ -71,8 +71,12 @@
 /*
 * Title
 */
-.acf-field-acfml-title .acf-label {
-  display: none;
+.post-php, 
+.post-new.php,
+.edit-tags-php {
+  .acf-field-acfml-title .acf-label {
+    display: none;
+  }
 }
 .post-php, .post-new-php {
   .acf-field-acfml-title input {
@@ -96,4 +100,21 @@
 }
 #acf-acfml_title_group > .acf-fields > .acf-field {
   padding-top: 0;
+}
+
+/*
+* Category edit screens
+*/
+#addtag,
+#edittag {
+  display: flex;
+  flex-direction: column;
+}
+#addtag > *,
+#edittag > * {
+  order: 2;
+}
+#addtag > #acf-term-fields,
+#edittag > #acf-form-data + .form-table {
+  order: 1;
 }

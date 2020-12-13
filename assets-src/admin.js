@@ -17,6 +17,7 @@ export default class ACFML {
    * This runs on doc ready
    */
   onDocReady() {
+    this.initTitleField();
     this.initLanguageTabs();
   }
 
@@ -64,6 +65,12 @@ export default class ACFML {
       init.body_class += ` acf-wysiwyg--${fieldNameClass}`;
       return init;
     })
+  }
+
+  initTitleField() {
+    const $titleField = $('.acf-field-acfml-title');
+    if( !$titleField.length ) return;
+    $('.form-field.term-name-wrap').remove();
   }
 
   /**
