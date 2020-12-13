@@ -20,10 +20,13 @@ class Titles extends Singleton {
 
   private function add_title_field_group() {
     $field_group_key = "{$this->prefix}_title_group";
-    $post_types  = get_post_types();
-    $post_types = array_filter($post_types, function($pt) {
-      return post_type_supports( $pt, 'title' ) && is_post_type_viewable( $pt );
+    // find all post types that support `translatable-title`
+    $post_types = array_filter(get_post_types(), function($pt) {
+      return post_type_supports( $pt, "$this->prefix-title" );
     });
+    // bail early if no post types support `translatable-title`
+    if( !count($post_types) ) return;
+    // generate location rules for translatable titles
     $location = [];
     foreach( $post_types as $pt ) {
       $location[] = [
