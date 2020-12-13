@@ -7,7 +7,7 @@
  * Author URI: https://rassohilber.com
 **/
 
-namespace R\ACFL;
+namespace R\ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  * Require classes
  */
 require_once(__DIR__ . '/inc/class.singleton.php');
-require_once(__DIR__ . '/inc/class.acfl.php');
+require_once(__DIR__ . '/inc/class.acfml.php');
 require_once(__DIR__ . '/inc/class.translatable-fields.php');
 require_once(__DIR__ . '/inc/class.admin.php');
 require_once(__DIR__ . '/inc/class.titles.php');
@@ -23,7 +23,7 @@ require_once(__DIR__ . '/inc/class.titles.php');
 /**
  * Initialize classes
  */
-ACFL::getInstance();
+ACFML::getInstance();
 TranslatableFields::getInstance();
 Admin::getInstance();
 Titles::getInstance();
@@ -31,8 +31,8 @@ Titles::getInstance();
 /**
  * Make main instance available API calls
  *
- * @return ACFL
+ * @return ACFML
  */
-function acfl() { 
-  return ACFL::getInstance(); 
+function acfml() { 
+  return ACFML::getInstance(); 
 }

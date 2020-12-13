@@ -1,6 +1,6 @@
 <?php 
 
-namespace R\ACFL;
+namespace R\ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
@@ -26,7 +26,7 @@ class Admin extends Singleton {
     // e.g. 'en' or 'de'
     if( in_array($post_type, ['post', 'page'])
         && !$post_parent
-        && $slug === acfl()->get_default_language() ) {
+        && $slug === acfml()->get_default_language() ) {
       remove_filter('unique_post_slug', [$this, 'unique_post_slug']);
       $slug = wp_unique_post_slug("$slug-1", $post_id, $post_status, $post_type, $post_parent);
       add_filter('unique_post_slug', [$this, 'unique_post_slug'], 10, 6);

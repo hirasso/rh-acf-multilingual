@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-13)
 
-- add documentation (#af95ed2)
+- rename from 'acfl' to 'acfml' (#ab77ae6)
+- add documentation (#5be7a68)
 - add post_type_support `acfl-title` (#13b6768)
 - minor fixes (#29534e7)
 - Add support for translated titles (#330040d)

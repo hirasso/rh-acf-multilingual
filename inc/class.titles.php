@@ -1,6 +1,6 @@
 <?php 
 
-namespace R\ACFL;
+namespace R\ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
@@ -9,7 +9,7 @@ class Titles extends Singleton {
   private $prefix;
 
   public function __construct() {
-    $this->prefix = acfl()->get_prefix();
+    $this->prefix = acfml()->get_prefix();
     add_action('init', [$this, 'init'], PHP_INT_MAX);
     add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
   }
@@ -20,7 +20,7 @@ class Titles extends Singleton {
 
   /**
    * Adds a custom field group for the  title
-   * for each post_type that supports `acfl-title`
+   * for each post_type that supports `acfml-title`
    *
    * @return void
    */
@@ -75,8 +75,8 @@ class Titles extends Singleton {
    * @return String
    */
   public function filter_post_title($title, $post_id) {
-    $acfl_title = get_field('acfl_title', $post_id);
-    return $acfl_title ? $acfl_title : $title;
+    $acfml_title = get_field('acfml_title', $post_id);
+    return $acfml_title ? $acfml_title : $title;
     // $language = $this->get_language();
     // if( $language === $this->get_default_language() ) return $title;
     // if( $translated_title = get_field("title_$language", $post_id) ) {

@@ -4,14 +4,14 @@ const $ = global.jQuery;
 import Cookie from './js/cookie';
 import './scss/admin.scss';
 
-export default class ACFL {
+export default class ACFML {
 
   constructor() {
     $(document).ready(() => this.onDocReady());
     this.acfWysiwyg();
-    $('body').toggleClass('supports-acfl-title', $('.acfl-title').length > 0 );
-    // $('#edit-slug-box').clone(true).appendTo($('.acfl-title .acf-fields .acf-input:first'));
-    // Cookie.set('rh-acfl-admin-language', 'en');
+    $('body').toggleClass('supports-acfml-title', $('.acfml-title').length > 0 );
+    // $('#edit-slug-box').clone(true).appendTo($('.acfml-title .acf-fields .acf-input:first'));
+    // Cookie.set('rh-acfml-admin-language', 'en');
   }
 
   /**
@@ -25,29 +25,29 @@ export default class ACFL {
    * Setup language switchers for translatable acf-fields
    */
   initLanguageTabs() {
-    $(document).on('click', '.acfl-tab', e => {
+    $(document).on('click', '.acfml-tab', e => {
       e.preventDefault();
       const $el = $(e.target);
       $el.blur();
       const language = $el.attr('data-language');
-      this.switchLanguage($el.parents('.acfl-translatable-field:first'), language);
+      this.switchLanguage($el.parents('.acfml-translatable-field:first'), language);
     });
-    $(document).on('dblclick', '.acfl-tab', e => {
+    $(document).on('dblclick', '.acfml-tab', e => {
       e.preventDefault();
       const $el = $(e.target);
       const language = $el.attr('data-language');
-      this.switchLanguage($('.acfl-translatable-field'), language);
+      this.switchLanguage($('.acfml-translatable-field'), language);
     })
   }
 
   /**
-   * Switches the language for an .acfl-translatable-field
+   * Switches the language for an .acfml-translatable-field
    * @param {jQuery Object} $el 
    * @param {String} language 
    */
   switchLanguage($el, language) {
-    const $fields = $el.find('.acf-input:first').find(".acfl-field");
-    const $tabs = $el.find('.acfl-tab');
+    const $fields = $el.find('.acf-input:first').find(".acfml-field");
+    const $tabs = $el.find('.acfml-tab');
     $tabs.removeClass('is-active');
     $tabs.filter(`[data-language=${language}]`).addClass('is-active');
     $fields.removeClass('is-visible');
@@ -59,7 +59,7 @@ export default class ACFL {
    */
   acfWysiwyg() {
     acf.addFilter('wysiwyg_tinymce_settings', (init, id, field) => {
-      const $parent = field.$el.parents('.acfl-translatable-field');
+      const $parent = field.$el.parents('.acfml-translatable-field');
       if( !$parent.length ) return init;
       const fieldNameClass = $parent.attr('data-name').split('_').join('-');
       init.body_class += ` acf-wysiwyg--${fieldNameClass}`;
@@ -104,4 +104,4 @@ export default class ACFL {
 
 }
 
-new ACFL();
+new ACFML();

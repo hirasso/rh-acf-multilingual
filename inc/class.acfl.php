@@ -1,12 +1,12 @@
 <?php 
 
-namespace R\ACFL;
+namespace R\ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class ACFL extends Singleton {
+class ACFML extends Singleton {
 
-  private $prefix = 'acfl';
+  private $prefix = 'acfml';
   private $debug = false;
 
   public function __construct() {
@@ -103,7 +103,7 @@ class ACFL extends Singleton {
    */
   private function get_admin_inline_script() {
     ?><script><?php ob_start() ?>
-    var ACFL = {
+    var ACFML = {
       foo: 'bar'
     };
     <?php $script = ob_get_clean(); ?></script><?php return $script;
@@ -127,7 +127,7 @@ class ACFL extends Singleton {
     $admin_language = $this->get_admin_language();
     ob_start() ?>
     <style id="<?= $this->prefix ?>-admin-style">
-      .acfl-field[data-name=<?= $admin_language ?>] {
+      .acfml-field[data-name=<?= $admin_language ?>] {
         display: block !important;
       }
     </style>
