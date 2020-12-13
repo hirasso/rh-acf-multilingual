@@ -18,15 +18,17 @@ require_once(__DIR__ . '/inc/class.singleton.php');
 require_once(__DIR__ . '/inc/class.acfml.php');
 require_once(__DIR__ . '/inc/class.translatable-fields.php');
 require_once(__DIR__ . '/inc/class.admin.php');
-require_once(__DIR__ . '/inc/class.titles.php');
+require_once(__DIR__ . '/inc/class.translatable-post-titles.php');
+require_once(__DIR__ . '/inc/class.translatable-term-titles.php');
 
 /**
  * Initialize classes
  */
 ACFML::getInstance();
-TranslatableFields::getInstance();
+Translatable_Fields::getInstance();
 Admin::getInstance();
-Titles::getInstance();
+Translatable_Post_Titles::getInstance();
+Translatable_Term_Titles::getInstance();
 
 /**
  * Make main instance available API calls

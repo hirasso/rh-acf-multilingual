@@ -4,7 +4,7 @@ namespace R\ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class TranslatableFields extends Singleton {
+class Translatable_Fields extends Singleton {
 
   // for which field types should 'is_translatable' be available?
   private $translatable_field_types = [

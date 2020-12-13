@@ -7,7 +7,8 @@
 .acfml-translatable-field > .acf-input > .acf-fields > .acfml-field {
   padding-left: 0;
   padding-right: 0;
-  padding-top: 10px;
+  padding-top: 5px;
+  padding-bottom: 0;
   border: none;
   &:not(.is-visible) {
     @include visually-hidden;
@@ -71,15 +72,13 @@
 /*
 * Title
 */
-.post-php, 
-.post-new.php,
-.edit-tags-php {
-  .acf-field-acfml-title .acf-label {
-    display: none;
-  }
+.acf-field-acfml-post-title .acf-label,
+.edit-tags-php .acf-field-acfml-term-title .acf-label {
+  display: none;
 }
+
 .post-php, .post-new-php {
-  .acf-field-acfml-title input {
+  .acf-field-acfml-post-title input {
     padding: 3px 8px;
     font-size: 1.7em;
     line-height: 100%;
@@ -91,14 +90,15 @@
   }
 }
 
-.supports-acfml-title #post-body-content #acf_after_title-sortables {
+.acfml-supports-post-title #post-body-content #acf_after_title-sortables,
+.acf-field-acfml-term-name {
   margin-top: 0 !important;
 }
-.supports-acfml-title #titlediv {
+.acfml-supports-post-title #titlediv {
   pointer-events: none;
   opacity: 0.5;
 }
-#acf-acfml_title_group > .acf-fields > .acf-field {
+#acf-acfml_group_post_title > .acf-fields > .acf-field {
   padding-top: 0;
 }
 

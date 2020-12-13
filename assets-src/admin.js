@@ -68,7 +68,7 @@ export default class ACFML {
   }
 
   initTitleField() {
-    const $titleField = $('.acf-field-acfml-title');
+    const $titleField = $('.acf-field-acfml-term-name');
     if( !$titleField.length ) return;
     $('.form-field.term-name-wrap').remove();
   }

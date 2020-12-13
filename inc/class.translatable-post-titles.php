@@ -4,7 +4,7 @@ namespace R\ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Titles extends Singleton {
+class Translatable_Post_Titles extends Singleton {
   
   private $prefix;
   private $default_language;
@@ -15,13 +15,26 @@ class Titles extends Singleton {
     add_action('init', [$this, 'init'], PHP_INT_MAX);
     add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
-    add_action("acf/render_field/key=field_{$this->prefix}_title_$this->default_language", [$this, 'render_slug_input']);
+    add_action("acf/render_field/key=field_{$this->prefix}_post_title", [$this, 'render_slug_input']);
     add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
-    add_filter('pre_insert_term', [$this, 'pre_insert_term'], 10, 2);
   }
 
+  /**
+   * Init hook
+   *
+   * @return void
+   */
   public function init() {
     $this->add_title_field_group();
+  }
+
+  /**
+   * Get translatable post types
+   *
+   * @return Array
+   */
+  private function get_translatable_post_types() {
+    return array_unique( apply_filters("{$this->prefix}/translatable_post_types", []) );
   }
 
   /**
@@ -32,14 +45,13 @@ class Titles extends Singleton {
    */
   private function add_title_field_group() {
     global $pagenow;
-    $label = in_array($pagenow, ['term.php', 'edit-tags.php']) ? __('Name') : 'Title';
-    $field_group_key = "{$this->prefix}_title_group";
-    // add post types by filter
-    $post_types = array_unique( apply_filters("{$this->prefix}/translatable_post_types", []) );
-    $taxonomies = array_unique( apply_filters("{$this->prefix}/translatable_taxonomies", []) );
+    
+    $field_group_key = "{$this->prefix}_group_post_title";
+    
+    $post_types = $this->get_translatable_post_types();
     
     // bail early if no post types support `translatable-title`
-    if( !count($post_types) && !count($taxonomies) ) return;
+    if( !count($post_types) ) return;
     // generate location rules for translatable titles
     $location = [];
     foreach( $post_types as $pt ) {
@@ -48,15 +60,6 @@ class Titles extends Singleton {
           'param' => 'post_type',
           'operator' => '==',
           'value' => $pt
-        ]
-      ];
-    }
-    foreach( $taxonomies as $tax ) {
-      $location[] = [
-        [
-          'param' => 'taxonomy',
-          'operator' => '==',
-          'value' => $tax
         ]
       ];
     }
@@ -70,17 +73,20 @@ class Titles extends Singleton {
       'location' => $location,
     ]);
     
+    $instructions = 'Permalink: https://rassohilber.com';
+
     acf_add_local_field(array(
-      'key' => "field_{$this->prefix}_title",
-      'label' => $label,
-      'placeholder' => 'Title',
-      'name' => "{$this->prefix}_title",
+      'key' => "field_{$this->prefix}_post_title",
+      'label' => 'Title',
+      'instructions' => $instructions,
+      'placeholder' => __('Title'),
+      'name' => "{$this->prefix}_post_title",
       'type' => 'text',
       'is_translatable' => true,
       'required' => true,
       'parent' => $field_group_key,
       'wrapper' => [
-        'class' => "$this->prefix-title"
+        'class' => "$this->prefix-post-title"
       ]
     ));
 
@@ -93,9 +99,20 @@ class Titles extends Singleton {
    * @return void
    */
   public function render_slug_input($field) {
-    global $pagenow;
+    global $pagenow, $post_type, $post_type_object, $post;
     if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return;
-    echo 'TODO: render slug input';
+    if( !is_post_type_viewable( $post_type_object ) ) return;
+    if( !current_user_can( $post_type_object->cap->publish_posts ) ) return;
+    if( in_array(get_post_status( $post ), ['pending', 'auto-draft']) )  return;
+
+    $sample_permalink_html = get_sample_permalink_html( $post->ID );
+    if( !$sample_permalink_html ) return;
+    ob_start() ?>
+    <div id="edit-slug-box" class="hide-if-no-js">
+      <?= $sample_permalink_html ?>
+    </div>
+    <?= wp_nonce_field( 'samplepermalink', 'samplepermalinknonce', false, false ); ?>
+    <?php echo ob_get_clean();
   }
 
   /**
@@ -119,7 +136,7 @@ class Titles extends Singleton {
   public function admin_body_class($class) {
     global $pagenow, $typenow;
     if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return $class;
-    if( post_type_supports( $typenow, "$this->prefix-title" ) ) $class .= " supports-$this->prefix-title";
+    if( in_array($typenow, $this->get_translatable_post_types()) ) $class .= " $this->prefix-supports-post-title";
     return $class;
   }
 
@@ -130,21 +147,8 @@ class Titles extends Singleton {
    * @return void
    */
   public function wp_insert_post_data($data , $_post) {
-    $default_language_title = $_post["acf"]["field_{$this->prefix}_title"]["field_{$this->prefix}_title_{$this->default_language}"] ?? null;
+    $default_language_title = $_post["acf"]["field_{$this->prefix}_post_title"]["field_{$this->prefix}_post_title_{$this->default_language}"] ?? null;
     if( $default_language_title ) $data['post_title'] = $default_language_title;
     return $data;
-  }
-
-  /**
-   * Parse Custom Field value for term name
-   *
-   * @param [type] $term
-   * @param [type] $taxonomy
-   * @return void
-   */
-  public function pre_insert_term( $term, $taxonomy ) {
-    $default_language_title = $_POST["acf"]["field_{$this->prefix}_title"]["field_{$this->prefix}_title_{$this->default_language}"] ?? null;
-    if( !$term && $default_language_title ) $term = $default_language_title;
-    return $term;
   }
 }
