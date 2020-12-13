@@ -1,6 +1,7 @@
-#### 0.0.1 (2020-12-11)
+#### 0.0.1 (2020-12-13)
 
-- Prepare translatable WYSIWYG fields (#d2156dc)
+- Add support for translated titles (#b5d8e20)
+- Prepare translatable WYSIWYG fields (#24fda11)
 - acf_field_wrapper_attributes (#f9d0d29)
 - Fix load_value for previously non-translatable fields (#2bfbe65)
 - load_translatable_field_value (#e8f2c29)

@@ -4,18 +4,20 @@ namespace R\ACFL;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class AcfControls extends Singleton {
+class TranslatableFields extends Singleton {
 
   // for which field types should 'is_translatable' be available?
   private $translatable_field_types = [
     'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object'
   ];
 
+  private $prefix;
+
   /**
    * Constructor
    */
   public function __construct() {
-    $this->prefix = acfl()->prefix;
+    $this->prefix = acfl()->get_prefix();
     $this->add_hooks();
   }
 
@@ -112,7 +114,7 @@ class AcfControls extends Singleton {
       'required' => false,
       'wrapper' => [
         'width' >= $field['wrapper']['width'],
-        'class' => $field['wrapper']['class'] . " acfl-group",
+        'class' => $field['wrapper']['class'] . " acfl-translatable-field",
         'id' >= $field['wrapper']['id'],
       ],
     ]);
@@ -167,15 +169,17 @@ class AcfControls extends Singleton {
     $current_language = acfl()->get_admin_language();
     $languages = acfl()->get_languages();
     ob_start(); ?>
-    <div class="acfl-tabs">
-    <?php foreach( $languages as $language ) : ?>
-    <a href="##" class="acfl-tab <?= $language['iso'] === $current_language ? 'is-active' : '' ?>" data-language="<?= $language['iso'] ?>">
-      <?= $language['name'] ?>
-    </a>
-    <?php endforeach; ?>
-    <span class="dashicons dashicons-info acf-js-tooltip acfl-info-icon" 
-      title="<?= __('Double-click a language to switch all translatable fields', $this->prefix) ?>">
-    </span>
+    <div class="acfl-tabs-wrap">
+      <div class="acfl-tabs acf-js-tooltip" title="<?= __('Double-click to switch globally', $this->prefix) ?>">
+      <?php foreach( $languages as $language ) : ?>
+      <a href="##" class="acfl-tab <?= $language['iso'] === $current_language ? 'is-active' : '' ?>" data-language="<?= $language['iso'] ?>">
+        <?= $language['name'] ?>
+      </a>
+      <?php endforeach; ?>
+      <!-- <span class="dashicons dashicons-info acf-js-tooltip acfl-info-icon" 
+        title="<?= __('Double-click a language to switch all translatable fields', $this->prefix) ?>">
+      </span> -->
+      </div>
     </div>
     <?php echo ob_get_clean();
   }
@@ -192,7 +196,7 @@ class AcfControls extends Singleton {
 
   public function acf_field_wrapper_attributes($wrapper, $field) {
     if( $field['_name'] !== 'a_translatable_field_en' ) return $wrapper;
-    pre_dump([$field]);
+    // pre_dump([$field]);
     return $wrapper;
   }
   

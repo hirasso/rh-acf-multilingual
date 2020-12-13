@@ -6,12 +6,12 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class ACFL extends Singleton {
 
-  public $prefix = 'acfl';
+  private $prefix = 'acfl';
   private $debug = false;
 
   public function __construct() {
     
-    add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+    add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
     add_action('admin_notices', [$this, 'show_admin_notices']);
     add_action('plugins_loaded', [$this, 'detect_language']); // maybe a better plpace is 'request' ?
@@ -23,8 +23,48 @@ class ACFL extends Singleton {
     add_action('wp_head', [$this, 'wp_head']);
     add_action('admin_head', [$this, 'admin_head']);
     // add_filter('pre_get_posts', [$this, 'prepare_query']);
-    add_action('request', [$this, 'filter_request'], 5);
+    // add_action('request', [$this, 'filter_request'], 5);
     add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
+    
+    // add_filter('page_link', function($link, $post_id, $sample) {
+    //   pre_dump($link);
+    //   return $link;
+    // }, 10, 3);
+
+    // add_filter('post_link', function($link, $post, $leavename) {
+    //   pre_dump($link);
+    //   return $link;
+    // }, 10, 3);
+
+    // add_filter('post_type_link', function($link, $post, $leavename) {
+    //   pre_dump($link);
+    //   return $link;
+    // }, 10, 3);
+
+
+    // add_filter('posts_join', function($join, $query) {
+    //   if( $query->is_single() ) {
+    //     pre_dump(['join' => $join]);
+    //   }
+    //   return $join;
+    // }, 10, 2);
+
+    // add_filter('posts_where', function($where, $query) {
+    //   if( is_admin() ) return $where;
+    //   if( $query->is_single() ) {
+    //     pre_dump(['where' => $where]);
+    //   }
+    //   return $where;
+    // }, 10, 2);
+  }
+
+  /**
+   * Return Plugin Prefix
+   *
+   * @return void
+   */
+  public function get_prefix() {
+    return $this->prefix;
   }
 
   /**

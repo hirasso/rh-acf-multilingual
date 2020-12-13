@@ -9,6 +9,8 @@ export default class ACFL {
   constructor() {
     $(document).ready(() => this.onDocReady());
     this.acfWysiwyg();
+    $('body').toggleClass('supports-acfl-title', $('.acfl-title').length > 0 );
+    // $('#edit-slug-box').clone(true).appendTo($('.acfl-title .acf-fields .acf-input:first'));
     // Cookie.set('rh-acfl-admin-language', 'en');
   }
 
@@ -28,18 +30,18 @@ export default class ACFL {
       const $el = $(e.target);
       $el.blur();
       const language = $el.attr('data-language');
-      this.switchLanguage($el.parents('.acfl-group:first'), language);
+      this.switchLanguage($el.parents('.acfl-translatable-field:first'), language);
     });
     $(document).on('dblclick', '.acfl-tab', e => {
       e.preventDefault();
       const $el = $(e.target);
       const language = $el.attr('data-language');
-      this.switchLanguage($('.acfl-group'), language);
+      this.switchLanguage($('.acfl-translatable-field'), language);
     })
   }
 
   /**
-   * Switches the language for an .acfl-group
+   * Switches the language for an .acfl-translatable-field
    * @param {jQuery Object} $el 
    * @param {String} language 
    */
@@ -56,27 +58,13 @@ export default class ACFL {
    * Prepare translatable WYSIWYG fields
    */
   acfWysiwyg() {
-    acf.addAction('wysiwyg_tinymce_init',(editor, id, mceInit, field) => {
-      // add a slug class on all wysiwyg fields (for editor-styles.css)
-      editor.on('init', () => this.addClassToAcfWysiwyg(field))
-    });
-  }
-
-  /**
-   * add the acf field's name slug a data-attribute to the iframe body
-   * @param {object} $field the acf field as a jQuery object
-   */
-  addClassToAcfWysiwyg(field) {
-    const $parent = field.$el.parents('.acfl-group');
-    if( !$parent.length ) return;
-    const fieldName = $parent.attr('data-name');
-    const fieldLanguage = field.$el.attr('data-name');
-    const $iframe = $('iframe', field.$el).contents();
-    const $html = $iframe.find('html');
-    const $body = $iframe.find('body');
-    $html.attr('lang', fieldLanguage);
-    $body.attr('data-field-name', fieldName);
-    $body.attr('data-language', fieldLanguage);
+    acf.addFilter('wysiwyg_tinymce_settings', (init, id, field) => {
+      const $parent = field.$el.parents('.acfl-translatable-field');
+      if( !$parent.length ) return init;
+      const fieldNameClass = $parent.attr('data-name').split('_').join('-');
+      init.body_class += ` acf-wysiwyg--${fieldNameClass}`;
+      return init;
+    })
   }
 
   /**

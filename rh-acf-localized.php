@@ -16,15 +16,17 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  */
 require_once(__DIR__ . '/inc/class.singleton.php');
 require_once(__DIR__ . '/inc/class.acfl.php');
-require_once(__DIR__ . '/inc/class.acf-controls.php');
+require_once(__DIR__ . '/inc/class.translatable-fields.php');
 require_once(__DIR__ . '/inc/class.admin.php');
+require_once(__DIR__ . '/inc/class.titles.php');
 
 /**
  * Initialize classes
  */
 ACFL::getInstance();
-AcfControls::getInstance();
+TranslatableFields::getInstance();
 Admin::getInstance();
+Titles::getInstance();
 
 /**
  * Make main instance available API calls
