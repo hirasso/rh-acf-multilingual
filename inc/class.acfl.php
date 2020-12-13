@@ -24,7 +24,7 @@ class ACFL extends Singleton {
     add_action('admin_head', [$this, 'admin_head']);
     // add_filter('pre_get_posts', [$this, 'prepare_query']);
     // add_action('request', [$this, 'filter_request'], 5);
-    add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
+    
     
     // add_filter('page_link', function($link, $post_id, $sample) {
     //   pre_dump($link);
@@ -566,21 +566,7 @@ class ACFL extends Singleton {
     return count($posts) ? array_shift($posts) : null;
   }
 
-  /**
-   * Filter title
-   *
-   * @param String $title
-   * @param Int $post_id
-   * @return String
-   */
-  public function filter_post_title($title, $post_id) {
-    $language = $this->get_language();
-    if( $language === $this->get_default_language() ) return $title;
-    if( $translated_title = get_field("title_$language", $post_id) ) {
-      $title = $translated_title;
-    }
-    return $title;
-  }
+  
 
   
 }

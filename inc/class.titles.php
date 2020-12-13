@@ -11,6 +11,7 @@ class Titles extends Singleton {
   public function __construct() {
     $this->prefix = acfl()->get_prefix();
     add_action('init', [$this, 'init'], PHP_INT_MAX);
+    add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
   }
 
   public function init() {
@@ -57,4 +58,21 @@ class Titles extends Singleton {
     ));
   }
 
+  /**
+   * Filter title
+   *
+   * @param String $title
+   * @param Int $post_id
+   * @return String
+   */
+  public function filter_post_title($title, $post_id) {
+    $acfl_title = get_field('acfl_title', $post_id);
+    return $acfl_title ? $acfl_title : $title;
+    // $language = $this->get_language();
+    // if( $language === $this->get_default_language() ) return $title;
+    // if( $translated_title = get_field("title_$language", $post_id) ) {
+    //   $title = $translated_title;
+    // }
+    // return $title;
+  }
 }

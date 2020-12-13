@@ -13,6 +13,9 @@
     @include visually-hidden;
   }
 }
+.acfl-field > .acf-input > .acf-input-wrap {
+  overflow: visible;
+}
 .acfl-field > .acf-label {
   display: none;
 }
