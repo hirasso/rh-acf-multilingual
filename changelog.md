@@ -1,6 +1,7 @@
-#### 0.0.1 (2020-12-13)
+#### 0.0.1 (2020-12-14)
 
-- Re-organization (#dfa6ec9)
+- load defaults, cleanup (#974b780)
+- Re-organization (#64b2867)
 - add edit tags support (#4caef61)
 - wp_insert_post_data inject acfml_title (#62d9693)
 - rename from 'acfl' to 'acfml' (#2f0823b)

@@ -8,14 +8,23 @@ class Translatable_Term_Titles extends Singleton {
   
   private $prefix;
   private $default_language;
+  private $field_postfix = "term_name";
+  private $field_name;
+  private $field_key;
 
   public function __construct() {
+    
     $this->prefix = acfml()->get_prefix();
     $this->default_language = acfml()->get_default_language();
+    $this->field_name = "{$this->prefix}_{$this->field_postfix}";
+    $this->field_key = "field_{$this->field_name}";
+    $this->field_group_key = "group_{$this->field_name}";
+
     add_action('init', [$this, 'init'], PHP_INT_MAX);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
     add_filter('pre_insert_term', [$this, 'pre_insert_term'], 10, 2);
     add_filter('get_term', [$this, 'get_term'], 10, 2);
+    add_action("acf/load_value/key={$this->field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
   }
 
   public function init() {
@@ -30,7 +39,6 @@ class Translatable_Term_Titles extends Singleton {
    */
   private function add_title_field_group() {
     
-    $field_group_key = "{$this->prefix}_group_term_title";
     $taxonomies = $this->get_translatable_taxonomies();
     
     // bail early if no post types support `translatable-title`
@@ -48,7 +56,7 @@ class Translatable_Term_Titles extends Singleton {
     }
     
     acf_add_local_field_group([
-      'key' => $field_group_key,
+      'key' => $this->field_group_key,
       'title' => __('Name'),
       'menu_order' => -1000,
       'style' => 'seamless',
@@ -57,16 +65,16 @@ class Translatable_Term_Titles extends Singleton {
     ]);
 
     acf_add_local_field(array(
-      'key' => "field_{$this->prefix}_term_name",
+      'key' => $this->field_key,
       'label' => __('Name'),
       'instructions' => __('The name is how it appears on your site.'),
-      'name' => "{$this->prefix}_term_name",
+      'name' => $this->field_name,
       'type' => 'text',
       'is_translatable' => true,
       'required' => true,
-      'parent' => $field_group_key,
+      'parent' => $this->field_group_key,
       'wrapper' => [
-        'class' => "$this->prefix-term-name"
+        'class' => str_replace('_', '-', $this->field_name)
       ]
     ));
 
@@ -102,8 +110,8 @@ class Translatable_Term_Titles extends Singleton {
    * @return void
    */
   public function pre_insert_term( $term, $taxonomy ) {
-    $default_language_term_name = $_POST["acf"]["field_{$this->prefix}_term_name"]["field_{$this->prefix}_term_name_{$this->default_language}"] ?? null;
-    if( !$term && $default_language_term_name ) $term = $default_language_term_name;
+    $default_language_name = $_POST["acf"][$this->field_key]["{$this->field_key}_{$this->default_language}"] ?? null;
+    if( !$term && $default_language_name ) $term = $default_language_name;
     return $term;
   }
 
@@ -116,9 +124,30 @@ class Translatable_Term_Titles extends Singleton {
    */
   public function get_term($term, $taxonomy) {
     $language = acfml()->get_language();
-    if( $custom_name = get_field("acfml_title", $term) ) {
+    if( $custom_name = get_field($this->field_name, $term) ) {
       $term->name = $custom_name;
     }
     return $term;
+  }
+
+  /**
+   * Load Default Value
+   *
+   * @param Mixed $value
+   * @param Int $post_id
+   * @param Array $field
+   * @return Mixed
+   */
+  public function load_default_value( $value, $post_id, $field ) {
+    global $pagenow, $taxonomy;
+    if( $value ) return $value;
+    if( !in_array($pagenow, ['term.php']) ) return $value;
+    if( is_string($post_id) && strpos($post_id, '_') !== false ) {
+      $term_id = explode('_', $post_id)[1];
+      remove_filter('get_term', [$this, 'get_term']);
+      $value = get_term(intval($term_id), $taxonomy)->name;
+      add_filter('get_term', [$this, 'get_term'], 10, 2);
+    }
+    return $value;
   }
 }
