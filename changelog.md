@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-14)
 
-- cleanup (#dac71f3)
+- Render sample permalink if ready (#37a6b7a)
+- cleanup (#084037c)
 - load defaults, cleanup (#c696f40)
 - Re-organization (#64b2867)
 - add edit tags support (#4caef61)

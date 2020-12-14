@@ -23,7 +23,7 @@ class Translatable_Post_Titles extends Singleton {
     add_action('init', [$this, 'init'], PHP_INT_MAX);
     add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
-    add_action("acf/render_field/key={$this->field_key}", [$this, 'render_slug_input']);
+    add_action("acf/render_field/key={$this->field_key}", [$this, 'render_slug_box']);
     add_action("acf/load_value/key={$this->field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
     add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
   }
@@ -104,17 +104,22 @@ class Translatable_Post_Titles extends Singleton {
   }
 
   /**
-   * Renders the slug input
+   * Renders the slug box. 
+   * Inspired by code found in /wp-admin/edit-form-advanced.php
    *
    * @param Array $field
    * @return void
    */
-  public function render_slug_input($field) {
+  public function render_slug_box($field) {
     global $pagenow, $post_type, $post_type_object, $post;
     if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return;
     if( !is_post_type_viewable( $post_type_object ) ) return;
-    if( !current_user_can( $post_type_object->cap->publish_posts ) ) return; ?>
-    <div id="edit-slug-box" class="hide-if-no-js"></div>
+    if( !current_user_can( $post_type_object->cap->publish_posts ) ) return;
+    $sample_permalink_html = $post_type_object->public ? get_sample_permalink_html( $post->ID ) : ''; 
+    ?>
+    <div id="edit-slug-box" class="hide-if-no-js">
+    <?php if( $sample_permalink_html && 'auto-draft' !== get_post_status($post) ) echo $sample_permalink_html; ?>
+    </div>
     <?php echo wp_nonce_field( 'samplepermalink', 'samplepermalinknonce', false, false );
   }
 
