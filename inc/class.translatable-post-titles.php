@@ -34,6 +34,9 @@ class Translatable_Post_Titles extends Singleton {
    * @return void
    */
   public function init() {
+    foreach( $this->get_translatable_post_types() as $post_type ) {
+      remove_post_type_support($post_type, 'title');
+    }
     $this->add_title_field_group();
   }
 
@@ -93,7 +96,8 @@ class Translatable_Post_Titles extends Singleton {
       'required' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
-        'class' => str_replace('_', '-', $this->field_name)
+        'class' => str_replace('_', '-', $this->field_name),
+        'id' => 'titlediv',
       ]
     ));
 
@@ -109,17 +113,9 @@ class Translatable_Post_Titles extends Singleton {
     global $pagenow, $post_type, $post_type_object, $post;
     if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return;
     if( !is_post_type_viewable( $post_type_object ) ) return;
-    if( !current_user_can( $post_type_object->cap->publish_posts ) ) return;
-    if( in_array(get_post_status( $post ), ['pending', 'auto-draft']) )  return;
-
-    $sample_permalink_html = get_sample_permalink_html( $post->ID );
-    if( !$sample_permalink_html ) return;
-    ob_start() ?>
-    <div id="edit-slug-box" class="hide-if-no-js">
-      <?= $sample_permalink_html ?>
-    </div>
-    <?= wp_nonce_field( 'samplepermalink', 'samplepermalinknonce', false, false ); ?>
-    <?php echo ob_get_clean();
+    if( !current_user_can( $post_type_object->cap->publish_posts ) ) return; ?>
+    <div id="edit-slug-box" class="hide-if-no-js"></div>
+    <?php echo wp_nonce_field( 'samplepermalink', 'samplepermalinknonce', false, false );
   }
 
   /**
@@ -144,7 +140,10 @@ class Translatable_Post_Titles extends Singleton {
    */
   public function load_default_value( $value, $post_id, $field ) {
     if($value) return $value;
-    $value = get_the_title($post_id);
+    $post_status = get_post_status($post_id);
+    if( !in_array($post_status, ['auto-draft']) ) {
+      $value = get_the_title($post_id);
+    }
     return $value;
   }
 

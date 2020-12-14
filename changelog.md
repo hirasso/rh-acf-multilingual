@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-14)
 
-- load defaults, cleanup (#974b780)
+- cleanup (#dac71f3)
+- load defaults, cleanup (#c696f40)
 - Re-organization (#64b2867)
 - add edit tags support (#4caef61)
 - wp_insert_post_data inject acfml_title (#62d9693)

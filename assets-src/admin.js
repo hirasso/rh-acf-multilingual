@@ -7,18 +7,11 @@ import './scss/admin.scss';
 export default class ACFML {
 
   constructor() {
-    $(document).ready(() => this.onDocReady());
-    this.acfWysiwyg();
-    // $('#edit-slug-box').clone(true).appendTo($('.acfml-title .acf-fields .acf-input:first'));
-    // Cookie.set('rh-acfml-admin-language', 'en');
-  }
-
-  /**
-   * This runs on doc ready
-   */
-  onDocReady() {
-    this.initTitleField();
+    this.initTranslatableWysiwyg();
+    this.initTranslatablePostTitle();
+    this.initTranslatableTermName();
     this.initLanguageTabs();
+    // Cookie.set('rh-acfml-admin-language', 'en');
   }
 
   /**
@@ -57,7 +50,7 @@ export default class ACFML {
   /**
    * Prepare translatable WYSIWYG fields
    */
-  acfWysiwyg() {
+  initTranslatableWysiwyg() {
     acf.addFilter('wysiwyg_tinymce_settings', (init, id, field) => {
       const $parent = field.$el.parents('.acfml-translatable-field');
       if( !$parent.length ) return init;
@@ -67,10 +60,22 @@ export default class ACFML {
     })
   }
 
-  initTitleField() {
-    const $titleField = $('.acf-field-acfml-term-name');
-    if( !$titleField.length ) return;
-    $('.form-field.term-name-wrap').remove();
+  /**
+   * Translatable Post Titles
+   */
+  initTranslatablePostTitle() {
+    acf.addAction(`ready_field/key=field_acfml_post_title_${acfml.defaultLanguage}`, $field => {
+      $field.$input().attr('id', 'title');
+    });
+  }
+
+  /**
+   * Translatable Term Names
+   */
+  initTranslatableTermName() {
+    acf.addAction('ready_field/key=field_acfml_term_name', $field => {
+      $('.form-field.term-name-wrap').remove();
+    })
   }
 
   /**

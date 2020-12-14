@@ -115,7 +115,7 @@ class Translatable_Fields extends Singleton {
       'wrapper' => [
         'width' >= $field['wrapper']['width'],
         'class' => $field['wrapper']['class'] . " acfml-translatable-field",
-        'id' >= $field['wrapper']['id'],
+        'id' => $field['wrapper']['id'],
       ],
     ]);
     return $field;

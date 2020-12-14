@@ -102,10 +102,12 @@ class ACFML extends Singleton {
    * @return String
    */
   private function get_admin_inline_script() {
-    ?><script><?php ob_start() ?>
-    var ACFML = {
-      foo: 'bar'
-    };
+    $settings = [
+      'defaultLanguage' => $this->get_default_language(),
+      'languages' => $this->get_languages(),
+    ];
+    ?><script id="acfml-settings"><?php ob_start() ?>
+    var acfml = <?= json_encode($settings) ?>;
     <?php $script = ob_get_clean(); ?></script><?php return $script;
   }
 
