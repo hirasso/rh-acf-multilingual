@@ -66,6 +66,7 @@ export default class ACFML {
   initTranslatablePostTitle() {
     acf.addAction(`ready_field/key=field_acfml_post_title_${acfml.defaultLanguage}`, $field => {
       $field.$input().attr('id', 'title');
+      if( !acfml.isMobile && !$field.val() ) $field.$input().focus();
     });
   }
 

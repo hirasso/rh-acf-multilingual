@@ -85,7 +85,7 @@ class Translatable_Fields extends Singleton {
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfml-field';
       // if the current sub-field is the same as the $admin_language, show it by default
-      if( $lang === $admin_language ) $wrapper['class'] .= ' is-visible';
+      if( $lang === $default_language ) $wrapper['class'] .= ' is-visible';
       if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang}";
       $wrapper['width'] = '';
       // prepare subfield
@@ -166,19 +166,16 @@ class Translatable_Fields extends Singleton {
    */
   public function render_translatable_field( $field ) {
     if( !$this->is_acfml_group($field) ) return;
-    $current_language = acfml()->get_admin_language();
+    $default_language = acfml()->get_default_language();
     $languages = acfml()->get_languages();
     ob_start(); ?>
     <div class="acfml-tabs-wrap">
       <div class="acfml-tabs acf-js-tooltip" title="<?= __('Double-click to switch globally', $this->prefix) ?>">
       <?php foreach( $languages as $language ) : ?>
-      <a href="##" class="acfml-tab <?= $language['iso'] === $current_language ? 'is-active' : '' ?>" data-language="<?= $language['iso'] ?>">
+      <a href="##" class="acfml-tab <?= $language['iso'] === $default_language ? 'is-active' : '' ?>" data-language="<?= $language['iso'] ?>">
         <?= $language['name'] ?>
       </a>
       <?php endforeach; ?>
-      <!-- <span class="dashicons dashicons-info acf-js-tooltip acfml-info-icon" 
-        title="<?= __('Double-click a language to switch all translatable fields', $this->prefix) ?>">
-      </span> -->
       </div>
     </div>
     <?php echo ob_get_clean();

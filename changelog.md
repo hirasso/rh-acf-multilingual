@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-14)
 
-- Render sample permalink if ready (#37a6b7a)
+- Cleanup (#fcfb414)
+- Render sample permalink if ready (#7947f56)
 - cleanup (#084037c)
 - load defaults, cleanup (#c696f40)
 - Re-organization (#64b2867)

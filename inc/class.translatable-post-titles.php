@@ -23,7 +23,7 @@ class Translatable_Post_Titles extends Singleton {
     add_action('init', [$this, 'init'], PHP_INT_MAX);
     add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
-    add_action("acf/render_field/key={$this->field_key}", [$this, 'render_slug_box']);
+    add_action("acf/render_field/key={$this->field_key}", [$this, 'render_field']);
     add_action("acf/load_value/key={$this->field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
     add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
   }
@@ -89,7 +89,7 @@ class Translatable_Post_Titles extends Singleton {
       'key' => $this->field_key,
       'label' => 'Title',
       'instructions' => $instructions,
-      'placeholder' => __('Title'),
+      'placeholder' => __( 'Add title' ),
       'name' => $this->field_name,
       'type' => 'text',
       'is_translatable' => true,
@@ -104,13 +104,23 @@ class Translatable_Post_Titles extends Singleton {
   }
 
   /**
+   * Render the field
+   *
+   * @param Array $field
+   * @return void
+   */
+  public function render_field($field) {
+    $this->render_slug_box($field);
+  }
+
+  /**
    * Renders the slug box. 
    * Inspired by code found in /wp-admin/edit-form-advanced.php
    *
    * @param Array $field
    * @return void
    */
-  public function render_slug_box($field) {
+  private function render_slug_box($field) {
     global $pagenow, $post_type, $post_type_object, $post;
     if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return;
     if( !is_post_type_viewable( $post_type_object ) ) return;

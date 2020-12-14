@@ -105,6 +105,7 @@ class ACFML extends Singleton {
     $settings = [
       'defaultLanguage' => $this->get_default_language(),
       'languages' => $this->get_languages(),
+      'isMobile' => wp_is_mobile()
     ];
     ?><script id="acfml-settings"><?php ob_start() ?>
     var acfml = <?= json_encode($settings) ?>;
