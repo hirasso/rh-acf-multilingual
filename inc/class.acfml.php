@@ -1,6 +1,6 @@
 <?php 
 
-namespace R\ACFML;
+namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
@@ -14,10 +14,9 @@ class ACFML extends Singleton {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
     add_action('admin_notices', [$this, 'show_admin_notices']);
-    add_action('plugins_loaded', [$this, 'detect_language']); // maybe a better plpace is 'request' ?
-    add_filter('home_url', [$this, 'filter_home_url'], 10, 4);
+    add_action('plugins_loaded', [$this, 'detect_current_language']); // maybe a better plpace is 'request' ?
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX);
-    add_action('init', [$this, 'init']);
+    // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
@@ -25,21 +24,10 @@ class ACFML extends Singleton {
     // add_filter('pre_get_posts', [$this, 'prepare_query']);
     // add_action('request', [$this, 'filter_request'], 5);
     
-    
-    // add_filter('page_link', function($link, $post_id, $sample) {
-    //   pre_dump($link);
-    //   return $link;
-    // }, 10, 3);
-
-    // add_filter('post_link', function($link, $post, $leavename) {
-    //   pre_dump($link);
-    //   return $link;
-    // }, 10, 3);
-
-    // add_filter('post_type_link', function($link, $post, $leavename) {
-    //   pre_dump($link);
-    //   return $link;
-    // }, 10, 3);
+    add_filter('page_link', [$this, 'page_link'], 10, 3);
+    add_filter('post_link', [$this, 'post_link'], 10, 3);
+    add_filter('post_type_link', [$this, 'post_type_link'], 10, 3);
+    add_filter('term_link', [$this, 'term_link'], 10, 3);
 
 
     // add_filter('posts_join', function($join, $query) {
@@ -68,12 +56,12 @@ class ACFML extends Singleton {
   }
 
   /**
-   * Init
+   * flush_rewrite_rules
    *
    * @return void
    */
-  public function init() {
-    // flush_rewrite_rules(true);
+  public function flush_rewrite_rules() {
+    flush_rewrite_rules(true);
   }
 
   /**
@@ -113,35 +101,23 @@ class ACFML extends Singleton {
   }
 
   /**
-   * Hook for admin_head
+   * Get the home url in the requested or the default language
    *
-   * @return void
-   */
-  public function admin_head() {
-    // echo $this->get_admin_inline_style();
-  }
-
-  /**
-   * Get admin inline style
-   *
+   * @param String|Null $lang
    * @return String
    */
-  private function get_admin_inline_style() {
-    $admin_language = $this->get_admin_language();
-    ob_start() ?>
-    <style id="<?= $this->prefix ?>-admin-style">
-      .acfml-field[data-name=<?= $admin_language ?>] {
-        display: block !important;
-      }
-    </style>
-    <?php return ob_get_clean();
+  public function home_url($lang = null) {
+    $home_url = home_url();
+    if( !$lang ) $lang = $this->get_current_language();
+    if( $lang === $this->get_default_language() ) return $home_url;
+    return "$home_url/$lang";
   }
 
   /**
    * Helper function to get versioned asset urls
    *
-   * @param [type] $path
-   * @return void
+   * @param String $path
+   * @return String
    */
   private function asset_uri( $path ) {
     $uri = plugins_url( $path, __DIR__ );
@@ -154,7 +130,7 @@ class ACFML extends Singleton {
   }
 
   /**
-   * Helper function to get a file path inside this plugin's folder
+   * Helper function to get a file path inside this plugin's root folder
    *
    * @return void
    */
@@ -200,57 +176,6 @@ class ACFML extends Singleton {
     include( $path );
     return ob_get_clean();
   }
-
-  /**
-   * Check if on acf options page
-   *
-   * @return boolean
-   */
-  public function is_admin_acf_options_page() {
-    if( !function_exists('acf_get_options_page') ) return false;
-    if( !$slug = $_GET['page'] ?? null ) return false;
-    if( !$options_page = acf_get_options_page($slug) ) return false;
-    $prepare_slug = preg_replace( "/[\?|\&]page=$slug/", "", basename( $_SERVER['REQUEST_URI'] ) );
-    if( !empty($options_page['parent_slug']) && $options_page['parent_slug'] !== $prepare_slug ) return false;
-    return true;
-  }
-
-  /**
-   * Adds an admin notice
-   *
-   * @param string $key
-   * @param string $message
-   * @param string $type
-   * @return void
-   */
-  public function add_admin_notice( $key, $message, $type = 'warning', $is_dismissible = false ) {
-    $notices = get_transient("$this->prefix-admin-notices");
-    if( !$notices ) $notices = [];
-    $notices[$key] = [
-      'message' => $message,
-      'type' => $type,
-      'is_dismissible' => $is_dismissible
-    ];
-    set_transient("$this->prefix-admin-notices", $notices);
-  }
-  
-  /**
-   * Shows admin notices from transient
-   *
-   * @return void
-   */
-  public function show_admin_notices() {
-    $notices = get_transient("$this->prefix-admin-notices");
-    delete_transient("$this->prefix-admin-notices");
-    if( !is_array($notices) ) return;
-    foreach( $notices as $notice ) {
-      ob_start() ?>
-      <div class="notice notice-<?= $notice['type'] ?> <?= $notice['is_dismissible'] ? 'is-dismissible' : '' ?>">
-        <p><?= $notice['message'] ?></p>
-      </div>
-      <?php echo ob_get_clean();
-    }
-  }
   
   /**
    * Get all activated languages
@@ -288,7 +213,7 @@ class ACFML extends Singleton {
    * Get information for a language iso key
    *
    * @param String $lang_iso    e.g. 'en' or 'de'
-   * @return void
+   * @return Mixed
    */
   private function get_language_information($lang_iso) {
     foreach( $this->get_languages() as $language ) {
@@ -311,7 +236,7 @@ class ACFML extends Singleton {
    *
    * @return String
    */
-  public function detect_language() {
+  public function detect_current_language() {
     if( $this->is_frontend() ) {
       $language = $this->get_language_in_url($this->get_current_url());
       if( !$language ) $language = $this->get_default_language();
@@ -340,7 +265,7 @@ class ACFML extends Singleton {
    *
    * @return String
    */
-  public function get_language() {
+  public function get_current_language() {
     return $this->language ?: $this->get_default_language();
   }
 
@@ -352,22 +277,14 @@ class ACFML extends Singleton {
    * @return void
    */
   public function convert_url($url, $requested_language) {
-    
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
     // get language from requested URL
     $language_in_url = $this->get_language_in_url($url);
-    // get the unfiltered home url
-    $raw_home_url = $this->get_raw_home_url();
-    $search_home_url = $raw_home_url;
-    $new_home_url = $raw_home_url;
-    // add the $requested_language to the new URL, if it's not the default
-    if( $requested_language !== $this->get_default_language() ) {
-      $new_home_url = trailingslashit($raw_home_url) . $requested_language;
-    }
-    // append url language to the search if present
-    if( $language_in_url ) $search_home_url .= "/$language_in_url";
-    $url = str_replace($search_home_url, $new_home_url, $url);
+    if( !$language_in_url ) $language_in_url = $this->get_default_language();
+    $current_home_url = $this->home_url($language_in_url);
+    $new_home_url = $this->home_url($requested_language);
+    $url = str_replace($current_home_url, $new_home_url, $url);
     return $url;
   }
 
@@ -426,7 +343,7 @@ class ACFML extends Singleton {
    */
   public function filter_frontend_locale($locale) {
     if( !$this->is_frontend() ) return $locale;
-    return str_replace('_', '-', $this->get_language_information($this->get_language())['locale']);
+    return str_replace('_', '-', $this->get_language_information($this->get_current_language())['locale']);
   }
 
   /**
@@ -439,7 +356,13 @@ class ACFML extends Singleton {
    * @return String
    */
   public function filter_home_url($url, $path, $orig_scheme, $blog_id) {
-    $url = $this->convert_url($url, $this->get_language());
+    global $pagenow;
+    return $url;
+    // don't filter the $url if probably saving to .htaccess
+    // if ( function_exists( 'save_mod_rewrite_rules' ) ) return $url;
+    // dont't filter on some admin pages at all
+    if( in_array($pagenow, ['options-permalink.php']) ) return $url;
+    $url = $this->convert_url($url, $this->get_current_language());
     return $url;
   }
 
@@ -529,7 +452,7 @@ class ACFML extends Singleton {
       }
     }
 
-    $language = $this->get_language();
+    $language = $this->get_current_language();
     // return early if default language
     if( $language === $this->get_default_language() ) return $query;
 
@@ -569,7 +492,53 @@ class ACFML extends Singleton {
     return count($posts) ? array_shift($posts) : null;
   }
 
-  
+  /**
+   * Filters a page link (for built-in post type 'page')
+   *
+   * @param String $link
+   * @param Int $post_id
+   * @param Boolean $sample
+   * @return String
+   */
+  public function page_link($link, $post_id, $sample) {
+    return $this->convert_url($link, $this->get_current_language());
+  }
 
+  /**
+   * Filters a post link (for built-in posts)
+   *
+   * @param String $link
+   * @param Int $post_id
+   * @param Boolean $sample
+   * @return String
+   */
+  public function post_link($link, $post_id, $sample) {
+    
+    return $this->convert_url($link, $this->get_current_language());
+  }
+
+  /**
+   * filters a post type link
+   *
+   * @param String $link
+   * @param WP_Post $post
+   * @param Boolean $leavename
+   * @return String
+   */
+  public function post_type_link($link, $post, $leavename) {
+    return $this->convert_url($link, $this->get_current_language());
+  }
+
+  /**
+   * filters a term link
+   *
+   * @param String $link
+   * @param WP_Term $term
+   * @param String $taxonomy
+   * @return String
+   */
+  public function term_link($link, $term, $taxonomy) {
+    return $this->convert_url($link, $this->get_current_language());
+  }
   
 }

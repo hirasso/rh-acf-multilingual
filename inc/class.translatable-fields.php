@@ -1,6 +1,6 @@
 <?php 
 
-namespace R\ACFML;
+namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
@@ -152,7 +152,7 @@ class Translatable_Fields extends Singleton {
    */
   public function format_translatable_field_value( $value, $post_id, $field ) {
     if( !$this->is_acfml_group($field) ) return $value;
-    $language = acfml()->get_language();
+    $language = acfml()->get_current_language();
     $default_language = acfml()->get_default_language();
     $value = !empty($value[$language]) ? $value[$language] : ($value[$default_language] ?? null);
     return $value;
@@ -191,9 +191,14 @@ class Translatable_Fields extends Singleton {
     return is_array($field) && $field['type'] === 'group' && !empty($field['is_translatable']);
   }
 
+  /**
+   * Filter field wrapper
+   *
+   * @param Array $wrapper
+   * @param Array $field
+   * @return Array
+   */
   public function acf_field_wrapper_attributes($wrapper, $field) {
-    if( $field['_name'] !== 'a_translatable_field_en' ) return $wrapper;
-    // pre_dump([$field]);
     return $wrapper;
   }
   

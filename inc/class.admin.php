@@ -1,6 +1,6 @@
 <?php 
 
-namespace R\ACFML;
+namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
@@ -33,6 +33,43 @@ class Admin extends Singleton {
     }
     
     return $slug;
+  }
+
+  /**
+   * Adds an admin notice
+   *
+   * @param string $key
+   * @param string $message
+   * @param string $type
+   * @return void
+   */
+  public function add_admin_notice( $key, $message, $type = 'warning', $is_dismissible = false ) {
+    $notices = get_transient("$this->prefix-admin-notices");
+    if( !$notices ) $notices = [];
+    $notices[$key] = [
+      'message' => $message,
+      'type' => $type,
+      'is_dismissible' => $is_dismissible
+    ];
+    set_transient("$this->prefix-admin-notices", $notices);
+  }
+
+  /**
+   * Shows admin notices from transient
+   *
+   * @return void
+   */
+  public function show_admin_notices() {
+    $notices = get_transient("$this->prefix-admin-notices");
+    delete_transient("$this->prefix-admin-notices");
+    if( !is_array($notices) ) return;
+    foreach( $notices as $notice ) {
+      ob_start() ?>
+      <div class="notice notice-<?= $notice['type'] ?> <?= $notice['is_dismissible'] ? 'is-dismissible' : '' ?>">
+        <p><?= $notice['message'] ?></p>
+      </div>
+      <?php echo ob_get_clean();
+    }
   }
 
 }

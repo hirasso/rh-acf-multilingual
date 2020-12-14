@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-14)
 
-- Cleanup (#fcfb414)
+- Better link filters (#aeac6be)
+- Cleanup (#ee104f8)
 - Render sample permalink if ready (#7947f56)
 - cleanup (#084037c)
 - load defaults, cleanup (#c696f40)

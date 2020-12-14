@@ -1,6 +1,6 @@
 <?php 
 
-namespace R\ACFML;
+namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
@@ -123,7 +123,7 @@ class Translatable_Term_Titles extends Singleton {
    * @return WP_Term
    */
   public function get_term($term, $taxonomy) {
-    $language = acfml()->get_language();
+    $language = acfml()->get_current_language();
     if( $custom_name = get_field($this->field_name, $term) ) {
       $term->name = $custom_name;
     }
