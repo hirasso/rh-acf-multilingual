@@ -1,13 +1,20 @@
 07.11.2020:
   ❍ Filter for canonical_redirect
-  ❍ Generator for Language Selector
+  ❍ Generator for Language Switcher
   ✔ Admin-JS and Styles
   ✔ Add acf filter for loading values in the frontend
   ✔ Maybe rename the whole thing
   ❍ Make Post Titles translatable
   ❍ Optional: Localized slugs
-    ❍ Generate slugs for each translated title
-    ❍ Unique Post Slugs
-    ❍ Filter Permalinks for custom slugs
+    ❍ Unique Slugs (!!)
+    ❍ get_page_by_path
+    ❍ Filter Post-/Page-/CPT-/Term-/Tag-Links for custom slugs
     ❍ Filter request for custom slugs
     ❍ Filter wp_old_slug_redirect
+    ❍ Convert URLs in text fields
+      ❍ Save full path for custom slugs
+      ❍ Unique > easy
+      ❍ Query for custom slug (full path)
+      ❍ No taxonomy support
+      ❍ use 'request' to fetch actual post by translated slug
+      ❍ Use the same functionality for URL paths in links

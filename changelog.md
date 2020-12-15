@@ -1,6 +1,7 @@
-#### 0.0.1 (2020-12-14)
+#### 0.0.1 (2020-12-15)
 
-- Better link filters (#aeac6be)
+- Add slugs (#e6c8ca6)
+- Better link filters (#4643582)
 - Cleanup (#ee104f8)
 - Render sample permalink if ready (#7947f56)
 - cleanup (#084037c)

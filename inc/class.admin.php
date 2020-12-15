@@ -6,8 +6,12 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class Admin extends Singleton {
   
+  private $prefix;
+
   public function __construct() {
+    $this->prefix = acfml()->get_prefix();
     add_filter('wp_unique_post_slug', [$this, 'unique_post_slug'], 10, 6);
+    add_action('admin_notices', [$this, 'show_admin_notices']);
   }
 
   /**

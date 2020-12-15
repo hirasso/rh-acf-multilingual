@@ -13,21 +13,27 @@ class Translatable_Term_Titles extends Singleton {
   private $field_key;
 
   public function __construct() {
-    
+    add_action('acf/init', [$this, 'init']);
+  }
+
+  public function init() {
+    // variables
     $this->prefix = acfml()->get_prefix();
     $this->default_language = acfml()->get_default_language();
+
     $this->field_name = "{$this->prefix}_{$this->field_postfix}";
     $this->field_key = "field_{$this->field_name}";
     $this->field_group_key = "group_{$this->field_name}";
 
-    add_action('init', [$this, 'init'], PHP_INT_MAX);
+    // hooks
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
     add_filter('pre_insert_term', [$this, 'pre_insert_term'], 10, 2);
+    add_filter('wp_update_term_data', [$this, 'update_term_data'], 10, 4);
+    // wp_update_term()
     add_filter('get_term', [$this, 'get_term'], 10, 2);
     add_action("acf/load_value/key={$this->field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
-  }
 
-  public function init() {
+    // methods
     $this->add_title_field_group();
   }
 
@@ -111,8 +117,23 @@ class Translatable_Term_Titles extends Singleton {
    */
   public function pre_insert_term( $term, $taxonomy ) {
     $default_language_name = $_POST["acf"][$this->field_key]["{$this->field_key}_{$this->default_language}"] ?? null;
-    if( !$term && $default_language_name ) $term = $default_language_name;
+    if( $default_language_name ) $term = $default_language_name;
     return $term;
+  }
+
+  /**
+   * Undocumented function
+   *
+   * @param [type] $data
+   * @param [type] $term_id
+   * @param [type] $taxonomy
+   * @param [type] $args
+   * @return void
+   */
+  public function update_term_data($data, $term_id, $taxonomy, $args) {
+    $default_language_name = $_POST["acf"][$this->field_key]["{$this->field_key}_{$this->default_language}"] ?? null;
+    if( $default_language_name ) $data['name'] = $default_language_name;
+    return $data;
   }
 
   /**
@@ -123,6 +144,8 @@ class Translatable_Term_Titles extends Singleton {
    * @return WP_Term
    */
   public function get_term($term, $taxonomy) {
+    global $pagenow;
+    if( $pagenow === 'term.php' ) return $term;
     $language = acfml()->get_current_language();
     if( $custom_name = get_field($this->field_name, $term) ) {
       $term->name = $custom_name;

@@ -37,7 +37,7 @@ class Translatable_Fields extends Singleton {
     // filter field wrapper attributes
     // add_filter("acf/field_wrapper_attributes", [$this, 'acf_field_wrapper_attributes'], 10, 2);
     // add hooks for generated translatable fields (type of those will be 'group')
-    add_filter("acf/format_value/type=group", [$this, 'format_translatable_field_value'], 11, 3);
+    add_filter("acf/format_value/type=group", [$this, 'format_translatable_field_value'], 12, 3);
     add_action("acf/render_field/type=group", [$this, 'render_translatable_field'], 5);
     add_filter("acf/load_value/type=group", [$this, 'load_translatable_field_value'], 10, 3);
   }
@@ -79,26 +79,31 @@ class Translatable_Fields extends Singleton {
     $admin_language = acfml()->get_admin_language();
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
+
+    $languages = acfml()->get_languages();
+
+    if( $field['hide_default_language'] ?? null ) $languages = acfml()->get_non_default_languages();
     
-    foreach( acfml()->get_languages('iso') as $lang ) {
+    foreach( $languages as $id => $lang ) {
+      $lang_iso = $lang['iso'];
       // prepare wrapper
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfml-field';
-      // if the current sub-field is the same as the $admin_language, show it by default
-      if( $lang === $default_language ) $wrapper['class'] .= ' is-visible';
-      if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang}";
+      if( $id === 0 ) $wrapper['class'] .= ' is-visible';
+      if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang_iso}";
       $wrapper['width'] = '';
       // prepare subfield
       $sub_field = array_merge($field, [
-        'key' => "{$field['key']}_{$lang}",
-        'label' => "{$field['label']} ({$lang})",
-        'name' => "{$field['name']}_{$lang}",
-        '_name' => "$lang",
+        'key' => "{$field['key']}_{$lang_iso}",
+        'label' => "{$field['label']} ({$lang_iso})",
+        'name' => "{$field['name']}_{$lang_iso}",
+        '_name' => "$lang_iso",
         // Only the default language of a sub-field should be required
-        'required' => $lang === $default_language && $field['required'],
+        'required' => $lang_iso === $default_language && $field['required'],
         'is_translatable' => 0,
         'wrapper' => $wrapper
       ]);
+      
       // add the subfield
       $sub_fields[] = $sub_field;
     }
@@ -121,6 +126,7 @@ class Translatable_Fields extends Singleton {
     return $field;
   }
 
+
   /**
    * Automatically loads possible value of previously non-translatable field
    * to the sub_field assigned to the default language
@@ -133,6 +139,7 @@ class Translatable_Fields extends Singleton {
   public function load_translatable_field_value( $value, $post_id, $field ) {
     // bail early if field is empty or not translatable
     if( !$this->is_acfml_group($field) ) return $value;
+    // parse value from before the field became translatable to the default value
     $default_language = acfml()->get_default_language();
     if( is_string($value) && strlen($value) > 0 ) {
       add_filter("acf/load_value/key={$field['key']}_$default_language", function() use ($value) {
@@ -168,11 +175,13 @@ class Translatable_Fields extends Singleton {
     if( !$this->is_acfml_group($field) ) return;
     $default_language = acfml()->get_default_language();
     $languages = acfml()->get_languages();
+    // maybe remove default language
+    if( $field['hide_default_language'] ?? null ) $languages = acfml()->get_non_default_languages();
     ob_start(); ?>
     <div class="acfml-tabs-wrap">
       <div class="acfml-tabs acf-js-tooltip" title="<?= __('Double-click to switch globally', $this->prefix) ?>">
-      <?php foreach( $languages as $language ) : ?>
-      <a href="##" class="acfml-tab <?= $language['iso'] === $default_language ? 'is-active' : '' ?>" data-language="<?= $language['iso'] ?>">
+      <?php foreach( $languages as $id => $language ) : ?>
+      <a href="##" class="acfml-tab <?= $id === 0 ? 'is-active' : '' ?>" data-language="<?= $language['iso'] ?>">
         <?= $language['name'] ?>
       </a>
       <?php endforeach; ?>

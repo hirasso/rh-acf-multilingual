@@ -68,6 +68,10 @@ export default class ACFML {
       $field.$input().attr('id', 'title');
       if( !acfml.isMobile && !$field.val() ) $field.$input().focus();
     });
+    acf.addAction(`ready_field/key=field_acfml_slug_${acfml.defaultLanguage}`, $field => {
+      $field.$input().attr('id', 'post_name');
+      $('.postbox#slugdiv').remove();
+    });
   }
 
   /**

@@ -12,20 +12,11 @@ class Translatable_Post_Titles extends Singleton {
   private $field_name;
   private $field_key;
 
-  public function __construct() {
-    
-    $this->prefix = acfml()->get_prefix();
-    $this->default_language = acfml()->get_default_language();
-    $this->field_name = "{$this->prefix}_{$this->field_postfix}";
-    $this->field_key = "field_{$this->field_name}";
-    $this->field_group_key = "group_{$this->field_name}";
+  private $slug_field_name;
+  private $slug_field_key;
 
-    add_action('init', [$this, 'init'], PHP_INT_MAX);
-    add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
-    add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
-    add_action("acf/render_field/key={$this->field_key}", [$this, 'render_field']);
-    add_action("acf/load_value/key={$this->field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
-    add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
+  public function __construct() {
+    add_action('acf/init', [$this, 'init']);
   }
 
   /**
@@ -34,10 +25,36 @@ class Translatable_Post_Titles extends Singleton {
    * @return void
    */
   public function init() {
+    // variables
+    $this->prefix = acfml()->get_prefix();
+    $this->default_language = acfml()->get_default_language();
+    $this->field_name = "{$this->prefix}_{$this->field_postfix}";
+    $this->field_key = "field_{$this->field_name}";
+    $this->field_group_key = "group_{$this->field_name}";
+
+    $this->slug_field_name = "{$this->prefix}_slug";
+    $this->slug_field_key = "field_$this->slug_field_name";
+
+    // hooks
+    add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
+    add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
+    add_action("acf/render_field/key={$this->field_key}", [$this, 'render_field']);
+    add_action("acf/load_value/key={$this->field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
+    add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
+
+    // methods
+    $this->add_title_field_group();
+    
+    $this->adjust_post_type_support();
+  }
+
+  /**
+   * Removes some post type support if 
+   */
+  function adjust_post_type_support() {
     foreach( $this->get_translatable_post_types() as $post_type ) {
       remove_post_type_support($post_type, 'title');
     }
-    $this->add_title_field_group();
   }
 
   /**
@@ -101,6 +118,28 @@ class Translatable_Post_Titles extends Singleton {
       ]
     ));
 
+    $this->add_slug_fields();
+  }
+
+  /**
+   * Add a field for translatable slugs
+   *
+   * @return void
+   */
+  private function add_slug_fields() {
+    acf_add_local_field(array(
+      'key' => $this->slug_field_key,
+      'label' => __('Slug'),
+      'name' => $this->slug_field_name,
+      'type' => 'text',
+      'is_translatable' => true,
+      'hide_default_language' => true,
+      'parent' => $this->field_group_key,
+      'wrapper' => [
+        'class' => str_replace('_', '-', $this->slug_field_name),
+        'id' => 'slugdiv'
+      ]
+    ));
   }
 
   /**

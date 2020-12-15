@@ -9,41 +9,38 @@ class ACFML extends Singleton {
   private $prefix = 'acfml';
   private $debug = false;
 
-  public function __construct() {
-    
+  public function __construct() {}
+
+  public function init() {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
-    add_action('admin_notices', [$this, 'show_admin_notices']);
     add_action('plugins_loaded', [$this, 'detect_current_language']); // maybe a better plpace is 'request' ?
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX);
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
-    add_action('admin_head', [$this, 'admin_head']);
     // add_filter('pre_get_posts', [$this, 'prepare_query']);
-    // add_action('request', [$this, 'filter_request'], 5);
+    // add_action('request', [$this, 'request'], 5);
     
+    add_action('parse_request', function($query) {
+      if( is_admin() ) return;
+      // pre_dump($query);
+    });
+
+    // complex links
     add_filter('page_link', [$this, 'page_link'], 10, 3);
     add_filter('post_link', [$this, 'post_link'], 10, 3);
     add_filter('post_type_link', [$this, 'post_type_link'], 10, 3);
     add_filter('term_link', [$this, 'term_link'], 10, 3);
 
+    // simple links
+    add_filter('get_shortlink', [$this, 'convert_url']);
+    add_filter('rest_url', [$this, 'convert_url']);
 
-    // add_filter('posts_join', function($join, $query) {
-    //   if( $query->is_single() ) {
-    //     pre_dump(['join' => $join]);
-    //   }
-    //   return $join;
-    // }, 10, 2);
+    // links in the_content
+    add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
 
-    // add_filter('posts_where', function($where, $query) {
-    //   if( is_admin() ) return $where;
-    //   if( $query->is_single() ) {
-    //     pre_dump(['where' => $where]);
-    //   }
-    //   return $where;
-    // }, 10, 2);
   }
 
   /**
@@ -106,11 +103,11 @@ class ACFML extends Singleton {
    * @param String|Null $lang
    * @return String
    */
-  public function home_url($lang = null) {
+  public function home_url($path = '', $lang = null) {
     $home_url = home_url();
     if( !$lang ) $lang = $this->get_current_language();
-    if( $lang === $this->get_default_language() ) return $home_url;
-    return "$home_url/$lang";
+    if( $lang === $this->get_default_language() ) return $home_url . $path;
+    return trailingslashit($home_url) . $lang . $path;
   }
 
   /**
@@ -210,6 +207,21 @@ class ACFML extends Singleton {
   }
 
   /**
+   * Get non-default languages
+   *
+   * @return Array
+   */
+  public function get_non_default_languages() {
+    $default_language = $this->get_default_language();
+    $languages = $this->get_languages();
+    $languages = array_filter($languages, function($language) use ($default_language) {
+      return $language['iso'] !== $default_language;
+    });
+    // cleanup array keys
+    return array_merge($languages);
+  }
+
+  /**
    * Get information for a language iso key
    *
    * @param String $lang_iso    e.g. 'en' or 'de'
@@ -273,17 +285,18 @@ class ACFML extends Singleton {
    * Convert an URL for a language
    *
    * @param [type] $url
-   * @param [type] $language
+   * @param String $language
    * @return void
    */
-  public function convert_url($url, $requested_language) {
+  public function convert_url($url, $requested_language = null) {
+    if( !$requested_language ) $requested_language = $this->get_current_language();
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
     // get language from requested URL
     $language_in_url = $this->get_language_in_url($url);
     if( !$language_in_url ) $language_in_url = $this->get_default_language();
-    $current_home_url = $this->home_url($language_in_url);
-    $new_home_url = $this->home_url($requested_language);
+    $current_home_url = $this->home_url('', $language_in_url);
+    $new_home_url = $this->home_url('', $requested_language);
     $url = str_replace($current_home_url, $new_home_url, $url);
     return $url;
   }
@@ -305,24 +318,11 @@ class ACFML extends Singleton {
    */
   public function get_language_in_url($url) {
     $url = untrailingslashit($url);
-    $home_url = untrailingslashit($this->get_raw_home_url());
-    $path = trailingslashit(str_replace($home_url, '', $url));
+    $path = str_replace(home_url(), '', $url);
     $regex_languages = implode('|', $this->get_languages('iso'));
     preg_match("%/($regex_languages)(/|$|\?|#)%", $path, $matches);
     $language = $matches[1] ?? null;
     return $language;
-  }
-
-  /**
-   * Get unfiltered home url
-   *
-   * @return String
-   */
-  private function get_raw_home_url($path = '') {
-    remove_filter('home_url', [$this, 'filter_home_url']);
-    $home_url = home_url($path);
-    add_filter('home_url', [$this, 'filter_home_url'], 10, 4);
-    return $home_url;
   }
 
   /**
@@ -433,38 +433,29 @@ class ACFML extends Singleton {
    * @param Array $query
    * @return void
    */
-  public function filter_request($query) {
-    global $wp;
-    
+  public function request($query) {
     if( is_admin() ) return $query;
-    pre_dump($query);
-    $save_query = $query;
-    if( isset($wp->matched_query) || empty($query) ) {
-      $query = wp_parse_args($wp->matched_query, $save_query);
-    }
-
-    $custom_post_type = null;
-
-    // Adds custom post types to the query if present
-    foreach (get_post_types() as $post_type) {
-      if ( array_key_exists($post_type, $query) && !in_array($post_type, array('post', 'page') ) ) {
-        $custom_post_type = $post_type;
-      }
-    }
-
-    $language = $this->get_current_language();
-    // return early if default language
-    if( $language === $this->get_default_language() ) return $query;
-
-    // alter query for custom post types
-    if ( $custom_post_type && $post = $this->get_post_by_slug($custom_post_type, $language, $query[$custom_post_type]) ) {
-      $query[$custom_post_type] = $post->post_name;
-      $query['name'] = $post->post_name;
-    } elseif ( isset($query['name']) ) { // Built-in posts
-      if( $post = $this->get_post_by_slug(['page', 'post'], $language, $query['name']) ) {
-        $query['name'] = $post->post_name;
-      }
-    }
+    
+    /**
+     * Unset default query vars
+     */
+    // unset($query['name']);
+    // unset($query['pagename']);
+    /**
+    * Post
+    */
+    // $query['post_type'] = 'post';
+    // $query['p'] = 1;
+    /**
+    * Page
+    */
+    // $query['post_type'] = 'page';
+    // $query['p'] = 48;
+    /**
+     * Custom Post Type
+     */
+    // $query['post_type'] = 'event';
+    // $query['p'] = 82;
 
     return $query;
   }
@@ -501,7 +492,7 @@ class ACFML extends Singleton {
    * @return String
    */
   public function page_link($link, $post_id, $sample) {
-    return $this->convert_url($link, $this->get_current_language());
+    return $this->convert_url($link);
   }
 
   /**
@@ -514,7 +505,7 @@ class ACFML extends Singleton {
    */
   public function post_link($link, $post_id, $sample) {
     
-    return $this->convert_url($link, $this->get_current_language());
+    return $this->convert_url($link);
   }
 
   /**
@@ -526,7 +517,7 @@ class ACFML extends Singleton {
    * @return String
    */
   public function post_type_link($link, $post, $leavename) {
-    return $this->convert_url($link, $this->get_current_language());
+    return $this->convert_url($link);
   }
 
   /**
@@ -538,7 +529,45 @@ class ACFML extends Singleton {
    * @return String
    */
   public function term_link($link, $term, $taxonomy) {
-    return $this->convert_url($link, $this->get_current_language());
+    return $this->convert_url($link);
   }
+
+  /**
+   * Filter for 'the_content'
+   *
+   * @param String $value
+   * @return String
+   */
+  public function format_acf_field_wysiwyg($value) {
+    return $this->convert_urls_in_string($value);
+  }
+
+  /**
+   * Strip protocol from URL
+   *
+   * @param [type] $url
+   * @return void
+   */
+  private function strip_protocol($url) {
+    return preg_replace('#^https?:#', '', $url);
+  }
+
+  /**
+   * Convert URLs in Strings
+   *
+   * @param String $string
+   * @return String
+   */
+  public function convert_urls_in_string($string) {
+    $string = preg_replace_callback('/href=[\'|\"](http.*?)[\'|\"]/', function($matches) {
+      $url = $matches[1];
+      if( strpos($this->strip_protocol($url), $this->strip_protocol(home_url())) !== false ) {
+        $url = $this->convert_url($url);
+      }
+      return "href=\"$url\"";
+    }, $string);
+    return $string;
+  }
+
   
 }
