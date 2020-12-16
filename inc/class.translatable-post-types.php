@@ -65,9 +65,9 @@ class Translatable_Post_Types extends Singleton {
    * Check if a post type is translatable
    *
    * @param String $post_type
-   * @return Boolean
+   * @return Bool
    */
-  private function is_translatable_post_type(String $post_type):Boolean {
+  private function is_translatable_post_type(String $post_type):Bool {
     return in_array($post_type, $this->get_translatable_post_types());
   }
 
@@ -294,13 +294,13 @@ class Translatable_Post_Types extends Singleton {
     $reserved_slugs = array_merge($reserved_slugs, ['embed']);
 
     $count = 0;
-
+    
     if( in_array($slug, $reserved_slugs, true) 
       || preg_match( "@^($wp_rewrite->pagination_base)?\d+$@", $slug )
       ) {
         $count = 2;
     }
-    pre_dump($count, true);
+    
 
     $original_slug = $slug;
     $check_post_name = true;
@@ -324,6 +324,6 @@ class Translatable_Post_Types extends Singleton {
       }
     }
     
-    return $slug;
+    return "$original_slug-$count";
   }
 }

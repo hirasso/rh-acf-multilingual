@@ -1,5 +1,6 @@
 #### 0.0.1 (2020-12-16)
 
+- Also add count at the end of get_unique_post_slug (if no duplicate was  found) (#6d5152b)
 - Translate URLS, parse URLS, Find posts by URLS 😀 (#989de69)
 - Parse requests  for custom post types!!! (#fc8c22a)
 - 'request' for translated slugs 🎉 (#5d32b61)

@@ -9,7 +9,8 @@ const blacklist = [
   'pre-commit-msg', 
   '#ignore', 
   'update TODO',
-  'cleanup'
+  'cleanup',
+  'cleanupp'
 ];
 
 /**
