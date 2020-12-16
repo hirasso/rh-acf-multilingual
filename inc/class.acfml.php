@@ -21,12 +21,12 @@ class ACFML extends Singleton {
     add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
     // add_filter('pre_get_posts', [$this, 'prepare_query']);
-    // add_action('request', [$this, 'request'], 5);
+    add_action('request', [$this, 'request'], 5);
     
-    add_action('parse_request', function($query) {
-      if( is_admin() ) return;
-      // pre_dump($query);
-    });
+    // add_action('parse_request', function($query) {
+    //   if( is_admin() ) return;
+    //   // pre_dump($query);
+    // });
 
     // complex links
     add_filter('page_link', [$this, 'page_link'], 10, 3);
@@ -428,8 +428,23 @@ class ACFML extends Singleton {
    * @param Array $query
    * @return void
    */
-  public function request($query) {
-    if( is_admin() ) return $query;
+  public function request($vars) {
+    if( is_admin() ) return $vars;
+
+    // do nothing for default language
+    if( $this->language === $this->get_default_language() ) return $vars;
+
+    if( $post = $this->get_post_by_path($this->get_path($this->get_current_url()), $this->get_current_language()) ) {
+      $vars['post_type'] = $post->post_type;
+      $vars['p'] = $post->ID;
+      unset($vars['attachment']);
+      remove_action('template_redirect', 'redirect_canonical');
+    }
+    // pre_dump($vars);
+    // $vars['post_type'] = 'page';
+    // $vars['p'] = 261;
+    // unset($vars['attachment']);
+    // @TODO filter the canonical redirect instead of deactivating it
     
     /**
      * Unset default query vars
@@ -452,7 +467,7 @@ class ACFML extends Singleton {
     // $query['post_type'] = 'event';
     // $query['p'] = 82;
 
-    return $query;
+    return $vars;
   }
 
   /**
@@ -576,6 +591,63 @@ class ACFML extends Singleton {
   public function get_field_or(String $selector, $fallback, $post_id = false, $format_value = true) {
     $value = get_field($selector, $post_id, $format_value);
     return $value ?: $fallback;
+  }
+
+  /**
+   * Get path from URL
+   *
+   * – removes home url and language
+   * – removes query
+   * – removes leading and trailing slashes
+   * 
+   * @param String $url
+   * @return string
+   */
+  private function get_path($url):string {
+    $path = str_replace($this->home_url(), '', $url);
+    $path = explode('?', $path)[0];
+    $path = trim($path, '/');
+    return $path;
+  }
+
+  
+  public function get_post_by_path($path, $language) {
+    global $wp_rewrite;
+
+    $meta_key = "{$this->prefix}_slug_{$language}";
+    $post_type = ['post', 'page'];
+    $post = null;
+    $segments = explode('/', $path);
+    $post_parent = 0;
+
+    // if the first segment matches a custom post types name, 
+    // use it and unset it from the segments
+    // @TODO look for the custom post types rewrite slug instead of just it's name
+    $custom_post_types = array_keys(get_post_types([
+      'public' => true,
+      '_builtin' => false,
+    ]));
+    if( in_array($segments[0], $custom_post_types) ) {
+      $post_type = $segments[0];
+      unset($segments[0]);
+      $segments = array_merge($segments);
+    }
+    
+    foreach($segments as $segment) {
+      $posts = get_posts([
+        'post_type' => $post_type,
+        'post_parent' => $post_parent,
+        'meta_key' => $meta_key,
+        'meta_value' => $segment,
+        'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
+      ]);
+      if( $post = array_shift($posts) ) {
+        $post_parent = $post->ID;
+      } else {
+        break;
+      }
+    }
+    return $post;
   }
   
 }

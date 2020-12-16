@@ -238,6 +238,13 @@ class Translatable_Post_Titles extends Singleton {
    * @return Void
    */
   function save_post_slugs($post_id):Void {
+    $post = get_post($post_id);
+    if ( in_array( $post->post_status, array( 'draft', 'pending', 'auto-draft' ), true )
+      || ( 'inherit' === $post->post_status && 'revision' === $post->post_type ) || 'user_request' === $post->post_type
+    ) {
+      return;
+    }
+    
     // This will hold all post titles for the slugs to be generated
     $post_titles = [];
     // get the post title of the default language (should always have some)
@@ -258,6 +265,16 @@ class Translatable_Post_Titles extends Singleton {
       $slug = $this->get_unique_post_slug( $slug, get_post($post_id), "{$this->slug_field_name}_{$lang}" );
       // save the unique slug to the database
       update_field("{$this->slug_field_name}_{$lang}", $slug, $post_id);
+      if( $lang === $this->default_language ) $post_name = $slug;
+    }
+    // save slug of the default language to the post_name
+    if( isset($post_name) ) {
+      remove_action('acf/save_post', [$this, 'save_post_slugs']);
+      wp_update_post([
+        'ID' => $post_id,
+        'post_name' => $post_name
+      ]);
+      add_action('acf/save_post', [$this, 'save_post_slugs']);
     }
   }
 
@@ -270,11 +287,6 @@ class Translatable_Post_Titles extends Singleton {
    * @return String The (hopefully) unique post slug
    */
   function get_unique_post_slug($requested_slug, \WP_Post $post, $meta_key):String {
-    if ( in_array( $post->post_status, array( 'draft', 'pending', 'auto-draft' ), true )
-      || ( 'inherit' === $post->post_status && 'revision' === $post->post_type ) || 'user_request' === $post->post_type
-    ) {
-      return $requested_slug;
-    }
 
     $count = 0;
 
@@ -289,6 +301,7 @@ class Translatable_Post_Titles extends Singleton {
         'post__not_in' => [$post->ID],
         'meta_key' => $meta_key,
         'meta_value' => $slug,
+        'post_status' => ['publish', 'future', 'private']
       ]);
       if( count($posts) ) {
         $count ++;
