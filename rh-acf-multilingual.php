@@ -41,13 +41,12 @@ function admin() {
 /**
  * Initialize classes
  */
+
 ACFML\ACF_Multilingual::getInstance();
 ACFML\Translatable_Fields::getInstance();
 ACFML\Admin::getInstance();
 ACFML\Translatable_Post_Titles::getInstance();
 ACFML\Translatable_Term_Titles::getInstance();
-
-acfml()->init();
 
 /**
  * If ACF is defined, initialize the plugin.

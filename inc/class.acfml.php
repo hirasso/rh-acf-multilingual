@@ -9,28 +9,25 @@ class ACF_Multilingual extends Singleton {
   private $prefix = 'acfml';
   private $debug = false;
 
-  public function __construct() {}
-
-  public function init() {
+  public function __construct() {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
-    add_action('plugins_loaded', [$this, 'detect_current_language']); // maybe a better plpace is 'request' ?
+    add_action('plugins_loaded', [$this, 'detect_current_language']);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX);
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
-    add_action('request', [$this, 'request'], 5);
+    add_action('request', [$this, 'prepare_request'], 5);
 
     // complex links
-    add_filter('post_type_link', [$this, 'convert_url'], 10);
+    add_filter('post_type_link', [$this, 'convert_url'], 11);
     // add_filter('term_link', [$this, 'term_link'], 10, 3);
     // simple links
     add_filter('get_shortlink', [$this, 'convert_url']);
     add_filter('rest_url', [$this, 'convert_url']);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
-
   }
 
   /**
@@ -404,7 +401,7 @@ class ACF_Multilingual extends Singleton {
    * @param Array $query
    * @return void
    */
-  public function request($vars) {
+  public function prepare_request($vars) {
     if( is_admin() ) return $vars;
 
     // do nothing for default language
@@ -419,7 +416,7 @@ class ACF_Multilingual extends Singleton {
       // @TODO filter the canonical redirect instead of deactivating it
       remove_action('template_redirect', 'redirect_canonical');
     }
-    
+
     return $vars;
   }
 
