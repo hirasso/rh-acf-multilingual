@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-16)
 
-- Parse requests  for custom post types!!! (#286cd66)
+- Translate URLS, parse URLS, Find posts by URLS 😀 (#2cd333b)
+- Parse requests  for custom post types!!! (#fc8c22a)
 - 'request' for translated slugs 🎉 (#5d32b61)
 - First draft of unique post slug (#1cbaedb)
 - Add slugs (#e086b4b)

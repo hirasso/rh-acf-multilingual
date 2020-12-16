@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class ACFML extends Singleton {
+class ACF_Multilingual extends Singleton {
 
   private $prefix = 'acfml';
   private $debug = false;
@@ -20,24 +20,14 @@ class ACFML extends Singleton {
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
-    // add_filter('pre_get_posts', [$this, 'prepare_query']);
     add_action('request', [$this, 'request'], 5);
-    
-    // add_action('parse_request', function($query) {
-    //   if( is_admin() ) return;
-    //   // pre_dump($query);
-    // });
 
     // complex links
-    add_filter('page_link', [$this, 'page_link'], 10, 3);
-    add_filter('post_link', [$this, 'post_link'], 10, 3);
-    add_filter('post_type_link', [$this, 'post_type_link'], 10, 3);
-    add_filter('term_link', [$this, 'term_link'], 10, 3);
-
+    add_filter('post_type_link', [$this, 'convert_url'], 10);
+    // add_filter('term_link', [$this, 'term_link'], 10, 3);
     // simple links
     add_filter('get_shortlink', [$this, 'convert_url']);
     add_filter('rest_url', [$this, 'convert_url']);
-
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
 
@@ -290,6 +280,12 @@ class ACFML extends Singleton {
     // get language from requested URL
     $language_in_url = $this->get_language_in_url($url);
     if( !$language_in_url ) $language_in_url = $this->get_default_language();
+    
+    // if this is a URL for a post, get the url from this
+    if( $post = $this->get_post_by_path($this->get_path($url), $language_in_url) ) {
+      return $this->get_post_url($post, $requested_language);
+    } 
+    // if nothing special was found, return a 'dumb' converted url
     $current_home_url = $this->home_url('', $language_in_url);
     $new_home_url = $this->home_url('', $requested_language);
     $url = str_replace($current_home_url, $new_home_url, $url);
@@ -339,26 +335,6 @@ class ACFML extends Singleton {
   public function filter_frontend_locale($locale) {
     if( !$this->is_frontend() ) return $locale;
     return str_replace('_', '-', $this->get_language_info($this->get_current_language())['locale']);
-  }
-
-  /**
-   * Filter the home url
-   *
-   * @param String $url
-   * @param String $path
-   * @param String $orig_scheme
-   * @param Int $blog_id
-   * @return String
-   */
-  public function filter_home_url($url, $path, $orig_scheme, $blog_id) {
-    global $pagenow;
-    return $url;
-    // don't filter the $url if probably saving to .htaccess
-    // if ( function_exists( 'save_mod_rewrite_rules' ) ) return $url;
-    // dont't filter on some admin pages at all
-    if( in_array($pagenow, ['options-permalink.php']) ) return $url;
-    $url = $this->convert_url($url, $this->get_current_language());
-    return $url;
   }
 
   /**
@@ -440,35 +416,10 @@ class ACFML extends Singleton {
       unset($vars['attachment']);
       unset($vars['name']);
       unset($vars[$post->post_type]);
+      // @TODO filter the canonical redirect instead of deactivating it
       remove_action('template_redirect', 'redirect_canonical');
     }
     
-    // $vars['post_type'] = 'page';
-    // $vars['p'] = 261;
-    // unset($vars['attachment']);
-    // @TODO filter the canonical redirect instead of deactivating it
-    
-    /**
-     * Unset default query vars
-     */
-    // unset($query['name']);
-    // unset($query['pagename']);
-    /**
-    * Post
-    */
-    // $query['post_type'] = 'post';
-    // $query['p'] = 1;
-    /**
-    * Page
-    */
-    // $query['post_type'] = 'page';
-    // $query['p'] = 48;
-    /**
-     * Custom Post Type
-     */
-    // $query['post_type'] = 'event';
-    // $query['p'] = 82;
-
     return $vars;
   }
 
@@ -493,55 +444,6 @@ class ACFML extends Singleton {
     ];
     $posts = get_posts($args);
     return count($posts) ? array_shift($posts) : null;
-  }
-
-  /**
-   * Filters a page link (for built-in post type 'page')
-   *
-   * @param String $link
-   * @param Int $post_id
-   * @param Boolean $sample
-   * @return String
-   */
-  public function page_link($link, $post_id, $sample) {
-    return $this->convert_url($link);
-  }
-
-  /**
-   * Filters a post link (for built-in posts)
-   *
-   * @param String $link
-   * @param Int $post_id
-   * @param Boolean $sample
-   * @return String
-   */
-  public function post_link($link, $post_id, $sample) {
-    
-    return $this->convert_url($link);
-  }
-
-  /**
-   * filters a post type link
-   *
-   * @param String $link
-   * @param WP_Post $post
-   * @param Boolean $leavename
-   * @return String
-   */
-  public function post_type_link($link, $post, $leavename) {
-    return $this->convert_url($link);
-  }
-
-  /**
-   * filters a term link
-   *
-   * @param String $link
-   * @param WP_Term $term
-   * @param String $taxonomy
-   * @return String
-   */
-  public function term_link($link, $term, $taxonomy) {
-    return $this->convert_url($link);
   }
 
   /**
@@ -603,19 +505,28 @@ class ACFML extends Singleton {
    * – removes leading and trailing slashes
    * 
    * @param String $url
-   * @return string
+   * @return String
    */
-  private function get_path($url):string {
-    $path = str_replace($this->home_url(), '', $url);
+  private function get_path(String $url):String {
+    $path = str_replace(home_url(), '', $url);
+    $regex_languages = implode('|', $this->get_languages('iso'));
+    $path = preg_replace("%/($regex_languages)(/|$|\?|#)%", '', $path);
     $path = explode('?', $path)[0];
     $path = trim($path, '/');
     return $path;
   }
 
-  
-  public function get_post_by_path($path, $language) {
+  /**
+   * Get a post by a URL path
+   *
+   * @param String $path
+   * @param String|null $language
+   * @return \WP_Post|null
+   */
+  public function get_post_by_path(String $path, ?String $language = null): ?\WP_Post {
     global $wp_rewrite;
-
+    
+    if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type = ['post', 'page'];
     $post = null;
@@ -650,6 +561,39 @@ class ACFML extends Singleton {
       }
     }
     return $post;
+  }
+
+  /**
+   * Get translated permalink for a post
+   *
+   * @param \WP_Post $post
+   * @param String $language
+   * @return String
+   */
+  public function get_post_url( \WP_Post $post, String $language ):String {
+    $meta_key = "{$this->prefix}_slug_{$language}";
+    $post_type_object = get_post_type_object($post->post_type);
+    $ancestors = get_ancestors($post->ID, $post->post_type, 'post_type');
+    $segments = [];
+    $url = '';
+
+    // if the post is the front page, return home page in requested language
+    if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
+
+    // add possible custom post type's rewrite slug to segments
+    // @TODO should post type rewrite slugs also be translatable?
+    if( $rewrite_slug = ($post_type_object->rewrite['slug'] ?? null) ) {
+      $segments[] = $rewrite_slug;
+    }
+    // add slugs for all ancestors to segments
+    foreach( $ancestors as $ancestor_id ) {
+      $segments[] = get_field($meta_key, $ancestor_id);
+    }
+    // add slug for requested post to segments
+    $segments[] = get_field($meta_key, $post->ID);
+    $path = implode('/', $segments);
+    $url = $this->home_url("/$path/", $language);
+    return $url;
   }
   
 }

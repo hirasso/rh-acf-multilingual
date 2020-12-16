@@ -7,8 +7,6 @@
  * Author URI: https://rassohilber.com
 **/
 
-namespace ACFML;
-
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /**
@@ -25,34 +23,31 @@ require_once(__DIR__ . '/inc/class.translatable-term-titles.php');
 /**
  * Make main instance available API calls
  *
- * @return ACFML
+ * @return \ACFML\ACF_Multilingual
  */
 function acfml() { 
-  return ACFML::getInstance(); 
+  return ACFML\ACF_Multilingual::getInstance(); 
 }
 
 /**
  * Make Admin accessible
  *
- * @return Admin
+ * @return \ACFML\Admin
  */
 function admin() {
-  return Admin::getInstance();
+  return ACFML\Admin::getInstance();
 }
 
 /**
  * Initialize classes
  */
-function init() {
-  ACFML::getInstance();
-  Translatable_Fields::getInstance();
-  Admin::getInstance();
-  Translatable_Post_Titles::getInstance();
-  Translatable_Term_Titles::getInstance();
-  acfml()->init();
-}
+ACFML\ACF_Multilingual::getInstance();
+ACFML\Translatable_Fields::getInstance();
+ACFML\Admin::getInstance();
+ACFML\Translatable_Post_Titles::getInstance();
+ACFML\Translatable_Term_Titles::getInstance();
 
-init();
+acfml()->init();
 
 /**
  * If ACF is defined, initialize the plugin.
