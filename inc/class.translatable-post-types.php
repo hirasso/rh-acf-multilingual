@@ -58,13 +58,13 @@ class Translatable_Post_Types extends Singleton {
    * @return Array
    */
   private function get_translatable_post_types() {
-    return array_unique( apply_filters("{$this->prefix}/translatable_post_types", []) );
+    return array_unique( apply_filters("acfml/translatable_post_types", []) );
   }
   
   /**
    * Check if a post type is translatable
    *
-   * @param String $post_type
+   * @param string $post_type
    * @return Bool
    */
   private function is_translatable_post_type(String $post_type):Bool {
@@ -179,9 +179,9 @@ class Translatable_Post_Types extends Singleton {
   /**
    * Filter title
    *
-   * @param String $title
+   * @param string $title
    * @param Int $post_id
-   * @return String
+   * @param string
    */
   public function filter_post_title($title, $post_id) {
     $acfml_title = get_field($this->title_field_name, $post_id);
@@ -208,8 +208,8 @@ class Translatable_Post_Types extends Singleton {
   /**
    * Filter Admin Body Class
    *
-   * @param String $class
-   * @return String
+   * @param string $class
+   * @param string
    */
   public function admin_body_class($class) {
     global $pagenow, $typenow;
@@ -263,7 +263,7 @@ class Translatable_Post_Types extends Singleton {
       // get the slug from the field
       $slug = acfml()->get_field_or("{$this->slug_field_name}_{$lang}", sanitize_title($post_titles[$lang]), $post_id);
       // make the slug unique
-      $slug = $this->get_unique_post_slug( $slug, get_post($post_id), "{$this->slug_field_name}_{$lang}" );
+      $slug = $this->get_unique_post_slug( $slug, get_post($post_id), $lang );
       // save the unique slug to the database
       update_field("{$this->slug_field_name}_{$lang}", $slug, $post_id);
       if( $lang === $this->default_language ) $post_name = $slug;
@@ -282,25 +282,28 @@ class Translatable_Post_Types extends Singleton {
   /**
    * Undocumented function
    *
-   * @param String $requested_slug
+   * @param string $slug
    * @param WP_Post $post_id
-   * @param String $meta_key
-   * @return String The (hopefully) unique post slug
+   * @param string $lang
+   * @param string The (hopefully) unique post slug
    */
-  function get_unique_post_slug($slug, \WP_Post $post, $meta_key):String {
-
+  function get_unique_post_slug(String $slug, \WP_Post $post, String $lang): string {
     global $wp_rewrite;
+    $meta_key = "{$this->slug_field_name}_{$lang}";
     $reserved_slugs = $wp_rewrite->feeds ?? [];
     $reserved_slugs = array_merge($reserved_slugs, ['embed']);
-
     $count = 0;
-    
-    if( in_array($slug, $reserved_slugs, true) 
+
+    // allow for filtering bad post slugs
+    $is_bad_post_slug = apply_filters('acfml/is_bad_post_slug', false, $slug, $post, $lang);
+
+    // @see wp-includes/post.php -> wp_unique_post_slug()
+    if( $post->post_parent && in_array($slug, $reserved_slugs, true) 
       || preg_match( "@^($wp_rewrite->pagination_base)?\d+$@", $slug )
+      || $is_bad_post_slug
       ) {
         $count = 2;
     }
-    
 
     $original_slug = $slug;
     $check_post_name = true;
@@ -324,6 +327,6 @@ class Translatable_Post_Types extends Singleton {
       }
     }
     
-    return "$original_slug-$count";
+    return $count ? "$original_slug-$count" : $original_slug;
   }
 }

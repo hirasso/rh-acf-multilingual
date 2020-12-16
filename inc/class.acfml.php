@@ -71,7 +71,7 @@ class ACF_Multilingual extends Singleton {
   /**
    * Add an inline script
    *
-   * @return String
+   * @param string
    */
   private function get_admin_inline_script() {
     $settings = [
@@ -87,8 +87,8 @@ class ACF_Multilingual extends Singleton {
   /**
    * Get the home url in the requested or the default language
    *
-   * @param String|Null $lang
-   * @return String
+   * @param string|Null $lang
+   * @param string
    */
   public function home_url($path = '', $lang = null) {
     $home_url = home_url();
@@ -100,8 +100,8 @@ class ACF_Multilingual extends Singleton {
   /**
    * Helper function to get versioned asset urls
    *
-   * @param String $path
-   * @return String
+   * @param string $path
+   * @param string
    */
   private function asset_uri( $path ) {
     $uri = plugins_url( $path, __DIR__ );
@@ -164,7 +164,7 @@ class ACF_Multilingual extends Singleton {
   /**
    * Get all activated languages
    *
-   * @param String $format    'full' or 'iso'
+   * @param string $format    'full' or 'iso'
    * @return Array
    */
   public function get_languages( $format = 'full' ) {
@@ -206,7 +206,7 @@ class ACF_Multilingual extends Singleton {
   /**
    * Get information for a language iso key
    *
-   * @param String $lang_iso    e.g. 'en' or 'de'
+   * @param string $lang_iso    e.g. 'en' or 'de'
    * @return Mixed
    */
   public function get_language_info($lang_iso) {
@@ -219,7 +219,7 @@ class ACF_Multilingual extends Singleton {
   /**
    * Get default language
    *
-   * @return String
+   * @param string
    */
   public function get_default_language() {
     return apply_filters("$this->prefix/default_language", 'en');
@@ -228,7 +228,7 @@ class ACF_Multilingual extends Singleton {
   /**
    * Set current language
    *
-   * @return String
+   * @param string
    */
   public function detect_current_language() {
     if( $this->is_frontend() ) {
@@ -257,7 +257,7 @@ class ACF_Multilingual extends Singleton {
   /**
    * Get language
    *
-   * @return String
+   * @param string
    */
   public function get_current_language() {
     return $this->language ?: $this->get_default_language();
@@ -267,7 +267,7 @@ class ACF_Multilingual extends Singleton {
    * Convert an URL for a language
    *
    * @param [type] $url
-   * @param String $language
+   * @param string $language
    * @return void
    */
   public function convert_url($url, $requested_language = null) {
@@ -292,8 +292,8 @@ class ACF_Multilingual extends Singleton {
   /**
    * Converts the current URL to a requested language
    *
-   * @param String $language
-   * @return String
+   * @param string $language
+   * @param string
    */
   public function convert_current_url($language) {
     return $this->convert_url($this->get_current_url(), $language);
@@ -302,7 +302,7 @@ class ACF_Multilingual extends Singleton {
   /**
    * Detect language information in URL
    *
-   * @return String the detecte language
+   * @param string the detecte language
    */
   public function get_language_in_url($url) {
     $url = untrailingslashit($url);
@@ -316,7 +316,7 @@ class ACF_Multilingual extends Singleton {
   /**
    * Get current URL from $_SERVER
    *
-   * @return String $url
+   * @param string $url
    */
   private function get_current_url() {
     $url = set_url_scheme( 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
@@ -423,8 +423,8 @@ class ACF_Multilingual extends Singleton {
   /**
    * Filter for 'the_content'
    *
-   * @param String $value
-   * @return String
+   * @param string $value
+   * @param string
    */
   public function format_acf_field_wysiwyg($value) {
     return $this->convert_urls_in_string($value);
@@ -443,8 +443,8 @@ class ACF_Multilingual extends Singleton {
   /**
    * Convert URLs in Strings
    *
-   * @param String $string
-   * @return String
+   * @param string $string
+   * @param string
    */
   public function convert_urls_in_string($string) {
     $string = preg_replace_callback('/href=[\'|\"](http.*?)[\'|\"]/', function($matches) {
@@ -460,7 +460,7 @@ class ACF_Multilingual extends Singleton {
   /**
    * Get a field's value, or if there is no value, return the fallback
    *
-   * @param String $selector
+   * @param string $selector
    * @param [type] $fallback
    * @param boolean $post_id
    * @param boolean $format_value
@@ -478,10 +478,10 @@ class ACF_Multilingual extends Singleton {
    * – removes query
    * – removes leading and trailing slashes
    * 
-   * @param String $url
-   * @return String
+   * @param string $url
+   * @param string
    */
-  private function get_path(String $url):String {
+  private function get_path(String $url): string {
     $path = str_replace(home_url(), '', $url);
     $regex_languages = implode('|', $this->get_languages('iso'));
     $path = preg_replace("%/($regex_languages)(/|$|\?|#)%", '', $path);
@@ -493,8 +493,8 @@ class ACF_Multilingual extends Singleton {
   /**
    * Get a post by a URL path
    *
-   * @param String $path
-   * @param String|null $language
+   * @param string $path
+   * @param string|null $language
    * @return \WP_Post|null
    */
   public function get_post_by_path(String $path, ?String $language = null): ?\WP_Post {
@@ -541,10 +541,10 @@ class ACF_Multilingual extends Singleton {
    * Get translated permalink for a post
    *
    * @param \WP_Post $post
-   * @param String $language
-   * @return String
+   * @param string $language
+   * @param string
    */
-  public function get_post_url( \WP_Post $post, String $language ):String {
+  public function get_post_url( \WP_Post $post, String $language ): string {
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type_object = get_post_type_object($post->post_type);
     $ancestors = get_ancestors($post->ID, $post->post_type, 'post_type');

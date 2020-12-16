@@ -42,13 +42,13 @@ class Admin extends Singleton {
   /**
    * Don't overwrite languages with post or top level page slugs
    *
-   * @param String $slug
+   * @param string $slug
    * @param Int $post_id
-   * @param String $post_status
-   * @param String $post_type
+   * @param string $post_status
+   * @param string $post_type
    * @param Int $post_parent
-   * @param String $original_slug
-   * @return String
+   * @param string $original_slug
+   * @param string
    */
   public function unique_post_slug( $slug, $post_id, $post_status, $post_type, $post_parent, $original_slug ) {
     // add 'one' to slugs that would overwrite the  default language 

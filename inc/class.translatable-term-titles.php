@@ -92,14 +92,14 @@ class Translatable_Term_Titles extends Singleton {
    * @return Array
    */
   private function get_translatable_taxonomies() {
-    return  array_unique( apply_filters("{$this->prefix}/translatable_taxonomies", []) );
+    return  array_unique( apply_filters("acfml/translatable_taxonomies", []) );
   }
 
   /**
    * Filter Admin Body Class
    *
-   * @param String $class
-   * @return String
+   * @param string $class
+   * @param string
    */
   public function admin_body_class($class) {
     global $pagenow, $taxonomy;
@@ -140,7 +140,7 @@ class Translatable_Term_Titles extends Singleton {
    * Filter terms
    *
    * @param WP_Term $term
-   * @param String $taxonomy
+   * @param string $taxonomy
    * @return WP_Term
    */
   public function get_term($term, $taxonomy) {
