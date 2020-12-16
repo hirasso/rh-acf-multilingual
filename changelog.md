@@ -1,6 +1,7 @@
-#### 0.0.1 (2020-12-15)
+#### 0.0.1 (2020-12-16)
 
-- Add slugs (#e6c8ca6)
+- First draft of unique post slug (#4278197)
+- Add slugs (#e086b4b)
 - Better link filters (#4643582)
 - Cleanup (#ee104f8)
 - Render sample permalink if ready (#7947f56)

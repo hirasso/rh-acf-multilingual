@@ -27,15 +27,13 @@ class Translatable_Fields extends Singleton {
    * @return void
    */
   private function add_hooks() {
-    // allow custom field types to be translatable, as well
+    // allow custom field types to be translatable
     $translatable_field_types = apply_filters("$this->prefix/translatable_field_types", $this->translatable_field_types);
     // add hooks to translatable field types
     foreach( $translatable_field_types as $field_type ) {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
       add_filter("acf/load_field/type=$field_type", [$this, 'load_translatable_field'], 20);
     }
-    // filter field wrapper attributes
-    // add_filter("acf/field_wrapper_attributes", [$this, 'acf_field_wrapper_attributes'], 10, 2);
     // add hooks for generated translatable fields (type of those will be 'group')
     add_filter("acf/format_value/type=group", [$this, 'format_translatable_field_value'], 12, 3);
     add_action("acf/render_field/type=group", [$this, 'render_translatable_field'], 5);
@@ -160,8 +158,7 @@ class Translatable_Fields extends Singleton {
   public function format_translatable_field_value( $value, $post_id, $field ) {
     if( !$this->is_acfml_group($field) ) return $value;
     $language = acfml()->get_current_language();
-    $default_language = acfml()->get_default_language();
-    $value = !empty($value[$language]) ? $value[$language] : ($value[$default_language] ?? null);
+    $value = !empty($value[$language]) ? $value[$language] : ($value[acfml()->get_default_language()] ?? null);
     return $value;
   }
 

@@ -192,11 +192,6 @@ class ACFML extends Singleton {
         'locale' => 'de_DE',
         'name' => 'Deutsch'
       ],
-      [
-        'iso' => 'fi',
-        'locale' => 'fi',
-        'name' => 'Finski'
-      ],
     ];
     $default_language = $this->get_default_language();
     foreach( $languages as &$language ) {
@@ -227,7 +222,7 @@ class ACFML extends Singleton {
    * @param String $lang_iso    e.g. 'en' or 'de'
    * @return Mixed
    */
-  private function get_language_information($lang_iso) {
+  public function get_language_info($lang_iso) {
     foreach( $this->get_languages() as $language ) {
       if( $language['iso'] === $lang_iso ) return $language;
     }
@@ -343,7 +338,7 @@ class ACFML extends Singleton {
    */
   public function filter_frontend_locale($locale) {
     if( !$this->is_frontend() ) return $locale;
-    return str_replace('_', '-', $this->get_language_information($this->get_current_language())['locale']);
+    return str_replace('_', '-', $this->get_language_info($this->get_current_language())['locale']);
   }
 
   /**
@@ -569,5 +564,18 @@ class ACFML extends Singleton {
     return $string;
   }
 
+  /**
+   * Get a field's value, or if there is no value, return the fallback
+   *
+   * @param String $selector
+   * @param [type] $fallback
+   * @param boolean $post_id
+   * @param boolean $format_value
+   * @return Mixed
+   */
+  public function get_field_or(String $selector, $fallback, $post_id = false, $format_value = true) {
+    $value = get_field($selector, $post_id, $format_value);
+    return $value ?: $fallback;
+  }
   
 }

@@ -78,7 +78,7 @@
 }
 
 .post-php, .post-new-php {
-  .acf-field-acfml-post-title input {
+  .acf-field-acfml-post-title input:not(.acf-is-prepended) {
     padding: 3px 8px;
     font-size: 1.7em;
     line-height: 100%;

@@ -12,6 +12,31 @@ class Admin extends Singleton {
     $this->prefix = acfml()->get_prefix();
     add_filter('wp_unique_post_slug', [$this, 'unique_post_slug'], 10, 6);
     add_action('admin_notices', [$this, 'show_admin_notices']);
+    add_action('acf/init', [$this, 'acf_init']);
+  }
+
+  /**
+   * Runs on acf_init
+   *
+   * @return void
+   */
+  function acf_init() {
+    //$this->add_options_page();
+  }
+
+  /**
+   * Adds an options page for the plugin settings
+   *
+   * @return void
+   */
+  private function add_options_page() {
+    acf_add_options_page([
+      'page_title' => __('ACF Multilingual Settings'),
+      'menu_title' => __('ACF Multilingual'),
+      'menu_slug' => "$this->prefix-options",
+      'capability' => 'manage_options',
+      'parent_slug' => 'options-general.php'
+    ]);
   }
 
   /**
