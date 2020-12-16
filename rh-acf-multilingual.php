@@ -16,7 +16,7 @@ require_once(__DIR__ . '/inc/class.singleton.php');
 require_once(__DIR__ . '/inc/class.acfml.php');
 require_once(__DIR__ . '/inc/class.translatable-fields.php');
 require_once(__DIR__ . '/inc/class.admin.php');
-require_once(__DIR__ . '/inc/class.translatable-post-titles.php');
+require_once(__DIR__ . '/inc/class.translatable-post-types.php');
 require_once(__DIR__ . '/inc/class.translatable-term-titles.php');
 
 
@@ -45,7 +45,7 @@ function admin() {
 ACFML\ACF_Multilingual::getInstance();
 ACFML\Translatable_Fields::getInstance();
 ACFML\Admin::getInstance();
-ACFML\Translatable_Post_Titles::getInstance();
+ACFML\Translatable_Post_Types::getInstance();
 ACFML\Translatable_Term_Titles::getInstance();
 
 /**

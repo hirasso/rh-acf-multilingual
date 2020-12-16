@@ -4,13 +4,13 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Translatable_Post_Titles extends Singleton {
+class Translatable_Post_Types extends Singleton {
   
   private $prefix;
   private $default_language;
   private $field_postfix = "post_title";
-  private $field_name;
-  private $field_key;
+  private $title_field_name;
+  private $field_field_key;
 
   private $slug_field_name;
   private $slug_field_key;
@@ -29,9 +29,9 @@ class Translatable_Post_Titles extends Singleton {
     $this->prefix = acfml()->get_prefix();
     $this->languages = acfml()->get_languages('iso');
     $this->default_language = acfml()->get_default_language();
-    $this->field_name = "{$this->prefix}_{$this->field_postfix}";
-    $this->field_key = "field_{$this->field_name}";
-    $this->field_group_key = "group_{$this->field_name}";
+    $this->title_field_name = "{$this->prefix}_{$this->field_postfix}";
+    $this->title_field_key = "field_{$this->title_field_name}";
+    $this->field_group_key = "group_{$this->title_field_name}";
 
     $this->slug_field_name = "{$this->prefix}_slug";
     $this->slug_field_key = "field_$this->slug_field_name";
@@ -39,8 +39,8 @@ class Translatable_Post_Titles extends Singleton {
     // hooks
     add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
-    // add_action("acf/render_field/key={$this->field_key}", [$this, 'render_field']);
-    add_action("acf/load_value/key={$this->field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
+    // add_action("acf/render_field/key={$this->title_field_key}", [$this, 'render_field']);
+    add_action("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
     add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
 
     // add_filter('acf/update_value/key=field_acfml_slug_en', [$this, 'update_post_slug'], 10, 3);
@@ -50,16 +50,6 @@ class Translatable_Post_Titles extends Singleton {
     // methods
     $this->setup_acf_fields();
     
-    $this->adjust_post_type_support();
-  }
-
-  /**
-   * Removes some post type support if 
-   */
-  function adjust_post_type_support() {
-    // foreach( $this->get_translatable_post_types() as $post_type ) {
-    //   remove_post_type_support($post_type, 'title');
-    // }
   }
 
   /**
@@ -69,6 +59,16 @@ class Translatable_Post_Titles extends Singleton {
    */
   private function get_translatable_post_types() {
     return array_unique( apply_filters("{$this->prefix}/translatable_post_types", []) );
+  }
+  
+  /**
+   * Check if a post type is translatable
+   *
+   * @param String $post_type
+   * @return Boolean
+   */
+  private function is_translatable_post_type(String $post_type):Boolean {
+    return in_array($post_type, $this->get_translatable_post_types());
   }
 
   /**
@@ -108,16 +108,16 @@ class Translatable_Post_Titles extends Singleton {
     
     // create the title field
     acf_add_local_field(array(
-      'key' => $this->field_key,
+      'key' => $this->title_field_key,
       'label' => 'Title',
       'placeholder' => __( 'Add title' ),
-      'name' => $this->field_name,
+      'name' => $this->title_field_name,
       'type' => 'text',
       'is_translatable' => true,
       'required' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
-        'class' => str_replace('_', '-', $this->field_name),
+        'class' => str_replace('_', '-', $this->title_field_name),
         // 'id' => 'titlediv',
       ]
     ));
@@ -184,7 +184,7 @@ class Translatable_Post_Titles extends Singleton {
    * @return String
    */
   public function filter_post_title($title, $post_id) {
-    $acfml_title = get_field($this->field_name, $post_id);
+    $acfml_title = get_field($this->title_field_name, $post_id);
     return $acfml_title ? $acfml_title : $title;
   }
 
@@ -226,7 +226,7 @@ class Translatable_Post_Titles extends Singleton {
    * @return Array
    */
   public function wp_insert_post_data(Array $data , Array $_post):Array {
-    $default_language_post_title = $_post["acf"][$this->field_key]["{$this->field_key}_{$this->default_language}"] ?? null;
+    $default_language_post_title = $_post["acf"][$this->title_field_key]["{$this->title_field_key}_{$this->default_language}"] ?? null;
     if( $default_language_post_title ) $data['post_title'] = $default_language_post_title;
     return $data;
   }
@@ -239,23 +239,24 @@ class Translatable_Post_Titles extends Singleton {
    */
   function save_post_slugs($post_id):Void {
     $post = get_post($post_id);
-    if ( in_array( $post->post_status, array( 'draft', 'pending', 'auto-draft' ), true )
-      || ( 'inherit' === $post->post_status && 'revision' === $post->post_type ) || 'user_request' === $post->post_type
-    ) {
-      return;
-    }
+
+    // bail early if the post type is not translatable
+    if( !$this->is_translatable_post_type($post->post_type) ) return;
+
+    // bail early based on the post's status
+    if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;
     
-    // This will hold all post titles for the slugs to be generated
+    // This array will contain all post titles for the slugs to be generated from
     $post_titles = [];
     // get the post title of the default language (should always have some)
-    $default_post_title = get_field("{$this->field_name}_{$this->default_language}", $post_id);
+    $default_post_title = get_field("{$this->title_field_name}_{$this->default_language}", $post_id);
     $post_titles[$this->default_language] = $default_post_title;
     
     // prepare post titles so there is one for every language
     foreach( $this->languages as $lang ) {
       // do nothing for the default language
       if( $lang === $this->default_language ) continue;
-      $post_titles[$lang] = acfml()->get_field_or("{$this->field_name}_{$lang}", $default_post_title, $post_id);
+      $post_titles[$lang] = acfml()->get_field_or("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
     }
     // generate slugs for every language
     foreach( $this->languages as $lang ) {
@@ -286,11 +287,22 @@ class Translatable_Post_Titles extends Singleton {
    * @param String $meta_key
    * @return String The (hopefully) unique post slug
    */
-  function get_unique_post_slug($requested_slug, \WP_Post $post, $meta_key):String {
+  function get_unique_post_slug($slug, \WP_Post $post, $meta_key):String {
+
+    global $wp_rewrite;
+    $reserved_slugs = $wp_rewrite->feeds ?? [];
+    $reserved_slugs = array_merge($reserved_slugs, ['embed']);
 
     $count = 0;
 
-    $slug = $requested_slug;
+    if( in_array($slug, $reserved_slugs, true) 
+      || preg_match( "@^($wp_rewrite->pagination_base)?\d+$@", $slug )
+      ) {
+        $count = 2;
+    }
+    pre_dump($count, true);
+
+    $original_slug = $slug;
     $check_post_name = true;
     
     while( $check_post_name ) {
@@ -306,7 +318,7 @@ class Translatable_Post_Titles extends Singleton {
       if( count($posts) ) {
         $count ++;
         $check_post_name = true;
-        $slug = "$requested_slug-$count";
+        $slug = "$original_slug-$count";
       } else {
         $check_post_name = false;
       }

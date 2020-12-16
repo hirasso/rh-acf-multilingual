@@ -421,29 +421,6 @@ class ACF_Multilingual extends Singleton {
   }
 
   /**
-   * Get a post by it's custom slug.
-   *
-   * @param String $post_type
-   * @param String $language
-   * @param String $slug
-   * @return WP_Post|Null
-   */
-  private function get_post_by_slug($post_type, $language, $slug ) {
-    $args = [
-      "post_type" => $post_type,
-      "meta_query" => [
-        [
-          "key" => "slug_$language",
-          "value" => $slug
-        ],
-      ],
-      'posts_per_page' => 1
-    ];
-    $posts = get_posts($args);
-    return count($posts) ? array_shift($posts) : null;
-  }
-
-  /**
    * Filter for 'the_content'
    *
    * @param String $value
@@ -529,7 +506,7 @@ class ACF_Multilingual extends Singleton {
     $post = null;
     $segments = explode('/', $path);
     $post_parent = 0;
-
+    
     // if the first segment matches a custom post types name, 
     // use it and unset it from the segments
     // @TODO look for the custom post types rewrite slug instead of just it's name
@@ -552,7 +529,7 @@ class ACF_Multilingual extends Singleton {
         'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
       ]);
       if( $post = array_shift($posts) ) {
-        $post_parent = $post->ID;
+        $post_parent = is_post_type_hierarchical($post_type) ? $post->ID : 0;
       } else {
         break;
       }
