@@ -438,9 +438,11 @@ class ACFML extends Singleton {
       $vars['post_type'] = $post->post_type;
       $vars['p'] = $post->ID;
       unset($vars['attachment']);
+      unset($vars['name']);
+      unset($vars[$post->post_type]);
       remove_action('template_redirect', 'redirect_canonical');
     }
-    // pre_dump($vars);
+    
     // $vars['post_type'] = 'page';
     // $vars['p'] = 261;
     // unset($vars['attachment']);

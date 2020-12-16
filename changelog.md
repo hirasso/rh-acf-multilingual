@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-16)
 
-- 'request' for translated slugs 🎉 (#53a7aea)
+- Parse requests  for custom post types!!! (#286cd66)
+- 'request' for translated slugs 🎉 (#5d32b61)
 - First draft of unique post slug (#1cbaedb)
 - Add slugs (#e086b4b)
 - Better link filters (#4643582)

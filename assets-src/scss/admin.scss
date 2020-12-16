@@ -95,10 +95,9 @@
   margin-top: 0 !important;
 }
 .acfml-supports-post-title #titlediv {
-  // pointer-events: none;
-  // opacity: 0.5;
+  display: none;
 }
-#acf-acfml_group_post_title > .acf-fields > .acf-field {
+.acf-fields>.acfml-post-title {
   padding-top: 0;
 }
 

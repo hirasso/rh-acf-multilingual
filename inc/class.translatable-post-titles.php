@@ -57,9 +57,9 @@ class Translatable_Post_Titles extends Singleton {
    * Removes some post type support if 
    */
   function adjust_post_type_support() {
-    foreach( $this->get_translatable_post_types() as $post_type ) {
-      remove_post_type_support($post_type, 'title');
-    }
+    // foreach( $this->get_translatable_post_types() as $post_type ) {
+    //   remove_post_type_support($post_type, 'title');
+    // }
   }
 
   /**
@@ -118,7 +118,7 @@ class Translatable_Post_Titles extends Singleton {
       'parent' => $this->field_group_key,
       'wrapper' => [
         'class' => str_replace('_', '-', $this->field_name),
-        'id' => 'titlediv',
+        // 'id' => 'titlediv',
       ]
     ));
 
