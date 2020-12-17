@@ -207,9 +207,9 @@ class ACF_Multilingual extends Singleton {
    * Get information for a language iso key
    *
    * @param string $lang_iso    e.g. 'en' or 'de'
-   * @return Mixed
+   * @return array|null
    */
-  public function get_language_info($lang_iso) {
+  public function get_language_info(string $lang_iso):? array {
     foreach( $this->get_languages() as $language ) {
       if( $language['iso'] === $lang_iso ) return $language;
     }
@@ -500,24 +500,21 @@ class ACF_Multilingual extends Singleton {
    * @return \WP_Post|null
    */
   public function get_post_by_path(String $path, ?String $language = null): ?\WP_Post {
-    global $wp_rewrite;
-    
+
     if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type = ['post', 'page'];
     $post = null;
     $post_parent = 0;
 
-    // prepare path
+    // prepare the path
     $path     = rawurlencode( urldecode( $path ) );
     $path     = str_replace( '%2F', '/', $path );
     $path     = str_replace( '%20', ' ', $path );
-    // prepare path_segments
+    // prepare the path segments
     $segments = explode( '/', trim( $path, '/' ) );
     $segments = array_map( 'sanitize_title_for_query', $segments );
 
-    
-    
     // if the first segment matches a custom post types name, 
     // use it and unset it from the segments
     // @TODO look for the custom post types rewrite slug instead of just it's name

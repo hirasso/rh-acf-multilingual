@@ -27,7 +27,6 @@ class Translatable_Post_Types extends Singleton {
   public function init() {
     // variables
     $this->prefix = acfml()->get_prefix();
-    $this->languages = acfml()->get_languages('iso');
     $this->default_language = acfml()->get_default_language();
     $this->title_field_name = "{$this->prefix}_{$this->field_postfix}";
     $this->title_field_key = "field_{$this->title_field_name}";
@@ -238,6 +237,11 @@ class Translatable_Post_Types extends Singleton {
    * @return Void
    */
   function save_post_slugs($post_id):Void {
+    // cache WP locale, so that we can temporarily overwrite it
+    // during the slug generation
+    $cached_locale = get_locale();
+
+    $languages = acfml()->get_languages('iso');
     $post = get_post($post_id);
 
     // bail early if the post type is not translatable
@@ -253,15 +257,23 @@ class Translatable_Post_Types extends Singleton {
     $post_titles[$this->default_language] = $default_post_title;
     
     // prepare post titles so there is one for every language
-    foreach( $this->languages as $lang ) {
+    foreach( $languages as $lang ) {
       // do nothing for the default language
       if( $lang === $this->default_language ) continue;
       $post_titles[$lang] = acfml()->get_field_or("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
     }
+
     // generate slugs for every language
-    foreach( $this->languages as $lang ) {
+    foreach( $languages as $lang ) {
+      
+      // set locale to current $lang, so that sanitize_title can run on full power
+      $locale = acfml()->get_language_info($lang)['locale'];
+      $sanitized_title = sanitize_title($post_titles[$lang]);
+      // reset locale
+      $locale = $cached_locale;
+
       // get the slug from the field
-      $slug = acfml()->get_field_or("{$this->slug_field_name}_{$lang}", sanitize_title($post_titles[$lang]), $post_id);
+      $slug = acfml()->get_field_or("{$this->slug_field_name}_{$lang}", $sanitized_title, $post_id);
       // make the slug unique
       $slug = $this->get_unique_post_slug( $slug, get_post($post_id), $lang );
       // save the unique slug to the database

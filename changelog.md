@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-17)
 
-- fix get_post_by_path (#38d4ffe)
+- sanitize_title with the correct  locale set (#1bcb276)
+- fix get_post_by_path (#7a363ff)
 - Also add count at the end of get_unique_post_slug (if no duplicate was  found) (#81b9a6d)
 - Translate URLS, parse URLS, Find posts by URLS 😀 (#989de69)
 - Parse requests  for custom post types!!! (#fc8c22a)
