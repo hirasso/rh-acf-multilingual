@@ -4,15 +4,15 @@
   ✔ Admin-JS and Styles
   ✔ Add acf filter for loading values in the frontend
   ✔ Maybe rename the whole thing
-  ❍ Make Post Titles translatable
-  ❍ Localized slugs
+  ✔ Make Post Titles translatable
+  ❍ Multilingual slugs
     ✔ Unique Slugs
     ✔ get_post_by_path
     ✔ Filter Post-/Page-/CPT-/Term-/Tag-Links for custom slugs
     ❍ Filter wp_old_slug_redirect
     ✔ Convert URLs in text fields
-    ❍ Query for custom slugs in path
+    ✔ Query for custom slugs in path
     ✔ No taxonomy support
     ✔ use 'request' to fetch actual post by translated slug
     ✔ Use the same functionality for URL paths in links
-    ❍ Support different post types in path
+    ❍ Set appropriate locale while sanitizing titles for slugs, reset afterwards
