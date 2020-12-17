@@ -16,3 +16,4 @@
     ✔ use 'request' to fetch actual post by translated slug
     ✔ Use the same functionality for URL paths in links
     ❍ Set appropriate locale while sanitizing titles for slugs, reset afterwards
+    ❍ Cache get_post_by_path calls

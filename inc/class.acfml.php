@@ -405,9 +405,10 @@ class ACF_Multilingual extends Singleton {
     if( is_admin() ) return $vars;
 
     // do nothing for default language
-    if( $this->language === $this->get_default_language() ) return $vars;
-
+    if( $this->get_current_language() === $this->get_default_language() ) return $vars;
+    
     if( $post = $this->get_post_by_path($this->get_path($this->get_current_url()), $this->get_current_language()) ) {
+      
       $vars['post_type'] = $post->post_type;
       $vars['p'] = $post->ID;
       unset($vars['attachment']);
@@ -416,6 +417,7 @@ class ACF_Multilingual extends Singleton {
       // @TODO filter the canonical redirect instead of deactivating it
       remove_action('template_redirect', 'redirect_canonical');
     }
+    
 
     return $vars;
   }
@@ -504,8 +506,17 @@ class ACF_Multilingual extends Singleton {
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type = ['post', 'page'];
     $post = null;
-    $segments = explode('/', $path);
     $post_parent = 0;
+
+    // prepare path
+    $path     = rawurlencode( urldecode( $path ) );
+    $path     = str_replace( '%2F', '/', $path );
+    $path     = str_replace( '%20', ' ', $path );
+    // prepare path_segments
+    $segments = explode( '/', trim( $path, '/' ) );
+    $segments = array_map( 'sanitize_title_for_query', $segments );
+
+    
     
     // if the first segment matches a custom post types name, 
     // use it and unset it from the segments
@@ -521,15 +532,16 @@ class ACF_Multilingual extends Singleton {
     }
     
     foreach($segments as $segment) {
-      $posts = get_posts([
+      $args = [
         'post_type' => $post_type,
         'post_parent' => $post_parent,
         'meta_key' => $meta_key,
         'meta_value' => $segment,
         'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
-      ]);
+      ];
+      $posts = get_posts($args);
       if( $post = array_shift($posts) ) {
-        $post_parent = is_post_type_hierarchical($post_type) ? $post->ID : 0;
+        $post_parent = $post->ID;
       } else {
         break;
       }
