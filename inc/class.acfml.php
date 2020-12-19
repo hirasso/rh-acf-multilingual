@@ -18,7 +18,7 @@ class ACF_Multilingual extends Singleton {
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
-    add_action('request', [$this, 'prepare_request'], 5);
+    add_action('request', [$this, 'prepare_request']);
 
     // complex links
     add_filter('post_type_link', [$this, 'convert_url'], 11);
@@ -403,7 +403,6 @@ class ACF_Multilingual extends Singleton {
    */
   public function prepare_request($vars) {
     if( is_admin() ) return $vars;
-
     // do nothing for default language
     if( $this->get_current_language() === $this->get_default_language() ) return $vars;
     
@@ -416,8 +415,7 @@ class ACF_Multilingual extends Singleton {
       unset($vars[$post->post_type]);
       // @TODO filter the canonical redirect instead of deactivating it
       remove_action('template_redirect', 'redirect_canonical');
-    }
-    
+    }    
 
     return $vars;
   }
@@ -537,33 +535,31 @@ class ACF_Multilingual extends Singleton {
       $segments = array_merge($segments);
     }
 
-    // first, check if only one post is there for the request's lowest segment
+    // first, check if only one post is there for the last $segment.
     // e.g. /mum/child/grandchild: Check if only one post with a slug of 'grandchild' exists globally
-    $args = [
+    $posts = get_posts([
       'post_type' => $post_type,
       'meta_key' => $meta_key,
       'posts_per_page' => 2,
       'meta_value' => $segments[count($segments)-1],
       'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
-    ];
-    $posts = get_posts($args);
+    ]);
     
     // we have been looking for two $posts with the same slug.
     // if exatly 1 $post has been found, use that one.
     if( count($posts) === 1 ) {
       $post = array_shift($posts);
     } else {
-      // if multiple posts have the same slug, walk the tree to find the requested.    
+      // if multiple posts have the same slug, walk the tree.    
       foreach($segments as $segment) {
-        $args = [
+        $posts = get_posts([
           'post_type' => $post_type,
           'post_parent' => $post_parent,
           'posts_per_page' => 1,
           'meta_key' => $meta_key,
           'meta_value' => $segment,
           'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
-        ];
-        $posts = get_posts($args);
+        ]);
         if( $post = array_shift($posts) ) {
           $post_parent = $post->ID;
         } else {
@@ -593,7 +589,7 @@ class ACF_Multilingual extends Singleton {
 
     // if the post is the front page, return home page in requested language
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
-    
+
     // add possible custom post type's rewrite slug to segments
     // @TODO should post type rewrite slugs also be translatable?
     if( $rewrite_slug = ($post_type_object->rewrite['slug'] ?? null) ) {

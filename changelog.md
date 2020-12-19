@@ -1,6 +1,6 @@
 #### 0.0.1 (2020-12-19)
 
-- make get_post_by_path smarter (#0b70750)
+- make get_post_by_path smarter (#7f8f2f8)
 - sanitize_title with the correct  locale set (#22cf355)
 - fix get_post_by_path (#7a363ff)
 - Also add count at the end of get_unique_post_slug (if no duplicate was  found) (#81b9a6d)
