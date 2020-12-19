@@ -14,10 +14,10 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  */
 require_once(__DIR__ . '/inc/class.singleton.php');
 require_once(__DIR__ . '/inc/class.acfml.php');
-require_once(__DIR__ . '/inc/class.translatable-fields.php');
+require_once(__DIR__ . '/inc/class.multilingual-fields.php');
 require_once(__DIR__ . '/inc/class.admin.php');
-require_once(__DIR__ . '/inc/class.translatable-post-types.php');
-require_once(__DIR__ . '/inc/class.translatable-term-titles.php');
+require_once(__DIR__ . '/inc/class.multilingual-post-types.php');
+require_once(__DIR__ . '/inc/class.multilingual-term-titles.php');
 
 
 /**

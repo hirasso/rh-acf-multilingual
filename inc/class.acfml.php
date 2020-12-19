@@ -590,7 +590,7 @@ class ACF_Multilingual extends Singleton {
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
 
     // add possible custom post type's rewrite slug to segments
-    // @TODO should post type rewrite slugs also be translatable?
+    // @TODO should post type rewrite slugs also be multilingual?
     if( $rewrite_slug = ($post_type_object->rewrite['slug'] ?? null) ) {
       $segments[] = $rewrite_slug;
     }

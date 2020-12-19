@@ -4,7 +4,7 @@
   ✔ Admin-JS and Styles
   ✔ Add acf filter for loading values in the frontend
   ✔ Maybe rename the whole thing
-  ✔ Make Post Titles translatable
+  ✔ Make Post Titles multilingual
   ❍ Multilingual slugs
     ✔ Unique Slugs
     ✔ get_post_by_path

@@ -1,10 +1,10 @@
 @import './inc/mixins';
 
-.acfml-translatable-field > .acf-input > .acf-fields {
+.acfml-multilingual-field > .acf-input > .acf-fields {
   border: none;
   background: none;
 }
-.acfml-translatable-field > .acf-input > .acf-fields > .acfml-field {
+.acfml-multilingual-field > .acf-input > .acf-fields > .acfml-field {
   padding-left: 0;
   padding-right: 0;
   padding-top: 5px;

@@ -55,25 +55,25 @@ class Translatable_Post_Types extends Singleton {
   }
 
   /**
-   * Get translatable post types
+   * Get multilingual post types
    *
    * @return Array
    */
-  private function get_translatable_post_types() {
-    return array_unique( apply_filters("acfml/translatable_post_types", []) );
+  private function get_multilingual_post_types() {
+    return array_unique( apply_filters("acfml/multilingual_post_types", []) );
   }
   
   /**
-   * Get translatable CUSTOM (not _builtin) post types
+   * Get multilingual CUSTOM (not _builtin) post types
    *
    * @return array
    */
-  private function get_translatable_custom_post_types():array {
+  private function get_multilingual_custom_post_types():array {
     $builtin = get_post_types([
       'public' => true,
       '_builtin' => true
     ]);
-    $post_types = $this->get_translatable_post_types();
+    $post_types = $this->get_multilingual_post_types();
     foreach( $post_types as $key => $type ) {
       if( in_array($type, $builtin) ) unset($post_types[$key]);
     }
@@ -89,7 +89,7 @@ class Translatable_Post_Types extends Singleton {
     
     add_filter('rewrite_rules_array', function($rules) {
       
-      foreach( $this->get_translatable_custom_post_types() as $post_type ) {
+      foreach( $this->get_multilingual_custom_post_types() as $post_type ) {
 
         $rules = $this->multilingual_rewrite_slugs($rules, $post_type);
         $rules = $this->multilingual_archive_slugs($rules, $post_type);
@@ -161,13 +161,13 @@ class Translatable_Post_Types extends Singleton {
   }
 
   /**
-   * Check if a post type is translatable
+   * Check if a post type is multilingual
    *
    * @param string $post_type
    * @return Bool
    */
-  private function is_translatable_post_type(String $post_type):Bool {
-    return in_array($post_type, $this->get_translatable_post_types());
+  private function is_multilingual_post_type(String $post_type):Bool {
+    return in_array($post_type, $this->get_multilingual_post_types());
   }
 
   /**
@@ -178,12 +178,12 @@ class Translatable_Post_Types extends Singleton {
    */
   private function setup_acf_fields() {
     
-    $post_types = $this->get_translatable_post_types();
+    $post_types = $this->get_multilingual_post_types();
     
-    // bail early if no post types support `translatable-title`
+    // bail early if no post types support `multilingual-title`
     if( !count($post_types) ) return;
 
-    // generate location rules for translatable titles
+    // generate location rules for multilingual titles
     $location = [];
     foreach( $post_types as $pt ) {
       $location[] = [
@@ -212,7 +212,7 @@ class Translatable_Post_Types extends Singleton {
       'placeholder' => __( 'Add title' ),
       'name' => $this->title_field_name,
       'type' => 'text',
-      'is_translatable' => true,
+      'is_multilingual' => true,
       'required' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
@@ -235,7 +235,7 @@ class Translatable_Post_Types extends Singleton {
       'key' => $this->slug_field_key,
       'name' => $this->slug_field_name,
       'type' => 'text',
-      'is_translatable' => true,
+      'is_multilingual' => true,
       'parent' => "group_{$this->slug_field_key}",
       'wrapper' => [
         'class' => str_replace('_', '-', $this->slug_field_name),
@@ -313,7 +313,7 @@ class Translatable_Post_Types extends Singleton {
   public function admin_body_class($class) {
     global $pagenow, $typenow;
     if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return $class;
-    if( in_array($typenow, $this->get_translatable_post_types()) ) $class .= " $this->prefix-supports-post-title";
+    if( in_array($typenow, $this->get_multilingual_post_types()) ) $class .= " $this->prefix-supports-post-title";
     return $class;
   }
 
@@ -344,8 +344,8 @@ class Translatable_Post_Types extends Singleton {
     $languages = acfml()->get_languages('iso');
     $post = get_post($post_id);
 
-    // bail early if the post type is not translatable
-    if( !$this->is_translatable_post_type($post->post_type) ) return;
+    // bail early if the post type is not multilingual
+    if( !$this->is_multilingual_post_type($post->post_type) ) return;
 
     // bail early based on the post's status
     if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;

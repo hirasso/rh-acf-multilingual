@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-19)
 
-- Make post type archives and rewrite slugs multilingual (#0ffb70a)
+- Coherent naming (#1406a40)
+- Make post type archives and rewrite slugs multilingual (#819ca13)
 - Make rewrite slugs of cpt's translatable (#814fc1e)
 - make get_post_by_path smarter (#7f8f2f8)
 - sanitize_title with the correct  locale set (#22cf355)

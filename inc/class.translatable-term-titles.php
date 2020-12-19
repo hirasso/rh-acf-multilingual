@@ -45,11 +45,11 @@ class Translatable_Term_Titles extends Singleton {
    */
   private function add_title_field_group() {
     
-    $taxonomies = $this->get_translatable_taxonomies();
+    $taxonomies = $this->get_multilingual_taxonomies();
     
-    // bail early if no post types support `translatable-title`
+    // bail early if no post types support `multilingual-title`
     if( !count($taxonomies) ) return;
-    // generate location rules for translatable titles
+    // generate location rules for multilingual titles
     $location = [];
     foreach( $taxonomies as $tax ) {
       $location[] = [
@@ -76,7 +76,7 @@ class Translatable_Term_Titles extends Singleton {
       'instructions' => __('The name is how it appears on your site.'),
       'name' => $this->field_name,
       'type' => 'text',
-      'is_translatable' => true,
+      'is_multilingual' => true,
       'required' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
@@ -87,12 +87,12 @@ class Translatable_Term_Titles extends Singleton {
   }
 
   /**
-   * Get translatable taxonomies
+   * Get multilingual taxonomies
    *
    * @return Array
    */
-  private function get_translatable_taxonomies() {
-    return  array_unique( apply_filters("acfml/translatable_taxonomies", []) );
+  private function get_multilingual_taxonomies() {
+    return  array_unique( apply_filters("acfml/multilingual_taxonomies", []) );
   }
 
   /**
@@ -104,7 +104,7 @@ class Translatable_Term_Titles extends Singleton {
   public function admin_body_class($class) {
     global $pagenow, $taxonomy;
     if( !in_array($pagenow, ['term.php', 'edit-tags.php'] ) ) return $class;
-    if( in_array($taxonomy, $this->get_translatable_taxonomies()) ) $class .= " supports-$this->prefix-title";
+    if( in_array($taxonomy, $this->get_multilingual_taxonomies()) ) $class .= " supports-$this->prefix-title";
     return $class;
   }
 

@@ -6,8 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class Translatable_Fields extends Singleton {
 
-  // for which field types should 'is_translatable' be available?
-  private $translatable_field_types = [
+  // for which field types should 'is_multilingual' be available?
+  private $multilingual_field_types = [
     'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object'
   ];
 
@@ -27,21 +27,21 @@ class Translatable_Fields extends Singleton {
    * @return void
    */
   private function add_hooks() {
-    // allow custom field types to be translatable
-    $translatable_field_types = apply_filters("$this->prefix/translatable_field_types", $this->translatable_field_types);
-    // add hooks to translatable field types
-    foreach( $translatable_field_types as $field_type ) {
+    // allow custom field types to be multilingual
+    $multilingual_field_types = apply_filters("$this->prefix/multilingual_field_types", $this->multilingual_field_types);
+    // add hooks to multilingual field types
+    foreach( $multilingual_field_types as $field_type ) {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
-      add_filter("acf/load_field/type=$field_type", [$this, 'load_translatable_field'], 20);
+      add_filter("acf/load_field/type=$field_type", [$this, 'load_multilingual_field'], 20);
     }
-    // add hooks for generated translatable fields (type of those will be 'group')
-    add_filter("acf/format_value/type=group", [$this, 'format_translatable_field_value'], 12, 3);
-    add_action("acf/render_field/type=group", [$this, 'render_translatable_field'], 5);
-    add_filter("acf/load_value/type=group", [$this, 'load_translatable_field_value'], 10, 3);
+    // add hooks for generated multilingual fields (type of those will be 'group')
+    add_filter("acf/format_value/type=group", [$this, 'format_multilingual_field_value'], 12, 3);
+    add_action("acf/render_field/type=group", [$this, 'render_multilingual_field'], 5);
+    add_filter("acf/load_value/type=group", [$this, 'load_multilingual_field_value'], 10, 3);
   }
 
   /**
-   * Render field settings for translatable fields
+   * Render field settings for multilingual fields
    *
    * @param Array $field
    * @return void
@@ -51,7 +51,7 @@ class Translatable_Fields extends Singleton {
     acf_render_field_setting( $field, array(
       'label'			=> __('Translatable?'),
       'instructions'	=> '',
-      'name'			=> 'is_translatable',
+      'name'			=> 'is_multilingual',
       'type'			=> 'true_false',
       'ui'			=> 1,
     ), false);
@@ -59,7 +59,7 @@ class Translatable_Fields extends Singleton {
   }
 
   /**
-   * Load translatable fields. If a fields 'is_translatable' setting is set to 'true', then:
+   * Load multilingual fields. If a fields 'is_multilingual' setting is set to 'true', then:
    * 
    *    - create one sub-field for each language with the same type of the field (e.g. text, textarea, ...)
    *    - create a field with type 'group' that will hold the different sub-fields
@@ -69,11 +69,11 @@ class Translatable_Fields extends Singleton {
    * @param Array $field
    * @return void
    */
-  public function load_translatable_field( $field ) {
+  public function load_multilingual_field( $field ) {
     $post_type = $_GET['post_type'] ?? get_post_type();
     if( $post_type === 'acf-field-group' ) return $field;
-    // bail early if field is empty or not translatable
-    if( !is_array($field) || empty($field['is_translatable']) ) return $field;
+    // bail early if field is empty or not multilingual
+    if( !is_array($field) || empty($field['is_multilingual']) ) return $field;
     $admin_language = acfml()->get_admin_language();
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
@@ -98,7 +98,7 @@ class Translatable_Fields extends Singleton {
         '_name' => "$lang_iso",
         // Only the default language of a sub-field should be required
         'required' => $lang_iso === $default_language && $field['required'],
-        'is_translatable' => 0,
+        'is_multilingual' => 0,
         'wrapper' => $wrapper
       ]);
       
@@ -117,7 +117,7 @@ class Translatable_Fields extends Singleton {
       'required' => false,
       'wrapper' => [
         'width' >= $field['wrapper']['width'],
-        'class' => $field['wrapper']['class'] . " acfml-translatable-field",
+        'class' => $field['wrapper']['class'] . " acfml-multilingual-field",
         'id' => $field['wrapper']['id'],
       ],
     ]);
@@ -126,7 +126,7 @@ class Translatable_Fields extends Singleton {
 
 
   /**
-   * Automatically loads possible value of previously non-translatable field
+   * Automatically loads possible value of previously non-multilingual field
    * to the sub_field assigned to the default language
    *
    * @param Mixed $value
@@ -134,10 +134,10 @@ class Translatable_Fields extends Singleton {
    * @param Array $field
    * @return Mixed
    */
-  public function load_translatable_field_value( $value, $post_id, $field ) {
-    // bail early if field is empty or not translatable
+  public function load_multilingual_field_value( $value, $post_id, $field ) {
+    // bail early if field is empty or not multilingual
     if( !$this->is_acfml_group($field) ) return $value;
-    // parse value from before the field became translatable to the default value
+    // parse value from before the field became multilingual to the default value
     $default_language = acfml()->get_default_language();
     if( is_string($value) && strlen($value) > 0 ) {
       add_filter("acf/load_value/key={$field['key']}_$default_language", function() use ($value) {
@@ -155,7 +155,7 @@ class Translatable_Fields extends Singleton {
    * @param Array $field
    * @return Mixed formatted value
    */
-  public function format_translatable_field_value( $value, $post_id, $field ) {
+  public function format_multilingual_field_value( $value, $post_id, $field ) {
     if( !$this->is_acfml_group($field) ) return $value;
     $language = acfml()->get_current_language();
     $value = !empty($value[$language]) ? $value[$language] : ($value[acfml()->get_default_language()] ?? null);
@@ -163,12 +163,12 @@ class Translatable_Fields extends Singleton {
   }
 
   /**
-   * Renders Language Tabs for translatable fields
+   * Renders Language Tabs for multilingual fields
    *
    * @param Array $field
    * @return void
    */
-  public function render_translatable_field( $field ) {
+  public function render_multilingual_field( $field ) {
     if( !$this->is_acfml_group($field) ) return;
     $default_language = acfml()->get_default_language();
     $languages = acfml()->get_languages();
@@ -188,13 +188,13 @@ class Translatable_Fields extends Singleton {
   }
 
   /**
-   * Check if a field is translatable
+   * Check if a field is multilingual
    *
    * @param Array|Boolean $field
    * @return Boolean
    */
   private function is_acfml_group($field) {
-    return is_array($field) && $field['type'] === 'group' && !empty($field['is_translatable']);
+    return is_array($field) && $field['type'] === 'group' && !empty($field['is_multilingual']);
   }
 
   /**

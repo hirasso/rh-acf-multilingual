@@ -15,7 +15,7 @@ export default class ACFML {
   }
 
   /**
-   * Setup language switchers for translatable acf-fields
+   * Setup language switchers for multilingual acf-fields
    */
   initLanguageTabs() {
     $(document).on('click', '.acfml-tab', e => {
@@ -23,18 +23,18 @@ export default class ACFML {
       const $el = $(e.target);
       $el.blur();
       const language = $el.attr('data-language');
-      this.switchLanguage($el.parents('.acfml-translatable-field:first'), language);
+      this.switchLanguage($el.parents('.acfml-multilingual-field:first'), language);
     });
     $(document).on('dblclick', '.acfml-tab', e => {
       e.preventDefault();
       const $el = $(e.target);
       const language = $el.attr('data-language');
-      this.switchLanguage($('.acfml-translatable-field'), language);
+      this.switchLanguage($('.acfml-multilingual-field'), language);
     })
   }
 
   /**
-   * Switches the language for an .acfml-translatable-field
+   * Switches the language for an .acfml-multilingual-field
    * @param {jQuery Object} $el 
    * @param {String} language 
    */
@@ -48,11 +48,11 @@ export default class ACFML {
   }
 
   /**
-   * Prepare translatable WYSIWYG fields
+   * Prepare multilingual WYSIWYG fields
    */
   initTranslatableWysiwyg() {
     acf.addFilter('wysiwyg_tinymce_settings', (init, id, field) => {
-      const $parent = field.$el.parents('.acfml-translatable-field');
+      const $parent = field.$el.parents('.acfml-multilingual-field');
       if( !$parent.length ) return init;
       const fieldNameClass = $parent.attr('data-name').split('_').join('-');
       init.body_class += ` acf-wysiwyg--${fieldNameClass}`;
