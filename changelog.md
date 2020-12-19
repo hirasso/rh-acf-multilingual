@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-19)
 
-- multilingual slugs support for get_post_url (#8071fb5)
+- multilingual post type rewrite slug support for get_post_by_path (#d936cfc)
+- multilingual slugs support for get_post_url (#8614af2)
 - fix for grandchildren (#0724efe)
 - Coherent naming (#dbe409f)
 - Make post type archives and rewrite slugs multilingual (#819ca13)

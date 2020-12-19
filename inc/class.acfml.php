@@ -516,7 +516,7 @@ class ACF_Multilingual extends Singleton {
     // check cache
     $last_changed = wp_cache_get_last_changed( 'posts' );
     $hash         = md5( $path . serialize( $post_type ) );
-    $cache_key    = "get_page_by_path:$hash:$last_changed";
+    $cache_key    = "get_page_by_path:$hash:$last_changed:$language";
     $cached       = wp_cache_get( $cache_key, 'posts' );
     if ( $cached !== false ) return get_post( $cached );
 
@@ -531,10 +531,16 @@ class ACF_Multilingual extends Singleton {
       'public' => true,
       '_builtin' => false,
     ]));
-    if( in_array($segments[0], $custom_post_types) ) {
-      $post_type = $segments[0];
-      unset($segments[0]);
-      $segments = array_merge($segments);
+    foreach( $custom_post_types as $pt ) {
+      $pt_object = get_post_type_object($pt);
+      $default_rewrite_slug = $pt_object->rewrite['slug'] ?? $pt;
+      $rewrite_slug = $pt_object->acfml[$language]['rewrite_slug'] ?? $default_rewrite_slug;
+      if( $segments[0] === $rewrite_slug ) {
+        $post_type = $pt;
+        unset($segments[0]);
+        $segments = array_merge($segments);
+        break;
+      }
     }
 
     // first, check if only one post is there for the last $segment.
