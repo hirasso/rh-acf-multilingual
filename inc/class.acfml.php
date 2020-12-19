@@ -407,11 +407,14 @@ class ACF_Multilingual extends Singleton {
     
     if( $post = $this->get_post_by_path($this->get_path($this->get_current_url()), $this->get_current_language()) ) {
       
+
       $vars['post_type'] = $post->post_type;
       $vars['p'] = $post->ID;
       unset($vars['attachment']);
       unset($vars['name']);
       unset($vars[$post->post_type]);
+      unset($vars['error']);
+      
       // @TODO filter the canonical redirect instead of deactivating it
       remove_action('template_redirect', 'redirect_canonical');
     }    
@@ -594,13 +597,15 @@ class ACF_Multilingual extends Singleton {
     if( $rewrite_slug = ($post_type_object->rewrite['slug'] ?? null) ) {
       $segments[] = $rewrite_slug;
     }
+    // add slug for requested post to segments
+    $segments[] = get_field($meta_key, $post->ID);
+
     // add slugs for all ancestors to segments
     foreach( $ancestors as $ancestor_id ) {
       $segments[] = get_field($meta_key, $ancestor_id);
     }
-    // add slug for requested post to segments
-    $segments[] = get_field($meta_key, $post->ID);
-    $path = implode('/', $segments);
+    
+    $path = implode('/', array_reverse($segments));
     $url = $this->home_url("/$path/", $language);
     return $url;
   }
