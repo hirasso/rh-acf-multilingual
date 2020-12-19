@@ -1,5 +1,6 @@
 #### 0.0.1 (2020-12-19)
 
+- Make rewrite slugs of cpt's translatable (#bd8c5e5)
 - make get_post_by_path smarter (#7f8f2f8)
 - sanitize_title with the correct  locale set (#22cf355)
 - fix get_post_by_path (#7a363ff)

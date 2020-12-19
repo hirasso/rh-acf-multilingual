@@ -46,8 +46,11 @@ class Translatable_Post_Types extends Singleton {
     // add_filter('acf/update_value/key=field_acfml_slug_de', [$this, 'update_post_slug'], 10, 3);
     add_action('acf/save_post', [$this, 'save_post_slugs'], 11);
 
+
     // methods
     $this->setup_acf_fields();
+
+    add_action('init', [$this, 'add_rewrite_rules'], 11);
     
   }
 
@@ -60,6 +63,47 @@ class Translatable_Post_Types extends Singleton {
     return array_unique( apply_filters("acfml/translatable_post_types", []) );
   }
   
+  /**
+   * Get translatable CUSTOM (not post, page) post types
+   *
+   * @return array
+   */
+  private function get_translatable_custom_post_types():array {
+    $builtin = get_post_types([
+      'public' => true,
+      '_builtin' => true
+    ]);
+    $post_types = $this->get_translatable_post_types();
+    foreach( $post_types as $key => $type ) {
+      if( in_array($type, $builtin) ) unset($post_types[$key]);
+    }
+    return $post_types;
+  }
+
+  /**
+   * Make custom post types URLs translatable
+   *
+   * @return void
+   */
+  public function add_rewrite_rules() {
+    foreach( $this->get_translatable_custom_post_types() as $post_type ) {
+      $pt_object = get_post_type_object( $post_type );
+
+      $default_slug = $pt_object->rewrite['slug'] ?? $post_type;
+      $translated_slugs = $pt_object->acfml['rewrite_slug'] ?? [];
+      $all_slugs = array_values(array_unique(array_merge([$default_slug], $translated_slugs)));
+
+      add_filter("{$post_type}_rewrite_rules", function($rules) use ($default_slug, $all_slugs) {
+        $translated_rules = [];
+        foreach( $rules as $regex => $rule ) {
+          $translated_regex = str_replace($default_slug, "(?:".implode('|', $all_slugs).")", $regex);
+          $translated_rules[$translated_regex] = $rule;
+        }
+        return $translated_rules;
+      });
+    }
+  }
+
   /**
    * Check if a post type is translatable
    *
