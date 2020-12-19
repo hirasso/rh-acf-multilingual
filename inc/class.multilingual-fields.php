@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Translatable_Fields extends Singleton {
+class Multilingual_Fields extends Singleton {
 
   // for which field types should 'is_multilingual' be available?
   private $multilingual_field_types = [
@@ -49,7 +49,7 @@ class Translatable_Fields extends Singleton {
   public function render_field_settings( $field ) {
 
     acf_render_field_setting( $field, array(
-      'label'			=> __('Translatable?'),
+      'label'			=> __('Multilingual?'),
       'instructions'	=> '',
       'name'			=> 'is_multilingual',
       'type'			=> 'true_false',

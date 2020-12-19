@@ -1,6 +1,6 @@
 #### 0.0.1 (2020-12-19)
 
-- Coherent naming (#1406a40)
+- Coherent naming (#f58959e)
 - Make post type archives and rewrite slugs multilingual (#819ca13)
 - Make rewrite slugs of cpt's translatable (#814fc1e)
 - make get_post_by_path smarter (#7f8f2f8)

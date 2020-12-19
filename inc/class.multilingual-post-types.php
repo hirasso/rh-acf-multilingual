@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Translatable_Post_Types extends Singleton {
+class Multilingual_Post_Types extends Singleton {
   
   private $prefix;
   private $default_language;

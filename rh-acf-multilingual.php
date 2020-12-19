@@ -43,10 +43,10 @@ function admin() {
  */
 
 ACFML\ACF_Multilingual::getInstance();
-ACFML\Translatable_Fields::getInstance();
+ACFML\Multilingual_Fields::getInstance();
 ACFML\Admin::getInstance();
-ACFML\Translatable_Post_Types::getInstance();
-ACFML\Translatable_Term_Titles::getInstance();
+ACFML\Multilingual_Post_Types::getInstance();
+ACFML\Multilingual_Term_Titles::getInstance();
 
 /**
  * If ACF is defined, initialize the plugin.
