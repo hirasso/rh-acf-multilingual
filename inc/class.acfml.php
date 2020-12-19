@@ -501,21 +501,30 @@ class ACF_Multilingual extends Singleton {
    */
   public function get_post_by_path(String $path, ?String $language = null): ?\WP_Post {
 
+    // setup variables
     if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type = ['post', 'page'];
     $post = null;
     $post_parent = 0;
 
-    // prepare the path
+    // prepare the $path
     $path     = rawurlencode( urldecode( $path ) );
     $path     = str_replace( '%2F', '/', $path );
     $path     = str_replace( '%20', ' ', $path );
+
+    // check cache
+    $last_changed = wp_cache_get_last_changed( 'posts' );
+    $hash         = md5( $path . serialize( $post_type ) );
+    $cache_key    = "get_page_by_path:$hash:$last_changed";
+    $cached       = wp_cache_get( $cache_key, 'posts' );
+    if ( $cached !== false ) return get_post( $cached );
+
     // prepare the path segments
     $segments = explode( '/', trim( $path, '/' ) );
     $segments = array_map( 'sanitize_title_for_query', $segments );
 
-    // if the first segment matches a custom post types name, 
+    // if the first segment matches a custom post_type name, 
     // use it and unset it from the segments
     // @TODO look for the custom post types rewrite slug instead of just it's name
     $custom_post_types = array_keys(get_post_types([
@@ -527,22 +536,44 @@ class ACF_Multilingual extends Singleton {
       unset($segments[0]);
       $segments = array_merge($segments);
     }
+
+    // first, check if only one post is there for the request's lowest segment
+    // e.g. /mum/child/grandchild: Check if only one post with a slug of 'grandchild' exists globally
+    $args = [
+      'post_type' => $post_type,
+      'meta_key' => $meta_key,
+      'posts_per_page' => 2,
+      'meta_value' => $segments[count($segments)-1],
+      'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
+    ];
+    $posts = get_posts($args);
     
-    foreach($segments as $segment) {
-      $args = [
-        'post_type' => $post_type,
-        'post_parent' => $post_parent,
-        'meta_key' => $meta_key,
-        'meta_value' => $segment,
-        'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
-      ];
-      $posts = get_posts($args);
-      if( $post = array_shift($posts) ) {
-        $post_parent = $post->ID;
-      } else {
-        break;
+    // we have been looking for two $posts with the same slug.
+    // if exatly 1 $post has been found, use that one.
+    if( count($posts) === 1 ) {
+      $post = array_shift($posts);
+    } else {
+      // if multiple posts have the same slug, walk the tree to find the requested.    
+      foreach($segments as $segment) {
+        $args = [
+          'post_type' => $post_type,
+          'post_parent' => $post_parent,
+          'posts_per_page' => 1,
+          'meta_key' => $meta_key,
+          'meta_value' => $segment,
+          'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
+        ];
+        $posts = get_posts($args);
+        if( $post = array_shift($posts) ) {
+          $post_parent = $post->ID;
+        } else {
+          break;
+        }
       }
     }
+    
+    wp_cache_set( $cache_key, $post->ID ?? 0, 'posts' );
+
     return $post;
   }
 
@@ -562,7 +593,7 @@ class ACF_Multilingual extends Singleton {
 
     // if the post is the front page, return home page in requested language
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
-
+    
     // add possible custom post type's rewrite slug to segments
     // @TODO should post type rewrite slugs also be translatable?
     if( $rewrite_slug = ($post_type_object->rewrite['slug'] ?? null) ) {
