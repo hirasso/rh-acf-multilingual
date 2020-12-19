@@ -64,7 +64,7 @@ class Translatable_Post_Types extends Singleton {
   }
   
   /**
-   * Get translatable CUSTOM (not post, page) post types
+   * Get translatable CUSTOM (not _builtin) post types
    *
    * @return array
    */
@@ -81,27 +81,83 @@ class Translatable_Post_Types extends Singleton {
   }
 
   /**
-   * Make custom post types URLs translatable
+   * Make custom post types rewrite rules multilingual
    *
    * @return void
    */
   public function add_rewrite_rules() {
-    foreach( $this->get_translatable_custom_post_types() as $post_type ) {
-      $pt_object = get_post_type_object( $post_type );
+    
+    add_filter('rewrite_rules_array', function($rules) {
+      
+      foreach( $this->get_translatable_custom_post_types() as $post_type ) {
 
-      $default_slug = $pt_object->rewrite['slug'] ?? $post_type;
-      $translated_slugs = $pt_object->acfml['rewrite_slug'] ?? [];
-      $all_slugs = array_values(array_unique(array_merge([$default_slug], $translated_slugs)));
+        $rules = $this->multilingual_rewrite_slugs($rules, $post_type);
+        $rules = $this->multilingual_archive_slugs($rules, $post_type);
 
-      add_filter("{$post_type}_rewrite_rules", function($rules) use ($default_slug, $all_slugs) {
-        $translated_rules = [];
-        foreach( $rules as $regex => $rule ) {
-          $translated_regex = str_replace($default_slug, "(?:".implode('|', $all_slugs).")", $regex);
-          $translated_rules[$translated_regex] = $rule;
-        }
-        return $translated_rules;
-      });
+      }
+      return $rules;
+    });
+    
+  }
+
+  /**
+   * Makes post type archives multilingual. Looks for the custom property acfml>archive_slug in the post type object
+   * and adds possibly found slug translations to the regex
+   *
+   * @param Array $rules
+   * @param String $post_type
+   * @return Array
+   */
+  private function multilingual_archive_slugs(Array $rules, String $post_type): array{
+    $pt_object = get_post_type_object( $post_type );
+    $has_archive = $pt_object->has_archive ?? null;
+    if( !$has_archive ) return $rules;
+
+    $default_slug = is_string($has_archive) ? $has_archive : $post_type;
+    $translated_slugs = $pt_object->acfml['archive_slug'] ?? null;
+    if( !$translated_slugs ) return $rules;
+
+    $slugs = array_values(array_unique(array_merge([$default_slug], $translated_slugs)));
+
+    $new_rules = [];
+    foreach( $rules as $regex => $rule ) {
+      if( strpos($regex, $default_slug ) === 0 ) {
+        $translated_regex = str_replace("$default_slug/?", "(?:".implode('|', $slugs).")/?", $regex);
+        $new_rules[$translated_regex] = $rule;
+      } else {
+        $new_rules[$regex] = $rule;
+      }
     }
+
+    return $new_rules;
+    
+  }
+
+  /**
+  * Makes post type rewrite slugs multilingual. Looks for the custom property acfml>rewrite_slug in the post type object
+  * and adds possibly found slug translations to the regex
+  *
+  * @param Array $rules
+  * @param String $post_type
+  * @return Array
+  */
+  private function multilingual_rewrite_slugs(Array $rules, String $post_type): array {
+    $pt_object = get_post_type_object( $post_type );
+    $default_slug = $pt_object->rewrite['slug'] ?? $post_type;
+    $translated_rewrite_slugs = $pt_object->acfml['rewrite_slug'] ?? null;
+    if( !$translated_rewrite_slugs ) return $rules;
+    $rewrite_slugs = array_values(array_unique(array_merge([$default_slug], $translated_rewrite_slugs)));
+
+    $new_rules = [];
+    foreach( $rules as $regex => $rule ) {
+      if( strpos($regex, $default_slug ) === 0 ) {
+        $translated_regex = str_replace("$default_slug/", "(?:".implode('|', $rewrite_slugs).")/", $regex);
+        $new_rules[$translated_regex] = $rule;
+      } else {
+        $new_rules[$regex] = $rule;
+      }
+    }
+    return $new_rules;
   }
 
   /**

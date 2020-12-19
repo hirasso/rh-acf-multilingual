@@ -359,7 +359,6 @@ class ACF_Multilingual extends Singleton {
         $key = "(?:$regex_languages)?/?" . ltrim($key, '^');
         $new_rules[$key] = $val;
     }
-
     return $new_rules;
   }
 
