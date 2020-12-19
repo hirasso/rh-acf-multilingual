@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-19)
 
-- fix for grandchildren (#015754e)
+- multilingual slugs support for get_post_url (#8071fb5)
+- fix for grandchildren (#0724efe)
 - Coherent naming (#dbe409f)
 - Make post type archives and rewrite slugs multilingual (#819ca13)
 - Make rewrite slugs of cpt's translatable (#814fc1e)

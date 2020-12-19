@@ -585,7 +585,7 @@ class ACF_Multilingual extends Singleton {
   public function get_post_url( \WP_Post $post, String $language ): string {
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type_object = get_post_type_object($post->post_type);
-    $ancestors = get_ancestors($post->ID, $post->post_type, 'post_type');
+    $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
     $segments = [];
     $url = '';
 
@@ -594,18 +594,21 @@ class ACF_Multilingual extends Singleton {
 
     // add possible custom post type's rewrite slug to segments
     // @TODO should post type rewrite slugs also be multilingual?
-    if( $rewrite_slug = ($post_type_object->rewrite['slug'] ?? null) ) {
+    $default_rewrite_slug = ($post_type_object->rewrite['slug'] ?? null);
+    $acfml_rewrite_slug = ($post_type_object->acfml[$language]['rewrite_slug']) ?? null;
+    if( $rewrite_slug = $acfml_rewrite_slug ?: $default_rewrite_slug ) {
       $segments[] = $rewrite_slug;
     }
-    // add slug for requested post to segments
-    $segments[] = get_field($meta_key, $post->ID);
 
     // add slugs for all ancestors to segments
     foreach( $ancestors as $ancestor_id ) {
       $segments[] = get_field($meta_key, $ancestor_id);
     }
+
+    // add slug for requested post to segments
+    $segments[] = get_field($meta_key, $post->ID);
     
-    $path = implode('/', array_reverse($segments));
+    $path = implode('/', $segments);
     $url = $this->home_url("/$path/", $language);
     return $url;
   }
