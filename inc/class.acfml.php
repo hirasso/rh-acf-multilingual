@@ -287,7 +287,7 @@ class ACF_Multilingual extends Singleton {
     }
     // if this is a URL for a post, get the url from this
     if( $post = $this->get_post_by_path($this->get_path($url), $language_in_url) ) {
-      return $this->get_post_url($post, $requested_language);
+      return $this->get_post_link($post, $requested_language);
     } 
     // if nothing special was found, return a 'dumb' converted url
     $current_home_url = $this->home_url('', $language_in_url);
@@ -643,7 +643,7 @@ class ACF_Multilingual extends Singleton {
    * @param string $language
    * @param string
    */
-  public function get_post_url( \WP_Post $post, String $language ): string {
+  public function get_post_link( \WP_Post $post, String $language ): string {
     global $wp_rewrite;
 
     $meta_key = "{$this->prefix}_slug_{$language}";
@@ -675,8 +675,8 @@ class ACF_Multilingual extends Singleton {
     // add slug for requested post to segments
     $segments[] = get_field($meta_key, $post->ID);
     
-    $path = implode('/', $segments);
-    $url = $this->home_url("/$path/", $language);
+    $path = user_trailingslashit(implode('/', $segments));
+    $url = $this->home_url("/$path", $language);
     return $url;
   }
 
@@ -689,20 +689,18 @@ class ACF_Multilingual extends Singleton {
    */
   private function get_post_type_archive_link( string $post_type, string $language ): ?string {
 
-    
     remove_filter('post_type_archive_link', [$this, 'convert_url']);
     $link = get_post_type_archive_link($post_type);
     $path = trim(str_replace(home_url(), '', $link), '/');
     add_filter('post_type_archive_link', [$this, 'convert_url']);
-    
 
     $default_archive_slug = $this->get_post_type_archive_slug($post_type, $this->get_default_language());
     $archive_slug = $this->get_post_type_archive_slug($post_type, $language);
     if( !$archive_slug ) return $link;
 
     $path = preg_replace("#$default_archive_slug$#", $archive_slug, $path);
-
-    $link = $this->home_url("/$path/", $language);
+    $path = user_trailingslashit($path);
+    $link = $this->home_url("/$path", $language);
     $link = apply_filters('acfml/post_type_archive_link', $link, $post_type, $language);
     return $link;
   }
