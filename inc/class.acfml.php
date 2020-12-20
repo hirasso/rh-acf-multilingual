@@ -22,6 +22,7 @@ class ACF_Multilingual extends Singleton {
 
     // complex links
     add_filter('post_type_link', [$this, 'convert_url'], 11);
+    add_filter('post_type_archive_link', [$this, 'convert_url']);
     // add_filter('term_link', [$this, 'term_link'], 10, 3);
     // simple links
     add_filter('get_shortlink', [$this, 'convert_url']);
@@ -266,11 +267,11 @@ class ACF_Multilingual extends Singleton {
   /**
    * Convert an URL for a language
    *
-   * @param [type] $url
+   * @param string $url
    * @param string $language
-   * @return void
+   * @return string $url
    */
-  public function convert_url($url, $requested_language = null) {
+  public function convert_url(string $url, string $requested_language = null) {
     if( !$requested_language ) $requested_language = $this->get_current_language();
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
@@ -282,6 +283,9 @@ class ACF_Multilingual extends Singleton {
     if( $post = $this->get_post_by_path($this->get_path($url), $language_in_url) ) {
       return $this->get_post_url($post, $requested_language);
     } 
+    // if( $post_type = $this->get_post_type_by_path($this->get_path($url), $language_in_url) ) {
+    //   pre_dump($post_type);
+    // }
     // if nothing special was found, return a 'dumb' converted url
     $current_home_url = $this->home_url('', $language_in_url);
     $new_home_url = $this->home_url('', $requested_language);
@@ -407,7 +411,6 @@ class ACF_Multilingual extends Singleton {
     
     if( $post = $this->get_post_by_path($this->get_path($this->get_current_url()), $this->get_current_language()) ) {
       
-
       $vars['post_type'] = $post->post_type;
       $vars['p'] = $post->ID;
       unset($vars['attachment']);
@@ -500,7 +503,8 @@ class ACF_Multilingual extends Singleton {
    * @return \WP_Post|null
    */
   public function get_post_by_path(String $path, ?String $language = null): ?\WP_Post {
-
+    global $wp_rewrite;
+    
     // setup variables
     if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
@@ -524,6 +528,13 @@ class ACF_Multilingual extends Singleton {
     $segments = explode( '/', trim( $path, '/' ) );
     $segments = array_map( 'sanitize_title_for_query', $segments );
 
+    
+    // ignore rewrite front
+    if( $segments[0] === trim($wp_rewrite->front, '/') ) {
+      unset($segments[0]);
+      $segments = array_values($segments);
+    }
+
     // if the first segment matches a custom post_type name, 
     // use it and unset it from the segments
     // @TODO look for the custom post types rewrite slug instead of just it's name
@@ -538,10 +549,11 @@ class ACF_Multilingual extends Singleton {
       if( $segments[0] === $rewrite_slug ) {
         $post_type = $pt;
         unset($segments[0]);
-        $segments = array_merge($segments);
+        $segments = array_values($segments);
         break;
       }
     }
+    
 
     // first, check if only one post is there for the last $segment.
     // e.g. /mum/child/grandchild: Check if only one post with a slug of 'grandchild' exists globally
@@ -589,6 +601,8 @@ class ACF_Multilingual extends Singleton {
    * @param string
    */
   public function get_post_url( \WP_Post $post, String $language ): string {
+    global $wp_rewrite;
+
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type_object = get_post_type_object($post->post_type);
     $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
@@ -598,9 +612,13 @@ class ACF_Multilingual extends Singleton {
     // if the post is the front page, return home page in requested language
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
 
-    // add possible custom post type's rewrite slug to segments
-    // @TODO should post type rewrite slugs also be multilingual?
-    $default_rewrite_slug = ($post_type_object->rewrite['slug'] ?? null);
+    // add possible rewrite front
+    $with_front = $post_type_object->rewrite['with_front'] ?? null;
+    $front = trim($wp_rewrite->front, '/');
+    if( $with_front && $front ) $segments[] = $front;
+
+    // add possible custom post type's rewrite slug and front to segments
+    $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
     $acfml_rewrite_slug = ($post_type_object->acfml[$language]['rewrite_slug']) ?? null;
     if( $rewrite_slug = $acfml_rewrite_slug ?: $default_rewrite_slug ) {
       $segments[] = $rewrite_slug;
@@ -619,4 +637,10 @@ class ACF_Multilingual extends Singleton {
     return $url;
   }
   
+
+  function post_type_archive_link($link, $post_type) {
+    $post_type_obj = get_post_type_object( $post_type );
+    // pre_dump( $post_type_obj );
+    return $link;
+  }
 }
