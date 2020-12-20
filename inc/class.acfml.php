@@ -269,23 +269,26 @@ class ACF_Multilingual extends Singleton {
    *
    * @param string $url
    * @param string $language
+   * 
    * @return string $url
    */
-  public function convert_url(string $url, string $requested_language = null) {
+  public function convert_url(string $url, string $requested_language = null): string {
+    
     if( !$requested_language ) $requested_language = $this->get_current_language();
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
     // get language from requested URL
     $language_in_url = $this->get_language_in_url($url);
     if( !$language_in_url ) $language_in_url = $this->get_default_language();
-    
+
+    // if this is a post type archive page, get the url from the post type
+    if( $post_type = $this->get_post_type_archive_by_path($this->get_path($url), $language_in_url) ) {
+      return $this->get_post_type_archive_link($post_type, $requested_language);
+    }
     // if this is a URL for a post, get the url from this
     if( $post = $this->get_post_by_path($this->get_path($url), $language_in_url) ) {
       return $this->get_post_url($post, $requested_language);
     } 
-    // if( $post_type = $this->get_post_type_by_path($this->get_path($url), $language_in_url) ) {
-    //   pre_dump($post_type);
-    // }
     // if nothing special was found, return a 'dumb' converted url
     $current_home_url = $this->home_url('', $language_in_url);
     $new_home_url = $this->home_url('', $requested_language);
@@ -300,7 +303,10 @@ class ACF_Multilingual extends Singleton {
    * @param string
    */
   public function convert_current_url($language) {
-    return $this->convert_url($this->get_current_url(), $language);
+    $this->debug = true;
+    $url = $this->convert_url($this->get_current_url(), $language);
+    $this->debug = false;
+    return $url;
   }
 
   /**
@@ -391,7 +397,7 @@ class ACF_Multilingual extends Singleton {
     $default_language = $this->get_default_language();
     $languages = $this->get_languages();
     foreach( $languages as &$language ) {
-      $language['url'] = $this->convert_current_url($language['iso']);
+      // $language['url'] = $this->convert_current_url($language['iso']);
     }
     echo $this->get_template('meta-tags', [
       'languages' => $languages,
@@ -420,7 +426,7 @@ class ACF_Multilingual extends Singleton {
       
       // @TODO filter the canonical redirect instead of deactivating it
       remove_action('template_redirect', 'redirect_canonical');
-    }    
+    }
 
     return $vars;
   }
@@ -492,6 +498,10 @@ class ACF_Multilingual extends Singleton {
     $path = preg_replace("%/($regex_languages)(/|$|\?|#)%", '', $path);
     $path = explode('?', $path)[0];
     $path = trim($path, '/');
+    // prepare the $path
+    $path     = rawurlencode( urldecode( $path ) );
+    $path     = str_replace( '%2F', '/', $path );
+    $path     = str_replace( '%20', ' ', $path );
     return $path;
   }
 
@@ -502,7 +512,7 @@ class ACF_Multilingual extends Singleton {
    * @param string|null $language
    * @return \WP_Post|null
    */
-  public function get_post_by_path(String $path, ?String $language = null): ?\WP_Post {
+  public function get_post_by_path(string $path, ?string $language = null): ?\WP_Post {
     global $wp_rewrite;
     
     // setup variables
@@ -512,32 +522,35 @@ class ACF_Multilingual extends Singleton {
     $post = null;
     $post_parent = 0;
 
-    // prepare the $path
-    $path     = rawurlencode( urldecode( $path ) );
-    $path     = str_replace( '%2F', '/', $path );
-    $path     = str_replace( '%20', ' ', $path );
-
+    
     // check cache
     $last_changed = wp_cache_get_last_changed( 'posts' );
     $hash         = md5( $path . serialize( $post_type ) );
-    $cache_key    = "get_page_by_path:$hash:$last_changed:$language";
+    $cache_key    = "$this->prefix:get_post_by_path:$hash:$last_changed:$language";
+    
+    // wp_cache_delete($cache_key, 'posts' );
     $cached       = wp_cache_get( $cache_key, 'posts' );
-    if ( $cached !== false ) return get_post( $cached );
+    if ( false !== $cached ) {
+      // Special case: '0' is a bad `$page_path`.
+      if ( '0' === $cached || 0 === $cached ) {
+        return null;
+      } else {
+        return get_post( $cached );
+      }
+    }
 
     // prepare the path segments
     $segments = explode( '/', trim( $path, '/' ) );
     $segments = array_map( 'sanitize_title_for_query', $segments );
 
-    
     // ignore rewrite front
     if( $segments[0] === trim($wp_rewrite->front, '/') ) {
       unset($segments[0]);
       $segments = array_values($segments);
     }
 
-    // if the first segment matches a custom post_type name, 
+    // if the first segment matches a custom post_type rewrite slug, 
     // use it and unset it from the segments
-    // @TODO look for the custom post types rewrite slug instead of just it's name
     $custom_post_types = array_keys(get_post_types([
       'public' => true,
       '_builtin' => false,
@@ -553,7 +566,6 @@ class ACF_Multilingual extends Singleton {
         break;
       }
     }
-    
 
     // first, check if only one post is there for the last $segment.
     // e.g. /mum/child/grandchild: Check if only one post with a slug of 'grandchild' exists globally
@@ -567,7 +579,7 @@ class ACF_Multilingual extends Singleton {
     
     // we have been looking for two $posts with the same slug.
     // if exatly 1 $post has been found, use that one.
-    if( count($posts) === 1 ) {
+    if( count($posts) < 2 ) { 
       $post = array_shift($posts);
     } else {
       // if multiple posts have the same slug, walk the tree.    
@@ -587,10 +599,41 @@ class ACF_Multilingual extends Singleton {
         }
       }
     }
-    
+
     wp_cache_set( $cache_key, $post->ID ?? 0, 'posts' );
 
     return $post;
+  }
+
+  /**
+   * Get a post type 
+   *
+   * @param String $path
+   * @param String|null $language
+   * @return String|null
+   */
+  public function get_post_type_archive_by_path(String $path, ?String $language = null): ?string {
+    // prepare the path segments
+    $segments = explode( '/', trim( $path, '/' ) );
+    $segments = array_map( 'sanitize_title_for_query', $segments );
+    foreach( get_post_types() as $post_type ) {
+      if( $this->get_post_type_archive_slug($post_type, $language) === $segments[0] ) return $post_type;
+    }
+    return null;
+  }
+
+  /**
+   * Get the archive slug for a post type
+   *
+   * @param string $post_type
+   * @param string $language
+   * @return string|null
+   */
+  public function get_post_type_archive_slug( string $post_type, string $language ): ?string {
+    $post_type_object = get_post_type_object($post_type);
+    if( !$post_type_object ) return null;
+    if( !$post_type_object->has_archive ) return null;
+    return $post_type_object->acfml[$language]['archive_slug'] ?? $post_type_object->has_archive;
   }
 
   /**
@@ -636,11 +679,32 @@ class ACF_Multilingual extends Singleton {
     $url = $this->home_url("/$path/", $language);
     return $url;
   }
-  
 
-  function post_type_archive_link($link, $post_type) {
-    $post_type_obj = get_post_type_object( $post_type );
-    // pre_dump( $post_type_obj );
+  /**
+   * Get post type archive url for a language
+   *
+   * @param string $post_type_object
+   * @param string $language
+   * @return string|null
+   */
+  private function get_post_type_archive_link( string $post_type, string $language ): ?string {
+
+    
+    remove_filter('post_type_archive_link', [$this, 'convert_url']);
+    $link = get_post_type_archive_link($post_type);
+    $path = trim(str_replace(home_url(), '', $link), '/');
+    add_filter('post_type_archive_link', [$this, 'convert_url']);
+    
+
+    $default_archive_slug = $this->get_post_type_archive_slug($post_type, $this->get_default_language());
+    $archive_slug = $this->get_post_type_archive_slug($post_type, $language);
+    if( !$archive_slug ) return $link;
+
+    $path = preg_replace("#$default_archive_slug$#", $archive_slug, $path);
+
+    $link = $this->home_url("/$path/", $language);
+    $link = apply_filters('acfml/post_type_archive_link', $link, $post_type, $language);
     return $link;
   }
+  
 }

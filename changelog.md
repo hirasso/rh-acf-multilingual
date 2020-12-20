@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-20)
 
-- support for rewrite front (#8356df4)
+- Make post type archive and rewrite slugs multilingual (#59c55a6)
+- support for rewrite front (#f9b7724)
 - multilingual post type rewrite slug support for get_post_by_path (#4a4c68c)
 - multilingual slugs support for get_post_url (#8614af2)
 - fix for grandchildren (#0724efe)
