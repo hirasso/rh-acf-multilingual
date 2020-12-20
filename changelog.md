@@ -1,6 +1,6 @@
 #### 0.0.1 (2020-12-20)
 
-- use user_trailingslashit for $paths (#3a3277e)
+- use user_trailingslashit for $paths (#104228c)
 - Make post type archive and rewrite slugs multilingual (#0634864)
 - support for rewrite front (#f9b7724)
 - multilingual post type rewrite slug support for get_post_by_path (#4a4c68c)

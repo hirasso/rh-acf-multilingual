@@ -616,7 +616,9 @@ class ACF_Multilingual extends Singleton {
     // prepare the path segments
     $segments = explode( '/', trim( $path, '/' ) );
     $segments = array_map( 'sanitize_title_for_query', $segments );
+    // loop through all post types and 
     foreach( get_post_types() as $post_type ) {
+      if( !is_post_type_viewable($post_type) ) continue;
       if( $this->get_post_type_archive_slug($post_type, $language) === $segments[0] ) return $post_type;
     }
     return null;
@@ -631,9 +633,9 @@ class ACF_Multilingual extends Singleton {
    */
   public function get_post_type_archive_slug( string $post_type, string $language ): ?string {
     $post_type_object = get_post_type_object($post_type);
-    if( !$post_type_object ) return null;
-    if( !$post_type_object->has_archive ) return null;
-    return $post_type_object->acfml[$language]['archive_slug'] ?? $post_type_object->has_archive;
+    if( !$post_type_object || !$post_type_object->has_archive ) return null;
+    $default_archive_slug = is_string($post_type_object->has_archive) ? $post_type_object->has_archive : $post_type;
+    return $post_type_object->acfml[$language]['archive_slug'] ?? $default_archive_slug;
   }
 
   /**

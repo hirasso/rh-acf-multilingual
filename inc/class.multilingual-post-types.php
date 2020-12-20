@@ -50,7 +50,8 @@ class Multilingual_Post_Types extends Singleton {
     // methods
     $this->setup_acf_fields();
 
-    add_action('init', [$this, 'add_rewrite_rules'], 11);
+    add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array']);
+    add_action('init', [$this, 'flush_rewrite_rules'], 11);
     
   }
 
@@ -85,24 +86,13 @@ class Multilingual_Post_Types extends Singleton {
    *
    * @return void
    */
-  public function add_rewrite_rules() {
-    
-    add_filter('rewrite_rules_array', function($rules) {
-      
-      foreach( $this->get_multilingual_custom_post_types() as $post_type ) {
-
-        $rules = $this->multilingual_rewrite_slugs($rules, $post_type);
-        $rules = $this->multilingual_archive_slugs($rules, $post_type);
-
-      }
-      return $rules;
-    });
+  public function flush_rewrite_rules() {
     flush_rewrite_rules();
   }
 
   /**
-   * Makes post type archives multilingual. Looks for the custom property acfml>archive_slug in the post type object
-   * and adds possibly found slug translations to the regex
+   * Makes post type archives multilingual. Looks for the custom property acfml->lang->archive_slug in the 
+   * post type object and adds possibly found slug translations to the regex
    *
    * @param Array $rules
    * @param String $post_type
@@ -128,14 +118,12 @@ class Multilingual_Post_Types extends Singleton {
         $new_rules[$regex] = $rule;
       }
     }
-
     return $new_rules;
-    
   }
 
   /**
   * Makes post type rewrite slugs multilingual. 
-  * Looks for the custom property acfml>rewrite_slug in the post type object
+  * Looks for the custom property acfml->lang->rewrite_slug in the post type object
   * and adds possibly found slug translations to the regex
   *
   * @param Array $rules
@@ -148,7 +136,6 @@ class Multilingual_Post_Types extends Singleton {
     $translated_rewrite_slugs = array_column($pt_object->acfml, 'rewrite_slug') ?? null;
     if( !$translated_rewrite_slugs ) return $rules;
     $rewrite_slugs = array_values(array_unique(array_merge([$default_slug], $translated_rewrite_slugs)));
-
     $new_rules = [];
     foreach( $rules as $regex => $rule ) {
       if( strpos($regex, $default_slug ) === 0 ) {
@@ -441,5 +428,21 @@ class Multilingual_Post_Types extends Singleton {
     }
     
     return $count ? "$original_slug-$count" : $original_slug;
+  }
+
+  /**
+   * Add rewrite rules for multilingual post types
+   *
+   * @param Array $rules
+   * @return Array
+   */
+  public function rewrite_rules_array($rules) {
+    foreach( $this->get_multilingual_custom_post_types() as $post_type ) {
+
+      $rules = $this->multilingual_rewrite_slugs($rules, $post_type);
+      $rules = $this->multilingual_archive_slugs($rules, $post_type);
+
+    }
+    return $rules;
   }
 }
