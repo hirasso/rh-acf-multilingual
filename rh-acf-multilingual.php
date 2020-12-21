@@ -14,11 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  */
 require_once(__DIR__ . '/inc/class.singleton.php');
 require_once(__DIR__ . '/inc/class.acfml.php');
-require_once(__DIR__ . '/inc/class.multilingual-fields.php');
-require_once(__DIR__ . '/inc/class.admin.php');
-require_once(__DIR__ . '/inc/class.multilingual-post-types.php');
-require_once(__DIR__ . '/inc/class.multilingual-term-titles.php');
-
 
 /**
  * Make main instance available API calls
@@ -29,30 +24,13 @@ function acfml() {
   return ACFML\ACF_Multilingual::getInstance(); 
 }
 
-/**
- * Make Admin accessible
- *
- * @return \ACFML\Admin
- */
-function admin() {
-  return ACFML\Admin::getInstance();
-}
-
-/**
- * Initialize classes
- */
-
-ACFML\ACF_Multilingual::getInstance();
-ACFML\Multilingual_Fields::getInstance();
-ACFML\Admin::getInstance();
-ACFML\Multilingual_Post_Types::getInstance();
-ACFML\Multilingual_Term_Titles::getInstance();
+acfml()->init();
 
 /**
  * If ACF is defined, initialize the plugin.
  * Otherwise, show a notice.
  */
-function initialize_plugin() {
+function acfml_initialize_plugin() {
   if( defined('ACF') ) {
     init();
   } elseif( current_user_can('manage_plugins') ) {

@@ -10,9 +10,9 @@ class Admin extends Singleton {
 
   public function __construct() {
     $this->prefix = acfml()->get_prefix();
-    add_filter('wp_unique_post_slug', [$this, 'unique_post_slug'], 10, 6);
     add_action('admin_notices', [$this, 'show_admin_notices']);
     add_action('acf/init', [$this, 'acf_init']);
+    
   }
 
   /**
@@ -37,31 +37,6 @@ class Admin extends Singleton {
       'capability' => 'manage_options',
       'parent_slug' => 'options-general.php'
     ]);
-  }
-
-  /**
-   * Don't overwrite languages with post or top level page slugs
-   *
-   * @param string $slug
-   * @param Int $post_id
-   * @param string $post_status
-   * @param string $post_type
-   * @param Int $post_parent
-   * @param string $original_slug
-   * @param string
-   */
-  public function unique_post_slug( $slug, $post_id, $post_status, $post_type, $post_parent, $original_slug ) {
-    // add 'one' to slugs that would overwrite the  default language 
-    // e.g. 'en' or 'de'
-    if( in_array($post_type, ['post', 'page'])
-        && !$post_parent
-        && $slug === acfml()->get_default_language() ) {
-      remove_filter('unique_post_slug', [$this, 'unique_post_slug']);
-      $slug = wp_unique_post_slug("$slug-1", $post_id, $post_status, $post_type, $post_parent);
-      add_filter('unique_post_slug', [$this, 'unique_post_slug'], 10, 6);
-    }
-    
-    return $slug;
   }
 
   /**

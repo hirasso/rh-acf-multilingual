@@ -4,12 +4,23 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+require_once(__DIR__ . '/class.multilingual-fields.php');
+require_once(__DIR__ . '/class.admin.php');
+require_once(__DIR__ . '/class.multilingual-post-types.php');
+require_once(__DIR__ . '/class.multilingual-taxonomies.php');
+
 class ACF_Multilingual extends Singleton {
 
   private $prefix = 'acfml';
   private $debug = false;
 
-  public function __construct() {
+  public function init() {
+    
+    Admin::getInstance();
+    Multilingual_Fields::getInstance();
+    Multilingual_Post_Types::getInstance();
+    Multilingual_Taxonomies::getInstance();
+
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
     add_action('plugins_loaded', [$this, 'detect_current_language']);
@@ -131,7 +142,7 @@ class ACF_Multilingual extends Singleton {
    * @param array $array
    * @return stdClass
    */
-  private function to_object( $array ) {
+  public function to_object( $array ) {
     return json_decode(json_encode($array));
   }
 
@@ -191,15 +202,16 @@ class ACF_Multilingual extends Singleton {
 
   /**
    * Get non-default languages
-   *
-   * @return Array
+   * 
+   * @param $format
+   * @return array
    */
-  public function get_non_default_languages() {
-    $default_language = $this->get_default_language();
+  public function get_non_default_languages(string $format = 'full'): array {
     $languages = $this->get_languages();
-    $languages = array_filter($languages, function($language) use ($default_language) {
-      return $language['iso'] !== $default_language;
+    $languages = array_filter($languages, function($language) {
+      return $language['is_default'] !== true;
     });
+    if( $format === 'iso' ) $languages = array_column($languages, 'iso');
     // cleanup array keys
     return array_merge($languages);
   }
@@ -424,8 +436,8 @@ class ACF_Multilingual extends Singleton {
       unset($vars[$post->post_type]);
       unset($vars['error']);
       
-      // @TODO filter the canonical redirect instead of deactivating it
-      remove_action('template_redirect', 'redirect_canonical');
+      // @TODO check if there are cases where we have to fix canonical redirects
+      // remove_action('template_redirect', 'redirect_canonical');
     }
 
     return $vars;
@@ -514,7 +526,7 @@ class ACF_Multilingual extends Singleton {
    */
   public function get_post_by_path(string $path, ?string $language = null): ?\WP_Post {
     global $wp_rewrite;
-    
+
     // setup variables
     if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
@@ -567,37 +579,42 @@ class ACF_Multilingual extends Singleton {
       }
     }
 
-    // first, check if only one post is there for the last $segment.
-    // e.g. /mum/child/grandchild: Check if only one post with a slug of 'grandchild' exists globally
-    $posts = get_posts([
-      'post_type' => $post_type,
-      'meta_key' => $meta_key,
-      'posts_per_page' => 2,
-      'meta_value' => $segments[count($segments)-1],
-      'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
-    ]);
-    
-    // we have been looking for two $posts with the same slug.
-    // if exatly 1 $post has been found, use that one.
-    if( count($posts) < 2 ) { 
-      $post = array_shift($posts);
-    } else {
-      // if multiple posts have the same slug, walk the tree.    
-      foreach($segments as $segment) {
-        $posts = get_posts([
-          'post_type' => $post_type,
-          'post_parent' => $post_parent,
-          'posts_per_page' => 1,
-          'meta_key' => $meta_key,
-          'meta_value' => $segment,
-          'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
-        ]);
-        if( $post = array_shift($posts) ) {
-          $post_parent = $post->ID;
-        } else {
-          break;
+    // if there are segments left, look for posts
+    if( count($segments) ) {
+
+      // first, check if only one post is there for the last $segment.
+      // e.g. /mum/child/grandchild: Check if only one post with a slug of 'grandchild' exists globally
+      $posts = get_posts([
+        'post_type' => $post_type,
+        'meta_key' => $meta_key,
+        'posts_per_page' => 2,
+        'meta_value' => $segments[count($segments)-1],
+        'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
+      ]);
+
+      // we have been looking for two $posts with the same slug.
+      // if exatly 1 $post has been found, use that one.
+      if( count($posts) < 2 ) { 
+        $post = array_shift($posts);
+      } else {
+        // if multiple posts have the same slug, walk the tree.    
+        foreach($segments as $segment) {
+          $posts = get_posts([
+            'post_type' => $post_type,
+            'post_parent' => $post_parent,
+            'posts_per_page' => 1,
+            'meta_key' => $meta_key,
+            'meta_value' => $segment,
+            'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
+          ]);
+          if( $post = array_shift($posts) ) {
+            $post_parent = $post->ID;
+          } else {
+            break;
+          }
         }
       }
+
     }
 
     wp_cache_set( $cache_key, $post->ID ?? 0, 'posts' );

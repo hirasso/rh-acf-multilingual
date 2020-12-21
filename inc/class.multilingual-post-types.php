@@ -16,6 +16,7 @@ class Multilingual_Post_Types extends Singleton {
   private $slug_field_key;
 
   public function __construct() {
+    add_action('registered_post_type', [$this, 'registered_post_type'], 10, 2);
     add_action('acf/init', [$this, 'init']);
   }
 
@@ -36,7 +37,7 @@ class Multilingual_Post_Types extends Singleton {
     $this->slug_field_key = "field_$this->slug_field_name";
 
     // hooks
-    add_filter('the_title', [$this, 'filter_post_title'], 10, 2);
+    add_filter('single_post_title', [$this, 'single_post_title'], 10, 2);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
     // add_action("acf/render_field/key={$this->title_field_key}", [$this, 'render_field']);
     add_action("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
@@ -264,14 +265,14 @@ class Multilingual_Post_Types extends Singleton {
   }
 
   /**
-   * Filter title
+   * Filter title of post
    *
    * @param string $title
    * @param Int $post_id
    * @param string
    */
-  public function filter_post_title($title, $post_id) {
-    $acfml_title = get_field($this->title_field_name, $post_id);
+  public function single_post_title($title, $post) {
+    $acfml_title = get_field($this->title_field_name, $post->ID);
     return $acfml_title ? $acfml_title : $title;
   }
 
@@ -390,15 +391,16 @@ class Multilingual_Post_Types extends Singleton {
   function get_unique_post_slug(String $slug, \WP_Post $post, String $lang): string {
     global $wp_rewrite;
     $meta_key = "{$this->slug_field_name}_{$lang}";
-    $reserved_slugs = $wp_rewrite->feeds ?? [];
-    $reserved_slugs = array_merge($reserved_slugs, ['embed']);
+    $reserved_root_slugs = $wp_rewrite->feeds ?? [];
+    $reserved_root_slugs = array_merge($reserved_root_slugs, ['embed']);
+    $reserved_root_slugs = array_merge($reserved_root_slugs, acfml()->get_languages('iso'));
     $count = 0;
 
     // allow for filtering bad post slugs
     $is_bad_post_slug = apply_filters('acfml/is_bad_post_slug', false, $slug, $post, $lang);
 
     // @see wp-includes/post.php -> wp_unique_post_slug()
-    if( $post->post_parent && in_array($slug, $reserved_slugs, true) 
+    if( !$post->post_parent && in_array($slug, $reserved_root_slugs, true) 
       || preg_match( "@^($wp_rewrite->pagination_base)?\d+$@", $slug )
       || $is_bad_post_slug
       ) {
@@ -427,7 +429,8 @@ class Multilingual_Post_Types extends Singleton {
       }
     }
     
-    return $count ? "$original_slug-$count" : $original_slug;
+    $slug =  $count ? "$original_slug-$count" : $original_slug;
+    return $slug;
   }
 
   /**
@@ -444,5 +447,23 @@ class Multilingual_Post_Types extends Singleton {
 
     }
     return $rules;
+  }
+
+  /**
+   * Runs after a post type was registered
+   *
+   * @param string $pt
+   * @param \WP_Post_Type $pt_object
+   * @return void
+   */
+  public function registered_post_type( string $pt, \WP_Post_Type $pt_object ) {
+    global $wp_post_types;
+    $language = acfml()->get_current_language();
+    $acfml = $pt_object->acfml[$language] ?? null;
+    if( !$acfml ) return;
+    if( $labels = $acfml['labels'] ?? null ) {
+      $pt_object->labels = $labels;
+      $wp_post_types[$pt]->labels = get_post_type_labels($pt_object);
+    }
   }
 }
