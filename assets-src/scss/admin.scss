@@ -105,8 +105,14 @@
 /*
 * Slugs
 */
-.acf-field-acfml-slug .acfml-tabs-wrap {
-  // display: none;
+.acfml-slug .acf-input-append {
+  padding: 0;
+  position: relative;
+  z-index: 2;
+}
+.acfml-slug .acf-input-append .button {
+  border-radius: 0 3px 3px 0;
+  margin: -1px;
 }
 
 /*

@@ -37,6 +37,7 @@ class Multilingual_Post_Types extends Singleton {
     $this->slug_field_key = "field_$this->slug_field_name";
 
     // hooks
+    add_filter('the_title', [$this, 'single_post_title'], 10, 2);
     add_filter('single_post_title', [$this, 'single_post_title'], 10, 2);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
     // add_action("acf/render_field/key={$this->title_field_key}", [$this, 'render_field']);
@@ -207,19 +208,22 @@ class Multilingual_Post_Types extends Singleton {
       'parent' => $this->field_group_key,
       'wrapper' => [
         'class' => str_replace('_', '-', $this->title_field_name),
-        // 'id' => 'titlediv',
       ]
     ));
 
+    // prepare slug fields for each language
     foreach( acfml()->get_languages('iso') as $lang ) {
       add_filter("acf/prepare_field/key=field_acfml_slug_$lang", function($field) use ($lang) {
         global $post;
-        $post_link = $post->post_parent ? acfml()->get_post_link(get_post($post->post_parent), $lang) : acfml()->get_post_link($post, $lang);
-        $field['prepend'] = $post_link;
+        $post_link = acfml()->get_post_link($post, $lang);
+        $prepend = $field['value'] ? preg_replace("#{$field['value']}/?$#", '', $post_link) : $post_link;
+        $field['prepend'] = $prepend;
+        if( in_array($post->post_status, ['publish'] ) ) {
+          $field['append'] = sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
+        }
         return $field;
       });
     }
-
     
     // create the field for slugs
     acf_add_local_field(array(
@@ -277,6 +281,7 @@ class Multilingual_Post_Types extends Singleton {
    * @param string
    */
   public function single_post_title($title, $post) {
+    $post = get_post($post);
     $acfml_title = get_field($this->title_field_name, $post->ID);
     return $acfml_title ? $acfml_title : $title;
   }

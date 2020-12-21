@@ -22,7 +22,6 @@ export default class ACFML {
       if( $field.hasClass('acfml-post-title') ) {
         this.switchLanguage($('.acfml-slug'), language);
       }
-      console.log( $field, language );
     })
     $(document).on('click', '.acfml-tab', e => {
       e.preventDefault();

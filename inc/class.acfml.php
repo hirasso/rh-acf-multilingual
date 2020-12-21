@@ -30,14 +30,9 @@ class ACF_Multilingual extends Singleton {
     add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
     add_action('request', [$this, 'prepare_request']);
-
-    // complex links
-    add_filter('post_type_link', [$this, 'convert_url'], 11);
-    add_filter('post_type_archive_link', [$this, 'convert_url']);
-    // add_filter('term_link', [$this, 'term_link'], 10, 3);
-    // simple links
-    add_filter('get_shortlink', [$this, 'convert_url']);
-    add_filter('rest_url', [$this, 'convert_url']);
+    
+    
+    $this->convert_wp_urls();
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
   }
@@ -306,6 +301,39 @@ class ACF_Multilingual extends Singleton {
     $new_home_url = $this->home_url('', $requested_language);
     $url = str_replace($current_home_url, $new_home_url, $url);
     return $url;
+  }
+
+  /**
+   * Converts all WP Urls
+   *
+   * @return void
+   */
+  private function convert_wp_urls() {
+    $urls = [
+      "author_feed_link" => 10,
+      "author_link" => 10,
+      "get_comment_author_url_link" => 10,
+      "post_comments_feed_link" => 10,
+      "day_link" => 10,
+      "month_link" => 10,
+      "year_link" => 10,
+      "page_link" => 10,
+      "post_link" => 10,
+      "category_link" => 10,
+      "category_feed_link" => 10,
+      "tag_link" => 10,
+      "term_link" => 10,
+      "the_permalink" => 10,
+      "feed_link" => 10,
+      "tag_feed_link" => 10,
+      "get_shortlink" => 10,
+      "rest_url" => 10,
+      "post_type_link" => 10,
+    ];
+    $urls = apply_filters("acfml/convert_wp_urls", $urls);
+    foreach( $urls as $filter_name => $priority ) {
+      add_filter($filter_name, [$this, 'convert_url'], $priority);
+    }
   }
 
   /**
