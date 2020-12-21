@@ -15,7 +15,7 @@
   }
 }
 .acfml-field > .acf-input > .acf-input-wrap {
-  overflow: visible;
+  
 }
 .acfml-field > .acf-label {
   display: none;
@@ -78,7 +78,7 @@
 }
 
 .post-php, .post-new-php {
-  .acf-field-acfml-post-title input:not(.acf-is-prepended) {
+  .acf-field-acfml-post-title input {
     padding: 3px 8px;
     font-size: 1.7em;
     line-height: 100%;
@@ -97,8 +97,16 @@
 .acfml-supports-post-title #titlediv {
   display: none;
 }
-.acf-fields>.acfml-post-title {
+.acf-fields>.acfml-post-title,
+.acf-fields>.acf-field-acfml-slug {
   padding-top: 0;
+}
+
+/*
+* Slugs
+*/
+.acf-field-acfml-slug .acfml-tabs-wrap {
+  // display: none;
 }
 
 /*

@@ -99,7 +99,7 @@ class Multilingual_Fields extends Singleton {
         // Only the default language of a sub-field should be required
         'required' => $lang_iso === $default_language && $field['required'],
         'is_multilingual' => 0,
-        'wrapper' => $wrapper
+        'wrapper' => $wrapper,
       ]);
       
       // add the subfield

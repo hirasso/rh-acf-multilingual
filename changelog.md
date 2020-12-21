@@ -1,5 +1,6 @@
-#### 0.0.1 (2020-12-20)
+#### 0.0.1 (2020-12-21)
 
+- Optimize Slug Fields (#ffb12c3)
 - use user_trailingslashit for $paths (#104228c)
 - Make post type archive and rewrite slugs multilingual (#0634864)
 - support for rewrite front (#f9b7724)

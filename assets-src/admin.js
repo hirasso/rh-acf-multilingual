@@ -18,6 +18,12 @@ export default class ACFML {
    * Setup language switchers for multilingual acf-fields
    */
   initLanguageTabs() {
+    acf.addAction('acfml/switch_language', ($field, language) => {
+      if( $field.hasClass('acfml-post-title') ) {
+        this.switchLanguage($('.acfml-slug'), language);
+      }
+      console.log( $field, language );
+    })
     $(document).on('click', '.acfml-tab', e => {
       e.preventDefault();
       const $el = $(e.target);
@@ -29,22 +35,26 @@ export default class ACFML {
       e.preventDefault();
       const $el = $(e.target);
       const language = $el.attr('data-language');
-      this.switchLanguage($('.acfml-multilingual-field'), language);
+      this.switchLanguage($('.acfml-multilingual-field:not(.acfml-slug)'), language);
     })
   }
 
   /**
    * Switches the language for an .acfml-multilingual-field
-   * @param {jQuery Object} $el 
+   * @param {jQuery Object} $fields 
    * @param {String} language 
    */
-  switchLanguage($el, language) {
-    const $fields = $el.find('.acf-input:first').find(".acfml-field");
-    const $tabs = $el.find('.acfml-tab');
-    $tabs.removeClass('is-active');
-    $tabs.filter(`[data-language=${language}]`).addClass('is-active');
-    $fields.removeClass('is-visible');
-    $fields.filter(`[data-name=${language}]`).addClass('is-visible');
+  switchLanguage($fields, language) {
+    $fields.each((i, el) => {
+      const $el = $(el);
+      const $childFields = $el.find('.acf-input:first').find(".acfml-field");
+      const $tabs = $el.find('.acfml-tab');
+      $tabs.removeClass('is-active');
+      $tabs.filter(`[data-language=${language}]`).addClass('is-active');
+      $childFields.removeClass('is-visible');
+      $childFields.filter(`[data-name=${language}]`).addClass('is-visible');
+      acf.doAction('acfml/switch_language', $el, language);
+    })
   }
 
   /**
@@ -66,7 +76,6 @@ export default class ACFML {
   initMultilingualPostTitle() {
     acf.addAction(`ready_field/key=field_acfml_post_title_${acfml.defaultLanguage}`, $field => {
       $('#titlediv').remove();
-      // $field.$input().attr('id', 'title');
       if( !acfml.isMobile && !$field.val() ) $field.$input().focus();
     });
     acf.addAction(`ready_field/key=field_acfml_slug`, $field => {

@@ -192,6 +192,7 @@ class Multilingual_Post_Types extends Singleton {
       'style' => 'seamless',
       'position' => 'acf_after_title',
       'location' => $location,
+      'instruction_placement' => 'field',
     ]);
     
     // create the title field
@@ -210,22 +211,26 @@ class Multilingual_Post_Types extends Singleton {
       ]
     ));
 
-    // create the slug field group
-    acf_add_local_field_group([
-      'key' => "group_{$this->slug_field_key}",
-      'title' => __('Slug'),
-      'menu_order' => -999,
-      'style' => 'default',
-      'position' => 'acf_after_title',
-      'location' => $location,
-    ]);
+    foreach( acfml()->get_languages('iso') as $lang ) {
+      add_filter("acf/prepare_field/key=field_acfml_slug_$lang", function($field) use ($lang) {
+        global $post;
+        $post_link = $post->post_parent ? acfml()->get_post_link(get_post($post->post_parent), $lang) : acfml()->get_post_link($post, $lang);
+        $field['prepend'] = $post_link;
+        return $field;
+      });
+    }
+
+    
     // create the field for slugs
     acf_add_local_field(array(
       'key' => $this->slug_field_key,
       'name' => $this->slug_field_name,
+      'label' => __('Permalink'),
+      'instructions' => __('If left empty, one will be generated from the title', $this->prefix),
       'type' => 'text',
       'is_multilingual' => true,
-      'parent' => "group_{$this->slug_field_key}",
+      'parent' => $this->field_group_key,
+      'prepend' => '/',
       'wrapper' => [
         'class' => str_replace('_', '-', $this->slug_field_name),
       ]
