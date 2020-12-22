@@ -33,7 +33,7 @@ class ACF_Multilingual extends Singleton {
     add_action('request', [$this, 'prepare_request']);
     
     
-    $this->convert_wp_urls();
+    $this->add_link_filters();
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
   }
@@ -382,13 +382,8 @@ class ACF_Multilingual extends Singleton {
     return $url;
   }
 
-  /**
-   * Converts all WP Urls
-   *
-   * @return void
-   */
-  private function convert_wp_urls() {
-    $urls = [
+  private function get_link_filters() {
+    $filters = [
       "author_feed_link" => 10,
       "author_link" => 10,
       "get_comment_author_url_link" => 10,
@@ -410,17 +405,36 @@ class ACF_Multilingual extends Singleton {
       "post_type_link" => 10,
     ];
     /**
-     * Filter the URLs that should be converted. 
-     * Should return an array like this:
-     * 
-     * array(
-     *  "wp_filter_name" => priority,
-     *  "another_wp_filter_name" => priority,
-     * )
-     */
-    $urls = apply_filters("acfml/convert_wp_urls", $urls);
-    foreach( $urls as $filter_name => $priority ) {
+    * Filter the Links that should be converted. 
+    * Should return an array like this:
+    * 
+    * array(
+    *  "wp_filter_name" => priority,
+    *  "another_wp_filter_name" => priority,
+    * )
+    */
+    return apply_filters("acfml/link_filters", $filters);
+  }
+
+  /**
+   * Add Link filters
+   *
+   * @return void
+   */
+  private function add_link_filters() {
+    foreach( $this->get_link_filters() as $filter_name => $priority ) {
       add_filter($filter_name, [$this, 'convert_url'], intval($priority));
+    }
+  }
+
+  /**
+  * Remove Link filters
+  *
+  * @return void
+  */
+  private function remove_link_filters() {
+    foreach( $this->get_link_filters() as $filter_name => $priority ) {
+      remove_filter($filter_name, [$this, 'convert_url']);
     }
   }
 
@@ -807,10 +821,14 @@ class ACF_Multilingual extends Singleton {
     // if the post is the front page, return home page in requested language
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
 
-    // add possible rewrite front
-    $with_front = $post->post_type === 'post' || ($post_type_object->rewrite['with_front'] ?? null);
-    $front = trim($wp_rewrite->front, '/');
-    if( $with_front && $front ) $segments[] = $front;
+    $this->remove_link_filters();
+    $default_permalink = get_permalink($post);
+    $original_post_uri = get_page_uri($post);
+    $this->add_link_filters();
+
+    if( $language === $this->get_default_language() ) {
+      return $default_permalink;
+    }
 
     // add possible custom post type's rewrite slug and front to segments
     $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
