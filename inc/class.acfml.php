@@ -542,13 +542,16 @@ class ACF_Multilingual extends Singleton {
     if( is_admin() ) return $vars;
     // do nothing for default language
     if( $this->get_current_language() === $this->get_default_language() ) return $vars;
+    $language = $this->get_current_language();
+    $path = $this->get_path($this->get_current_url());
     
-    if( $post = $this->get_post_by_path($this->get_path($this->get_current_url()), $this->get_current_language()) ) {
+    if( $post = $this->get_post_by_path($path, $language) ) {
       
       $vars['post_type'] = $post->post_type;
       $vars['p'] = $post->ID;
       unset($vars['attachment']);
       unset($vars['name']);
+      unset($vars['pagename']);
       unset($vars[$post->post_type]);
       unset($vars['error']);
       
@@ -643,13 +646,14 @@ class ACF_Multilingual extends Singleton {
   public function get_post_by_path(string $path, ?string $language = null): ?\WP_Post {
     global $wp_rewrite;
 
+    if( !$path ) return null;
+
     // setup variables
     if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type = ['post', 'page'];
     $post = null;
     $post_parent = 0;
-
     
     // check cache
     $last_changed = wp_cache_get_last_changed( 'posts' );
@@ -667,35 +671,51 @@ class ACF_Multilingual extends Singleton {
       }
     }
 
-    // prepare the path segments
-    $segments = explode( '/', trim( $path, '/' ) );
-    $segments = array_map( 'sanitize_title_for_query', $segments );
-
-    // ignore rewrite front
-    if( $segments[0] === trim($wp_rewrite->front, '/') ) {
-      unset($segments[0]);
-      $segments = array_values($segments);
-    }
-
-    // if the first segment matches a custom post_type rewrite slug, 
-    // use it and unset it from the segments
-    $custom_post_types = array_keys(get_post_types([
-      'public' => true,
-      '_builtin' => false,
-    ]));
-    foreach( $custom_post_types as $pt ) {
-      $pt_object = get_post_type_object($pt);
-      $default_rewrite_slug = $pt_object->rewrite['slug'] ?? $pt;
-      $rewrite_slug = $pt_object->acfml[$language]['rewrite_slug'] ?? $default_rewrite_slug;
-      if( $segments[0] === $rewrite_slug ) {
-        $post_type = $pt;
-        unset($segments[0]);
-        $segments = array_values($segments);
+    $query_vars = [];
+    foreach ( (array) $wp_rewrite->wp_rewrite_rules() as $match => $query ) {
+      if( preg_match( "#^$match#", $path, $matches ) ) {
+        $matched_rule = $match;
         break;
       }
     }
+    if( isset($matched_rule) ) {
+      // Trim the query of everything up to the '?'.
+      $query = preg_replace( '!^.+\?!', '', $query );
+      // Substitute the substring matches into the query.
+      $query = addslashes( \WP_MatchesMapRegex::apply( $query, $matches ) );
+      // parse the query string
+      $query_vars = wp_parse_args($query);
+    }
+    // pre_dump($query_vars); // @TODO: From here on we have valid query vars!!! PAARTY PAAAAARTY!!!
 
-    // if there are segments left, look for posts
+    $segments = [];
+    if( isset($query_vars['name']) ) {
+      $segments = [$query_vars['name']];
+    } elseif( isset($query_vars['pagename']) ) {
+      $post_type = 'page';
+      $segments = explode('/', $query_vars['pagename']);
+    } else {
+      $custom_post_types = array_keys(get_post_types([
+        'public' => true,
+        '_builtin' => false,
+      ]));
+      foreach( $custom_post_types as $pt ) {
+        $pt_object = get_post_type_object($pt);
+        $default_rewrite_slug = $pt_object->rewrite['slug'] ?? $pt;
+        $rewrite_slug = $pt_object->acfml[$language]['rewrite_slug'] ?? $default_rewrite_slug;
+        if( isset($query_vars[$rewrite_slug]) ) {
+          $post_type = $pt;
+          $segments = explode('/', $query_vars[$rewrite_slug]);
+          break;
+        }
+      }
+    }
+    // prepare the path segments
+    $segments = array_map( 'sanitize_title_for_query', $segments );
+    // pre_dump($post_type);
+    // pre_dump($segments);
+
+    // Look for posts
     if( count($segments) ) {
 
       // first, check if only one post is there for the last $segment.
@@ -734,7 +754,7 @@ class ACF_Multilingual extends Singleton {
     }
 
     wp_cache_set( $cache_key, $post->ID ?? 0, 'posts' );
-
+    
     return $post;
   }
 
