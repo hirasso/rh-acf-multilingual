@@ -1,6 +1,7 @@
-#### 0.0.1 (2020-12-21)
+#### 0.0.1 (2020-12-22)
 
-- add filter `acfml/convert_wp_urls` (#679b71f)
+- `get_language_switcher()` 🎉 (#b30a113)
+- add filter `acfml/convert_wp_urls` (#2e7f557)
 - Optimize Slug Fields (#3e44b84)
 - use user_trailingslashit for $paths (#104228c)
 - Make post type archive and rewrite slugs multilingual (#0634864)

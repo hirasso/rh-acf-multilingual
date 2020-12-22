@@ -8,9 +8,7 @@ class Multilingual_Post_Types extends Singleton {
   
   private $prefix;
   private $default_language;
-  private $field_postfix = "post_title";
   private $title_field_name;
-  private $field_field_key;
 
   private $slug_field_name;
   private $slug_field_key;
@@ -29,7 +27,7 @@ class Multilingual_Post_Types extends Singleton {
     // variables
     $this->prefix = acfml()->get_prefix();
     $this->default_language = acfml()->get_default_language();
-    $this->title_field_name = "{$this->prefix}_{$this->field_postfix}";
+    $this->title_field_name = "{$this->prefix}_post_title";
     $this->title_field_key = "field_{$this->title_field_name}";
     $this->field_group_key = "group_{$this->title_field_name}";
 
@@ -44,10 +42,7 @@ class Multilingual_Post_Types extends Singleton {
     add_action("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
     add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
 
-    // add_filter('acf/update_value/key=field_acfml_slug_en', [$this, 'update_post_slug'], 10, 3);
-    // add_filter('acf/update_value/key=field_acfml_slug_de', [$this, 'update_post_slug'], 10, 3);
     add_action('acf/save_post', [$this, 'save_post_slugs'], 11);
-
 
     // methods
     $this->setup_acf_fields();
@@ -193,7 +188,6 @@ class Multilingual_Post_Types extends Singleton {
       'style' => 'seamless',
       'position' => 'acf_after_title',
       'location' => $location,
-      'instruction_placement' => 'field',
     ]);
     
     // create the title field
@@ -212,11 +206,14 @@ class Multilingual_Post_Types extends Singleton {
     ));
 
     // prepare slug fields for each language
-    foreach( acfml()->get_languages('iso') as $lang ) {
+    foreach( acfml()->get_languages('slug') as $lang ) {
       add_filter("acf/prepare_field/key=field_acfml_slug_$lang", function($field) use ($lang) {
         global $post;
+        if( !$field ) return $field;
         $post_link = acfml()->get_post_link($post, $lang);
-        $prepend = $field['value'] ? preg_replace("#{$field['value']}/?$#", '', $post_link) : $post_link;
+        $slug = $field['value'] ?: $post->post_name;
+        $prepend = preg_replace("#$slug/?$#", '', $post_link);
+        if( !$field['value'] ) $field['placeholder'] = $post->post_name;
         $field['prepend'] = $prepend;
         if( in_array($post->post_status, ['publish'] ) ) {
           $field['append'] = sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
@@ -230,9 +227,10 @@ class Multilingual_Post_Types extends Singleton {
       'key' => $this->slug_field_key,
       'name' => $this->slug_field_name,
       'label' => __('Permalink'),
-      'instructions' => __('If left empty, one will be generated from the title', $this->prefix),
+      'instructions' => __('If left empty, one will be generated from the title for each language.', $this->prefix),
       'type' => 'text',
       'is_multilingual' => true,
+      // 'readonly' => true,
       'parent' => $this->field_group_key,
       'prepend' => '/',
       'wrapper' => [
@@ -281,6 +279,7 @@ class Multilingual_Post_Types extends Singleton {
    * @param string
    */
   public function single_post_title($title, $post) {
+    if( !$post ) return $title;
     $post = get_post($post);
     $acfml_title = get_field($this->title_field_name, $post->ID);
     return $acfml_title ? $acfml_title : $title;
@@ -340,7 +339,7 @@ class Multilingual_Post_Types extends Singleton {
     // during the slug generation
     $cached_locale = get_locale();
 
-    $languages = acfml()->get_languages('iso');
+    $languages = acfml()->get_languages('slug');
     $post = get_post($post_id);
 
     // bail early if the post type is not multilingual
@@ -403,7 +402,7 @@ class Multilingual_Post_Types extends Singleton {
     $meta_key = "{$this->slug_field_name}_{$lang}";
     $reserved_root_slugs = $wp_rewrite->feeds ?? [];
     $reserved_root_slugs = array_merge($reserved_root_slugs, ['embed']);
-    $reserved_root_slugs = array_merge($reserved_root_slugs, acfml()->get_languages('iso'));
+    $reserved_root_slugs = array_merge($reserved_root_slugs, acfml()->get_languages('slug'));
     $count = 0;
 
     // allow for filtering bad post slugs

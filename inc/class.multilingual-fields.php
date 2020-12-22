@@ -33,11 +33,12 @@ class Multilingual_Fields extends Singleton {
     foreach( $multilingual_field_types as $field_type ) {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
       add_filter("acf/load_field/type=$field_type", [$this, 'load_multilingual_field'], 20);
+      add_filter("acf/load_value/type=$field_type", [$this, 'load_previous_default_language_value'], 10, 3);
     }
     // add hooks for generated multilingual fields (type of those will be 'group')
     add_filter("acf/format_value/type=group", [$this, 'format_multilingual_field_value'], 12, 3);
     add_action("acf/render_field/type=group", [$this, 'render_multilingual_field'], 5);
-    add_filter("acf/load_value/type=group", [$this, 'load_multilingual_field_value'], 10, 3);
+    add_filter("acf/load_value/type=group", [$this, 'load_previous_simple_value'], 10, 3);
   }
 
   /**
@@ -70,36 +71,37 @@ class Multilingual_Fields extends Singleton {
    * @return void
    */
   public function load_multilingual_field( $field ) {
+    global $post, $post_type;
+    // return of no $field
+    if( !is_array($field) ) return $field;
+    // return of on acf-field-group edit screen
     $post_type = $_GET['post_type'] ?? get_post_type();
     if( $post_type === 'acf-field-group' ) return $field;
     // bail early if field is empty or not multilingual
-    if( !is_array($field) || empty($field['is_multilingual']) ) return $field;
-    $admin_language = acfml()->get_admin_language();
+    if( empty($field['is_multilingual']) ) return $field;
+
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
 
-    $languages = acfml()->get_languages();
-
-    if( $field['hide_default_language'] ?? null ) $languages = acfml()->get_non_default_languages();
+    $languages = acfml()->get_languages('slug');
     
     foreach( $languages as $id => $lang ) {
-      $lang_iso = $lang['iso'];
       // prepare wrapper
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfml-field';
       if( $id === 0 ) $wrapper['class'] .= ' is-visible';
-      if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang_iso}";
+      if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang}";
       $wrapper['width'] = '';
       // prepare subfield
       $sub_field = array_merge($field, [
-        'key' => "{$field['key']}_{$lang_iso}",
-        'label' => "{$field['label']} ({$lang_iso})",
-        'name' => "{$field['name']}_{$lang_iso}",
-        '_name' => "$lang_iso",
+        'key' => "{$field['key']}_{$lang}",
+        'label' => "{$field['label']} ({$lang})",
+        'name' => "{$field['name']}_{$lang}",
+        '_name' => "$lang",
         // Only the default language of a sub-field should be required
-        'required' => $lang_iso === $default_language && $field['required'],
+        'required' => $lang === $default_language && $field['required'],
         'is_multilingual' => 0,
-        'wrapper' => $wrapper,
+        'wrapper' => $wrapper
       ]);
       
       // add the subfield
@@ -134,7 +136,7 @@ class Multilingual_Fields extends Singleton {
    * @param Array $field
    * @return Mixed
    */
-  public function load_multilingual_field_value( $value, $post_id, $field ) {
+  public function load_previous_simple_value( $value, $post_id, $field ) {
     // bail early if field is empty or not multilingual
     if( !$this->is_acfml_group($field) ) return $value;
     // parse value from before the field became multilingual to the default value
@@ -144,6 +146,20 @@ class Multilingual_Fields extends Singleton {
         return $value;
       });
     }
+    return $value;
+  }
+
+  /**
+   * Load a simple field's value
+   *
+   * @param mixed $value
+   * @param int $post_id
+   * @param array $field
+   * @return mixed
+   */
+  public function load_previous_default_language_value( $value, $post_id, $field ) {
+    $default_language = acfml()->get_default_language();
+    if( !$value ) $value = get_field("{$field['name']}_{$default_language}", $post_id, false);
     return $value;
   }
 
@@ -173,12 +189,11 @@ class Multilingual_Fields extends Singleton {
     $default_language = acfml()->get_default_language();
     $languages = acfml()->get_languages();
     // maybe remove default language
-    if( $field['hide_default_language'] ?? null ) $languages = acfml()->get_non_default_languages();
     ob_start(); ?>
     <div class="acfml-tabs-wrap">
       <div class="acfml-tabs acf-js-tooltip" title="<?= __('Double-click to switch globally', $this->prefix) ?>">
       <?php foreach( $languages as $id => $language ) : ?>
-      <a href="##" class="acfml-tab <?= $id === 0 ? 'is-active' : '' ?>" data-language="<?= $language['iso'] ?>">
+      <a href="##" class="acfml-tab <?= $id === 0 ? 'is-active' : '' ?>" data-language="<?= $language['slug'] ?>">
         <?= $language['name'] ?>
       </a>
       <?php endforeach; ?>

@@ -13,6 +13,7 @@ class ACF_Multilingual extends Singleton {
 
   private $prefix = 'acfml';
   private $debug = false;
+  private $languages = null;
 
   public function init() {
     
@@ -171,28 +172,106 @@ class ACF_Multilingual extends Singleton {
   /**
    * Get all activated languages
    *
-   * @param string $format    'full' or 'iso'
+   * @param string $format    'full' or 'slug'
    * @return Array
    */
   public function get_languages( $format = 'full' ) {
     $languages = [
       [
-        'iso' => 'en',
+        'slug' => 'en',
         'locale' => 'en_US',
         'name' => 'English'
       ],
       [
-        'iso' => 'de',
+        'slug' => 'de',
         'locale' => 'de_DE',
         'name' => 'Deutsch'
       ],
     ];
-    $default_language = $this->get_default_language();
+    $languages = apply_filters("$this->prefix/languages", $languages);
     foreach( $languages as &$language ) {
-      $language['is_default'] = $language['iso'] === $default_language;
+      $language['is_default'] = $language['slug'] === $this->get_default_language();
     }
-    if( $format === 'iso' ) $languages = array_column($languages, 'iso');
-    return apply_filters("$this->prefix/languages", $languages);
+    if( $format === 'slug' ) return array_column($languages, 'slug');
+    return $languages;
+  }
+
+  /**
+   * Generate a language switcher for use in the fronend.
+   *
+   * @param array|null $args          An array with settings for your language switcher. Look at the wp_parse_args below
+   *                                  to see the default settings.
+   * 
+   *                                  - format:
+   *                                      - 'list' (default): Returns HTML like this: <ul><li><a></li><li><a></li>...</ul>
+   *                                      - 'naked_list': Samle as 'list', but without the wrapping <ul> element
+   *                                      - 'dropdown': Returns HTML like this: <select><option><option>...</select>
+   *                                      - 'raw': Returns an array
+   *                                  - display_names_as: 
+   *                                      – 'name' (default): e.g. 'English', 'Deutsch', ...
+   *                                      – 'slug': e.g. 'en', 'de', ...
+   *                                  – hide_current: 
+   *                                      - false (default): show the currenty active language
+   *                                      – true : hide the currently active language
+   *                                  – url: if specified, show links to translated versions for that URL. 
+   *                                      - null (default): show translations for current url
+   *                                      – 'https://my-website.tld/my-path/': show translations for that url
+   *                                  - element_class: overwrite the class of the language switcher html element(s)
+   * 
+   * @return mixed
+   */
+  public function get_language_switcher(?array $args = []) {
+    static $dropdown_count = 0;
+    static $list_count = 0;
+    $args = $this->to_object(wp_parse_args($args, [
+      'format' => 'list',
+      'display_names_as' => 'name',
+      'hide_current' => false,
+      'url' => null,
+      'element_class' => 'acfml-language-switcher',
+      // 'hide_if_no_translation' => true, // @TODO
+    ]));
+    $languages = $this->get_languages();
+    foreach( $languages as $key => &$language ) {
+      $language['is_current'] = $language['slug'] === $this->get_current_language();
+      $language['element_classes'] = [];
+      if( $language['is_current'] ) $language['element_classes'][] = 'is-current-language';
+      if( $language['is_default'] ) $language['element_classes'][] = 'is-default-language';
+      if( $args->hide_current && $language['is_current'] ) unset($languages[$key]);
+      $language['url'] = $args->url ? $this->convert_url($args->url, $language['slug']) : $this->convert_current_url($language['slug']);
+      switch( $args->display_names_as ) {
+        case 'name':
+          $language['display_name'] = $language['name'];
+          break;
+        case 'slug':
+          $language['display_name'] = $language['slug'];
+          break;
+      }
+      unset($language);
+    }
+    $languages = array_values($languages);
+    switch( $args->format ) {
+      case 'dropdown':
+        $dropdown_count ++;
+        return $this->get_template('language-switcher-dropdown', [
+          'languages' => $languages, 
+          'element_class' => $args->element_class,
+          'element_id' => "acfml-language-dropdown-$dropdown_count",
+          'args' => $args,
+        ]);
+        break;
+      case 'list':
+      case 'naked_list':
+        $list_count ++;
+        return $this->get_template('language-switcher-list', [
+          'languages' => $languages,
+          'element_class' => $args->element_class,
+          'element_id' => "acfml-language-list-$list_count",
+          'args' => $args,
+        ]);
+        break;
+    }
+    return $languages;
   }
 
   /**
@@ -206,7 +285,7 @@ class ACF_Multilingual extends Singleton {
     $languages = array_filter($languages, function($language) {
       return $language['is_default'] !== true;
     });
-    if( $format === 'iso' ) $languages = array_column($languages, 'iso');
+    if( $format === 'slug' ) $languages = array_column($languages, 'slug');
     // cleanup array keys
     return array_merge($languages);
   }
@@ -219,7 +298,7 @@ class ACF_Multilingual extends Singleton {
    */
   public function get_language_info(string $lang_iso):? array {
     foreach( $this->get_languages() as $language ) {
-      if( $language['iso'] === $lang_iso ) return $language;
+      if( $language['slug'] === $lang_iso ) return $language;
     }
     return null;
   }
@@ -330,9 +409,18 @@ class ACF_Multilingual extends Singleton {
       "rest_url" => 10,
       "post_type_link" => 10,
     ];
+    /**
+     * Filter the URLs that should be converted. 
+     * Should return an array like this:
+     * 
+     * array(
+     *  "wp_filter_name" => priority,
+     *  "another_wp_filter_name" => priority,
+     * )
+     */
     $urls = apply_filters("acfml/convert_wp_urls", $urls);
     foreach( $urls as $filter_name => $priority ) {
-      add_filter($filter_name, [$this, 'convert_url'], $priority);
+      add_filter($filter_name, [$this, 'convert_url'], intval($priority));
     }
   }
 
@@ -357,7 +445,7 @@ class ACF_Multilingual extends Singleton {
   public function get_language_in_url($url) {
     $url = untrailingslashit($url);
     $path = str_replace(home_url(), '', $url);
-    $regex_languages = implode('|', $this->get_languages('iso'));
+    $regex_languages = implode('|', $this->get_languages('slug'));
     preg_match("%/($regex_languages)(/|$|\?|#)%", $path, $matches);
     $language = $matches[1] ?? null;
     return $language;
@@ -402,7 +490,7 @@ class ACF_Multilingual extends Singleton {
    */
   public function rewrite_rules_array($rules) {
     $new_rules = array();
-    $regex_languages = implode('|', $this->get_languages('iso'));
+    $regex_languages = implode('|', $this->get_languages('slug'));
     $new_rules["(?:$regex_languages)?/?$"] = 'index.php';
 
     foreach ($rules as $key => $val) {
@@ -437,7 +525,7 @@ class ACF_Multilingual extends Singleton {
     $default_language = $this->get_default_language();
     $languages = $this->get_languages();
     foreach( $languages as &$language ) {
-      // $language['url'] = $this->convert_current_url($language['iso']);
+      // $language['url'] = $this->convert_current_url($language['slug']);
     }
     echo $this->get_template('meta-tags', [
       'languages' => $languages,
@@ -534,7 +622,7 @@ class ACF_Multilingual extends Singleton {
    */
   private function get_path(String $url): string {
     $path = str_replace(home_url(), '', $url);
-    $regex_languages = implode('|', $this->get_languages('iso'));
+    $regex_languages = implode('|', $this->get_languages('slug'));
     $path = preg_replace("%/($regex_languages)(/|$|\?|#)%", '', $path);
     $path = explode('?', $path)[0];
     $path = trim($path, '/');
@@ -703,7 +791,7 @@ class ACF_Multilingual extends Singleton {
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
 
     // add possible rewrite front
-    $with_front = $post_type_object->rewrite['with_front'] ?? null;
+    $with_front = $post->post_type === 'post' || ($post_type_object->rewrite['with_front'] ?? null);
     $front = trim($wp_rewrite->front, '/');
     if( $with_front && $front ) $segments[] = $front;
 
@@ -716,11 +804,12 @@ class ACF_Multilingual extends Singleton {
 
     // add slugs for all ancestors to segments
     foreach( $ancestors as $ancestor_id ) {
-      $segments[] = get_field($meta_key, $ancestor_id);
+      $ancestor = get_post($ancestor_id);
+      $segments[] = $this->get_field_or($meta_key, $ancestor->post_name, $ancestor_id);
     }
 
     // add slug for requested post to segments
-    $segments[] = get_field($meta_key, $post->ID);
+    $segments[] = $this->get_field_or($meta_key, $post->post_name, $post->ID);
     
     $path = user_trailingslashit(implode('/', $segments));
     $url = $this->home_url("/$path", $language);
