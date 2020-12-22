@@ -33,12 +33,12 @@ class Multilingual_Fields extends Singleton {
     foreach( $multilingual_field_types as $field_type ) {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
       add_filter("acf/load_field/type=$field_type", [$this, 'load_multilingual_field'], 20);
-      add_filter("acf/load_value/type=$field_type", [$this, 'load_previous_default_language_value'], 10, 3);
+      add_filter("acf/load_value/type=$field_type", [$this, 'inject_previous_multilingual_default_language_value'], 10, 3);
     }
     // add hooks for generated multilingual fields (type of those will be 'group')
     add_filter("acf/format_value/type=group", [$this, 'format_multilingual_field_value'], 12, 3);
     add_action("acf/render_field/type=group", [$this, 'render_multilingual_field'], 5);
-    add_filter("acf/load_value/type=group", [$this, 'load_previous_simple_value'], 10, 3);
+    add_filter("acf/load_value/type=group", [$this, 'inject_previous_monolingual_value'], 10, 3);
   }
 
   /**
@@ -128,7 +128,7 @@ class Multilingual_Fields extends Singleton {
 
 
   /**
-   * Automatically loads possible value of previously non-multilingual field
+   * Automatically loads possible value of previously monolingual field
    * to the sub_field assigned to the default language
    *
    * @param Mixed $value
@@ -136,28 +136,29 @@ class Multilingual_Fields extends Singleton {
    * @param Array $field
    * @return Mixed
    */
-  public function load_previous_simple_value( $value, $post_id, $field ) {
+  public function inject_previous_monolingual_value( $value, $post_id, $field ) {
     // bail early if field is empty or not multilingual
     if( !$this->is_acfml_group($field) ) return $value;
     // parse value from before the field became multilingual to the default value
     $default_language = acfml()->get_default_language();
-    if( is_string($value) && strlen($value) > 0 ) {
-      add_filter("acf/load_value/key={$field['key']}_$default_language", function() use ($value) {
-        return $value;
+    if( $value && !is_array($value) ) {
+      add_filter("acf/load_value/key={$field['key']}_$default_language", function($sub_field_value) use ($value) {
+        return $sub_field_value ? $sub_field_value : $value;
       });
     }
     return $value;
   }
 
   /**
-   * Load a simple field's value
+   * Inject a previous multilingual default language value
    *
    * @param mixed $value
    * @param int $post_id
    * @param array $field
    * @return mixed
    */
-  public function load_previous_default_language_value( $value, $post_id, $field ) {
+  public function inject_previous_multilingual_default_language_value( $value, $post_id, $field ) {
+    if( !empty($field['is_multilingual']) ) return $value;
     $default_language = acfml()->get_default_language();
     if( !$value ) $value = get_field("{$field['name']}_{$default_language}", $post_id, false);
     return $value;

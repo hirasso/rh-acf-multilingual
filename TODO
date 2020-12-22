@@ -1,6 +1,6 @@
 07.11.2020:
   ✔ Filter for canonical_redirect
-  ❍ Generator for Language Switcher
+  ✔ Generator for Language Switcher
   ✔ Admin-JS and Styles
   ✔ Add acf filter for loading values in the frontend
   ✔ Maybe rename the whole thing

@@ -197,7 +197,7 @@ class ACF_Multilingual extends Singleton {
   }
 
   /**
-   * Generate a language switcher for use in the fronend.
+   * Generate a language switcher for use in the frontend.
    *
    * @param array|null $args          An array with settings for your language switcher. Look at the wp_parse_args below
    *                                  to see the default settings.
@@ -215,10 +215,10 @@ class ACF_Multilingual extends Singleton {
    *                                      – true : hide the currently active language
    *                                  – url: if specified, show links to translated versions for that URL. 
    *                                      - null (default): show translations for current url
-   *                                      – 'https://my-website.tld/my-path/': show translations for that url
+   *                                      – 'https://...': show translations for that url
    *                                  - element_class: overwrite the class of the language switcher html element(s)
    * 
-   * @return mixed
+   * @return mixed                    Either a html string or an array
    */
   public function get_language_switcher(?array $args = []) {
     static $dropdown_count = 0;

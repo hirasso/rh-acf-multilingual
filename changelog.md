@@ -1,6 +1,6 @@
 #### 0.0.1 (2020-12-22)
 
-- `get_language_switcher()` 🎉 (#b30a113)
+- `get_language_switcher()` 🎉 (#47a9eb8)
 - add filter `acfml/convert_wp_urls` (#2e7f557)
 - Optimize Slug Fields (#3e44b84)
 - use user_trailingslashit for $paths (#104228c)
