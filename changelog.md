@@ -1,6 +1,6 @@
 #### 0.0.1 (2020-12-22)
 
-- use actual logic of `parse_query` for `get_post_by_path() ` (#1cc7438)
+- use actual logic of `parse_query` for `get_post_by_path() ` (#0283436)
 - `get_language_switcher()` 🎉 (#47a9eb8)
 - add filter `acfml/convert_wp_urls` (#2e7f557)
 - Optimize Slug Fields (#3e44b84)

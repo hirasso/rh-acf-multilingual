@@ -539,14 +539,14 @@ class ACF_Multilingual extends Singleton {
    * @return void
    */
   public function prepare_request($vars) {
+    
     if( is_admin() ) return $vars;
     // do nothing for default language
     if( $this->get_current_language() === $this->get_default_language() ) return $vars;
     $language = $this->get_current_language();
     $path = $this->get_path($this->get_current_url());
-    
+
     if( $post = $this->get_post_by_path($path, $language) ) {
-      
       $vars['post_type'] = $post->post_type;
       $vars['p'] = $post->ID;
       unset($vars['attachment']);
@@ -651,7 +651,7 @@ class ACF_Multilingual extends Singleton {
     // setup variables
     if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
-    $post_type = ['post', 'page'];
+    $post_type = 'post';
     $post = null;
     $post_parent = 0;
     
@@ -688,32 +688,29 @@ class ACF_Multilingual extends Singleton {
     }
     // pre_dump($query_vars); // @TODO: From here on we have valid query vars!!! PAARTY PAAAAARTY!!!
 
-    $segments = [];
-    if( isset($query_vars['name']) ) {
-      $segments = [$query_vars['name']];
-    } elseif( isset($query_vars['pagename']) ) {
-      $post_type = 'page';
-      $segments = explode('/', $query_vars['pagename']);
-    } else {
-      $custom_post_types = array_keys(get_post_types([
-        'public' => true,
-        '_builtin' => false,
-      ]));
-      foreach( $custom_post_types as $pt ) {
-        $pt_object = get_post_type_object($pt);
-        $default_rewrite_slug = $pt_object->rewrite['slug'] ?? $pt;
-        $rewrite_slug = $pt_object->acfml[$language]['rewrite_slug'] ?? $default_rewrite_slug;
-        if( isset($query_vars[$rewrite_slug]) ) {
-          $post_type = $pt;
-          $segments = explode('/', $query_vars[$rewrite_slug]);
-          break;
-        }
+    $custom_post_types = array_keys(get_post_types([
+      'public' => true,
+      '_builtin' => false,
+    ]));
+    foreach( $custom_post_types as $pt ) {
+      $pt_object = get_post_type_object($pt);
+      $rewrite_slug = $pt_object->rewrite['slug'] ?? $pt;
+      if( isset($query_vars[$rewrite_slug]) ) {
+        $post_type = $pt;
       }
     }
+    
+    $segments = [];
+    if( isset($query_vars[$post_type]) ) {  // custom post type
+      $segments = explode('/', $query_vars[$post_type]);
+    } elseif( isset($query_vars['pagename']) ) {  // post type 'page'
+      $post_type = 'page';
+      $segments = explode('/', $query_vars['pagename']);
+    } elseif( isset($query_vars['name']) ) { // post type 'post'
+      $segments = [$query_vars['name']];
+    } 
     // prepare the path segments
     $segments = array_map( 'sanitize_title_for_query', $segments );
-    // pre_dump($post_type);
-    // pre_dump($segments);
 
     // Look for posts
     if( count($segments) ) {
