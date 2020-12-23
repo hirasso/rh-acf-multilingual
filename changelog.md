@@ -1,6 +1,6 @@
 #### 0.0.1 (2020-12-23)
 
-- Alter the sql for get_page_by_path instead of rebuilding the  functionality. Reduced  sql-queries to 1! (#f1b44c5)
+- Alter the sql for get_page_by_path instead of rebuilding the  functionality. Reduced  sql-queries to 1! (#f460b7a)
 - minor fixes (#0f11f99)
 - start of cleaner get_post_link (#d3c5af2)
 - use actual logic of `parse_query` for `get_post_by_path() ` (#0283436)

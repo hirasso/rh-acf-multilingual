@@ -664,12 +664,11 @@ class ACF_Multilingual extends Singleton {
    * @return \WP_Post|null
    */
   public function get_post_by_path(string $path, ?string $language = null): ?\WP_Post {
-
+    // return early if nothing found
     if( !$path ) return null;
 
     // setup variables
     if( !$language ) $language = $this->get_current_language();
-    $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type = ['post', 'page'];
 
     $query_vars = $this->parse_query_from_path($path);
