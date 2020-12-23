@@ -382,7 +382,12 @@ class ACF_Multilingual extends Singleton {
     return $url;
   }
 
-  private function get_link_filters() {
+  /**
+   * Get all link filters
+   *
+   * @return Array
+   */
+  private function get_link_filters():array {
     $filters = [
       "author_feed_link" => 10,
       "author_link" => 10,
@@ -403,6 +408,7 @@ class ACF_Multilingual extends Singleton {
       "get_shortlink" => 10,
       "rest_url" => 10,
       "post_type_link" => 10,
+      "post_type_archive_link" => 10,
     ];
     /**
     * Filter the Links that should be converted. 
@@ -566,8 +572,8 @@ class ACF_Multilingual extends Singleton {
       unset($vars['attachment']);
       unset($vars['name']);
       unset($vars['pagename']);
-      unset($vars[$post->post_type]);
       unset($vars['error']);
+      unset($vars[get_post_type_object($post->post_type)->query_var]);
       
       // @TODO check if there are cases where we have to fix canonical redirects
       // remove_action('template_redirect', 'redirect_canonical');
@@ -665,7 +671,7 @@ class ACF_Multilingual extends Singleton {
     // setup variables
     if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
-    $post_type = 'post';
+    $post_type = null;
     $post = null;
     $post_parent = 0;
     
@@ -700,27 +706,30 @@ class ACF_Multilingual extends Singleton {
       // parse the query string
       $query_vars = wp_parse_args($query);
     }
-    // pre_dump($query_vars); // @TODO: From here on we have valid query vars!!! PAARTY PAAAAARTY!!!
+    // pre_dump($query_vars); // From here on we have valid query vars!!! PAARTY PAAAAARTY!!!
 
     $custom_post_types = array_keys(get_post_types([
       'public' => true,
       '_builtin' => false,
     ]));
     foreach( $custom_post_types as $pt ) {
-      $pt_object = get_post_type_object($pt);
-      $rewrite_slug = $pt_object->rewrite['slug'] ?? $pt;
-      if( isset($query_vars[$rewrite_slug]) ) {
-        $post_type = $pt;
+      $cpt_query_var = get_post_type_object($pt)->query_var;
+      if( isset($query_vars[$cpt_query_var]) ) {
+        $query_vars['post_type'] = $pt;
+        $query_vars['name'] = $query_vars[$cpt_query_var];
+        unset($query_vars[$cpt_query_var]);
       }
     }
-    
+
     $segments = [];
-    if( isset($query_vars[$post_type]) ) {  // custom post type
-      $segments = explode('/', $query_vars[$post_type]);
+    if( isset($query_vars['post_type']) ) {  // custom post type
+      $post_type = $query_vars['post_type'];
+      $segments = explode('/', $query_vars['name']);
     } elseif( isset($query_vars['pagename']) ) {  // post type 'page'
       $post_type = 'page';
       $segments = explode('/', $query_vars['pagename']);
     } elseif( isset($query_vars['name']) ) { // post type 'post'
+      $post_type = 'post';
       $segments = [$query_vars['name']];
     } 
     // prepare the path segments
@@ -823,7 +832,6 @@ class ACF_Multilingual extends Singleton {
 
     $this->remove_link_filters();
     $default_permalink = get_permalink($post);
-    $original_post_uri = get_page_uri($post);
     $this->add_link_filters();
 
     if( $language === $this->get_default_language() ) {
@@ -859,11 +867,11 @@ class ACF_Multilingual extends Singleton {
    * @return string|null
    */
   private function get_post_type_archive_link( string $post_type, string $language ): ?string {
-
-    remove_filter('post_type_archive_link', [$this, 'convert_url']);
+    
+    $this->remove_link_filters();
     $link = get_post_type_archive_link($post_type);
     $path = trim(str_replace(home_url(), '', $link), '/');
-    add_filter('post_type_archive_link', [$this, 'convert_url']);
+    $this->add_link_filters();
 
     $default_archive_slug = $this->get_post_type_archive_slug($post_type, $this->get_default_language());
     $archive_slug = $this->get_post_type_archive_slug($post_type, $language);

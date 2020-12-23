@@ -1,6 +1,6 @@
 #### 0.0.1 (2020-12-22)
 
-- start of cleaner get_post_link (#12071ab)
+- start of cleaner get_post_link (#d3c5af2)
 - use actual logic of `parse_query` for `get_post_by_path() ` (#0283436)
 - `get_language_switcher()` 🎉 (#47a9eb8)
 - add filter `acfml/convert_wp_urls` (#2e7f557)
