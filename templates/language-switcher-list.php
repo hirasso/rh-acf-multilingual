@@ -14,6 +14,6 @@
 <?php $items = ob_get_clean(); ?>
 <?php switch( $value->args->format ) : case 'list': ?>
 <ul class="<?= $value->element_class ?>"><?= $items ?></ul>
-<?php break; case 'naked_list': ?>
+<?php break; case 'list_items': ?>
 <?= $items ?>
 <?php break; endswitch; ?>

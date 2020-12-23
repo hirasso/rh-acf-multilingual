@@ -28,10 +28,8 @@ class ACF_Multilingual extends Singleton {
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX);
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
     add_filter('locale', [$this, 'filter_frontend_locale']);
-    add_action('template_redirect', [$this, 'redirect_default_language']);
     add_action('wp_head', [$this, 'wp_head']);
     add_action('request', [$this, 'prepare_request']);
-    
     
     $this->add_link_filters();
     // links in the_content
@@ -204,8 +202,9 @@ class ACF_Multilingual extends Singleton {
    * 
    *                                  - format:
    *                                      - 'list' (default): Returns HTML like this: <ul><li><a></li><li><a></li>...</ul>
-   *                                      - 'naked_list': Samle as 'list', but without the wrapping <ul> element
+   *                                      - 'list_items': Samle as 'list', but without the wrapping <ul> element
    *                                      - 'dropdown': Returns HTML like this: <select><option><option>...</select>
+   *                                      - '$key:$value': Returns an array containing the contents of one column as keys and of another column as values
    *                                      - 'raw': Returns an array
    *                                  - display_names_as: 
    *                                      – 'name' (default): e.g. 'English', 'Deutsch', ...
@@ -250,6 +249,13 @@ class ACF_Multilingual extends Singleton {
       unset($language);
     }
     $languages = array_values($languages);
+
+    // return for special $format 'key:value'
+    if( strpos($args->format, ':') !== false ) {
+      $key_value = explode(':', $args->format);
+      return array_combine(array_column($languages, $key_value[0]),array_column($languages, $key_value[1]));
+    }
+    // return other formats
     switch( $args->format ) {
       case 'dropdown':
         $dropdown_count ++;
@@ -261,7 +267,7 @@ class ACF_Multilingual extends Singleton {
         ]);
         break;
       case 'list':
-      case 'naked_list':
+      case 'list_items':
         $list_count ++;
         return $this->get_template('language-switcher-list', [
           'languages' => $languages,
@@ -271,6 +277,7 @@ class ACF_Multilingual extends Singleton {
         ]);
         break;
     }
+    // return raw
     return $languages;
   }
 
@@ -319,7 +326,9 @@ class ACF_Multilingual extends Singleton {
    */
   public function detect_current_language() {
     if( $this->is_frontend() ) {
+      $this->debug = true;
       $language = $this->get_language_in_url($this->get_current_url());
+      $this->debug = false;
       if( !$language ) $language = $this->get_default_language();
     } else {
       $language = $this->get_admin_language();
@@ -379,6 +388,7 @@ class ACF_Multilingual extends Singleton {
     $current_home_url = $this->home_url('', $language_in_url);
     $new_home_url = $this->home_url('', $requested_language);
     $url = str_replace($current_home_url, $new_home_url, $url);
+    
     return $url;
   }
 
@@ -409,6 +419,7 @@ class ACF_Multilingual extends Singleton {
       "rest_url" => 10,
       "post_type_link" => 10,
       "post_type_archive_link" => 10,
+      "redirect_canonical" => 10,
     ];
     /**
     * Filter the Links that should be converted. 
@@ -520,22 +531,6 @@ class ACF_Multilingual extends Singleton {
     return $new_rules;
   }
 
-
-  /**
-   * Redirects URLs for default language to language-agnostic URLs
-   * e.g. https://my-site.com/en/my-post/ to https://my-site.com/my-post/
-   *
-   * @return void
-   */
-  public function redirect_default_language() {
-    $language_in_url = $this->get_language_in_url($this->get_current_url()); 
-    if( $language_in_url && $language_in_url === $this->get_default_language() ) {
-      $new_url = $this->convert_url($this->get_current_url(), $this->get_default_language());
-      wp_redirect($new_url);
-      exit;
-    }
-  }
-
   /**
    * Hooks into wp_head and prints out hreflang tags
    *
@@ -545,7 +540,7 @@ class ACF_Multilingual extends Singleton {
     $default_language = $this->get_default_language();
     $languages = $this->get_languages();
     foreach( $languages as &$language ) {
-      // $language['url'] = $this->convert_current_url($language['slug']);
+      $language['url'] = $this->convert_current_url($language['slug']);
     }
     echo $this->get_template('meta-tags', [
       'languages' => $languages,
@@ -574,10 +569,13 @@ class ACF_Multilingual extends Singleton {
       unset($vars['pagename']);
       unset($vars['error']);
       unset($vars[get_post_type_object($post->post_type)->query_var]);
-      
+
       // @TODO check if there are cases where we have to fix canonical redirects
+      // redirect_canonical($requested_url, $do_redirect)
       // remove_action('template_redirect', 'redirect_canonical');
     }
+    
+    // 
 
     return $vars;
   }
@@ -671,10 +669,10 @@ class ACF_Multilingual extends Singleton {
     // setup variables
     if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
-    $post_type = null;
+    $post_type = ['post', 'page'];
     $post = null;
     $post_parent = 0;
-    
+
     // check cache
     $last_changed = wp_cache_get_last_changed( 'posts' );
     $hash         = md5( $path . serialize( $post_type ) );
@@ -722,14 +720,12 @@ class ACF_Multilingual extends Singleton {
     }
 
     $segments = [];
-    if( isset($query_vars['post_type']) ) {  // custom post type
+    if( isset($query_vars['post_type']) && isset($query_vars['name']) ) {  // custom post type
       $post_type = $query_vars['post_type'];
       $segments = explode('/', $query_vars['name']);
     } elseif( isset($query_vars['pagename']) ) {  // post type 'page'
-      $post_type = 'page';
       $segments = explode('/', $query_vars['pagename']);
     } elseif( isset($query_vars['name']) ) { // post type 'post'
-      $post_type = 'post';
       $segments = [$query_vars['name']];
     } 
     // prepare the path segments
@@ -820,7 +816,7 @@ class ACF_Multilingual extends Singleton {
    */
   public function get_post_link( \WP_Post $post, String $language ): string {
     global $wp_rewrite;
-
+    
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type_object = get_post_type_object($post->post_type);
     $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
@@ -830,13 +826,13 @@ class ACF_Multilingual extends Singleton {
     // if the post is the front page, return home page in requested language
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
 
-    $this->remove_link_filters();
-    $default_permalink = get_permalink($post);
-    $this->add_link_filters();
+    // $this->remove_link_filters();
+    // $default_permalink = get_permalink($post);
+    // $this->add_link_filters();
 
-    if( $language === $this->get_default_language() ) {
-      return $default_permalink;
-    }
+    // if( $language === $this->get_default_language() ) {
+    //   return $default_permalink;
+    // }
 
     // add possible custom post type's rewrite slug and front to segments
     $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
@@ -856,6 +852,7 @@ class ACF_Multilingual extends Singleton {
     
     $path = user_trailingslashit(implode('/', $segments));
     $url = $this->home_url("/$path", $language);
+    
     return $url;
   }
 
