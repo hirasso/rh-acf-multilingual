@@ -13,7 +13,7 @@ class ACF_Multilingual extends Singleton {
 
   private $prefix = 'acfml';
   private $debug = false;
-  private $languages = null;
+  private $language = null;
 
   public function init() {
     
@@ -30,6 +30,8 @@ class ACF_Multilingual extends Singleton {
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('wp_head', [$this, 'wp_head']);
     add_action('request', [$this, 'prepare_request']);
+
+    add_filter('query', [$this, 'get_page_by_path__query']);
     
     $this->add_link_filters();
     // links in the_content
@@ -356,7 +358,7 @@ class ACF_Multilingual extends Singleton {
    * @param string
    */
   public function get_current_language() {
-    return $this->language ?: $this->get_default_language();
+    return $this->language ?? $this->get_default_language();
   }
 
   /**
@@ -662,7 +664,6 @@ class ACF_Multilingual extends Singleton {
    * @return \WP_Post|null
    */
   public function get_post_by_path(string $path, ?string $language = null): ?\WP_Post {
-    global $wp_rewrite;
 
     if( !$path ) return null;
 
@@ -670,33 +671,45 @@ class ACF_Multilingual extends Singleton {
     if( !$language ) $language = $this->get_current_language();
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type = ['post', 'page'];
-    $post = null;
-    $post_parent = 0;
 
-    // check cache
-    $last_changed = wp_cache_get_last_changed( 'posts' );
-    $hash         = md5( $path . serialize( $post_type ) );
-    $cache_key    = "$this->prefix:get_post_by_path:$hash:$last_changed:$language";
-    
-    // wp_cache_delete($cache_key, 'posts' );
-    $cached       = wp_cache_get( $cache_key, 'posts' );
-    if ( false !== $cached ) {
-      // Special case: '0' is a bad `$page_path`.
-      if ( '0' === $cached || 0 === $cached ) {
-        return null;
-      } else {
-        return get_post( $cached );
-      }
+    $query_vars = $this->parse_query_from_path($path);
+
+    $path = '';
+    if( isset($query_vars['post_type']) && isset($query_vars['name']) ) {  // custom post type
+      $post_type = $query_vars['post_type'];
+      $path = $query_vars['name'];
+    } elseif( isset($query_vars['pagename']) ) {  // post type 'page'
+      $path = $query_vars['pagename'];
+    } elseif( isset($query_vars['name']) ) { // post type 'post'
+      $path = $query_vars['name'];
     }
+    if( !$path ) return null;
+    
+    $this->language_for_page_by_path = $language;
+    $result = get_page_by_path($path, OBJECT, $post_type);
+    unset($this->language_for_page_by_path);
+    return $result;
+    
+  }
 
+  /**
+   * Looks for matches in the global $wp_rewrite object
+   *
+   * @param string $path
+   * @return array
+   */
+  private function parse_query_from_path( string $path ): array{
+    global $wp_rewrite;
+    $matched_rule = null;
     $query_vars = [];
+    // look for the first matching rule
     foreach ( (array) $wp_rewrite->wp_rewrite_rules() as $match => $query ) {
       if( preg_match( "#^$match#", $path, $matches ) ) {
         $matched_rule = $match;
         break;
       }
     }
-    if( isset($matched_rule) ) {
+    if( $matched_rule ) {
       // Trim the query of everything up to the '?'.
       $query = preg_replace( '!^.+\?!', '', $query );
       // Substitute the substring matches into the query.
@@ -718,60 +731,8 @@ class ACF_Multilingual extends Singleton {
         unset($query_vars[$cpt_query_var]);
       }
     }
-
-    $segments = [];
-    if( isset($query_vars['post_type']) && isset($query_vars['name']) ) {  // custom post type
-      $post_type = $query_vars['post_type'];
-      $segments = explode('/', $query_vars['name']);
-    } elseif( isset($query_vars['pagename']) ) {  // post type 'page'
-      $segments = explode('/', $query_vars['pagename']);
-    } elseif( isset($query_vars['name']) ) { // post type 'post'
-      $segments = [$query_vars['name']];
-    } 
-    // prepare the path segments
-    $segments = array_map( 'sanitize_title_for_query', $segments );
-
-    // Look for posts
-    if( count($segments) ) {
-
-      // first, check if only one post is there for the last $segment.
-      // e.g. /mum/child/grandchild: Check if only one post with a slug of 'grandchild' exists globally
-      $posts = get_posts([
-        'post_type' => $post_type,
-        'meta_key' => $meta_key,
-        'posts_per_page' => 2,
-        'meta_value' => $segments[count($segments)-1],
-        'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
-      ]);
-
-      // we have been looking for two $posts with the same slug.
-      // if exatly 1 $post has been found, use that one.
-      if( count($posts) < 2 ) { 
-        $post = array_shift($posts);
-      } else {
-        // if multiple posts have the same slug, walk the tree.    
-        foreach($segments as $segment) {
-          $posts = get_posts([
-            'post_type' => $post_type,
-            'post_parent' => $post_parent,
-            'posts_per_page' => 1,
-            'meta_key' => $meta_key,
-            'meta_value' => $segment,
-            'post_status' => ['publish', 'future', 'private'] // @TODO check if this won't expose future or private posts
-          ]);
-          if( $post = array_shift($posts) ) {
-            $post_parent = $post->ID;
-          } else {
-            break;
-          }
-        }
-      }
-
-    }
-
-    wp_cache_set( $cache_key, $post->ID ?? 0, 'posts' );
     
-    return $post;
+    return $query_vars;
   }
 
   /**
@@ -881,4 +842,27 @@ class ACF_Multilingual extends Singleton {
     return $link;
   }
   
+
+  public function get_page_by_path__query($query) {
+    global $wpdb;
+    $language = $this->language_for_page_by_path ?? $this->get_current_language();
+    // only run this if it is the query inside WP's get_page_by_path
+    if( strpos(trim($query), "SELECT ID, post_name, post_parent, post_type") !== 0 ) return $query;
+    // find $in_string and $post_type_in_string in $query
+    preg_match('/post_name IN \((.*?)\).+ post_type IN \((.*?)\)/ms', $query, $matches);
+    $in_string = $matches[1];
+    $post_type_in_string = $matches[2];
+    // build the new query
+    $query = 
+        "SELECT ID, $wpdb->postmeta.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
+        LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID
+          WHERE 
+          (
+            $wpdb->postmeta.meta_key = 'acfml_slug_$language'
+            AND
+            $wpdb->postmeta.meta_value IN ($in_string)
+          )
+          AND $wpdb->posts.post_type IN ($post_type_in_string)";
+    return $query;
+  }
 }
