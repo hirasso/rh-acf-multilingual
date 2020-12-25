@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-25)
 
-- cleaner prepare_request handling. Now only does some changes for post type 'post' (#1a04862)
+- Alter SQL directly (#c8d49a9)
+- cleaner prepare_request handling. Now only does some changes for post type 'post' (#c887277)
 - Alter the sql for get_page_by_path instead of rebuilding the  functionality. Reduced  sql-queries to 1! (#f460b7a)
 - minor fixes (#0f11f99)
 - start of cleaner get_post_link (#d3c5af2)

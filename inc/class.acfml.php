@@ -31,8 +31,12 @@ class ACF_Multilingual extends Singleton {
     add_action('wp_head', [$this, 'wp_head']);
     add_action('request', [$this, 'prepare_request']);
     add_filter('pre_get_posts', [$this, 'pre_get_posts']);
+
+    add_filter('posts_join', [$this, 'posts_join'], 10, 2);
+    add_filter('posts_where', [$this, 'posts_where'], 10, 2);
     
     add_filter('query', [$this, 'query__get_page_by_path']);
+    add_filter('query', [$this, 'query__get_post']);
     
     $this->add_link_filters();
     // links in the_content
@@ -552,6 +556,20 @@ class ACF_Multilingual extends Singleton {
 
   public function pre_get_posts( $query ) {
     if( is_admin() || !$query->is_main_query() ) return;
+    $language = $this->get_current_language();
+    if( $query->is_single() ) {
+      // $query->set('name', '');
+      // $query->set('meta_key', "acfml_slug_$language");
+      // $query->set('meta_value', $query->get('name'));
+      // $query->set('meta_query', [
+      //   [
+      //     'key' => "acfml_slug_$language",
+      //     'value' => $query->get('name')
+      //   ]
+      // ]);
+    }
+    // pre_dump($query);
+    // pre_dump($query);
     // $query->is_single = true;
     // pre_dump($query);
   }
@@ -565,21 +583,21 @@ class ACF_Multilingual extends Singleton {
   public function prepare_request($vars) {
     // do nothing in admin
     if( is_admin() ) return $vars;
-
+    
     // if we detected a post with type 'post' when using the modified
     // get_page_by_path function, alter the $vars so that WP understands we 
     // are looking for a 'post', not a 'page'
-    $pagename = $vars['pagename'] ?? null;
-    $queried_post_type = $vars['post_type'] ?? null;
+    // $pagename = $vars['pagename'] ?? null;
+    // $queried_post_type = $vars['post_type'] ?? null;
     
-    if( $pagename 
-        && !$queried_post_type 
-        && $post = get_page_by_path($pagename) ) {
-      if( $post->post_type === 'post' ) {
-        $vars['post_type'] = 'post';
-        return $vars;
-      }
-    }
+    // if( $pagename 
+    //     && !$queried_post_type 
+    //     && $post = get_page_by_path($pagename) ) {
+    //   if( $post->post_type === 'post' ) {
+    //     $vars['post_type'] = 'post';
+    //     return $vars;
+    //   }
+    // }
     return  $vars;
   }
 
@@ -859,7 +877,7 @@ class ACF_Multilingual extends Singleton {
     $post_types = array_map(function($item) {
       return trim($item, "'");
     }, explode(',', $matches['postTypeInString']) );
-    if( in_array('page', $post_types) ) $post_types[] = 'post';
+    // if( in_array('page', $post_types) ) $post_types[] = 'post';
     $post_type_in_string = "'" . implode("','", $post_types) ."'";
     // $post_types[] = 'post';
     // build the new query
@@ -874,5 +892,69 @@ class ACF_Multilingual extends Singleton {
           )
           AND $wpdb->posts.post_type IN ({$post_type_in_string})";
     return $query;
+  }
+
+  /**
+   * Detect and overwrite the query for 'get_post'
+   *
+   * @param string $query
+   * @return string
+   */
+  public function query__get_post($query) {
+    global $wpdb;
+    $language = $this->get_current_language();
+    preg_match('/SELECT.+?_posts\.\*.+WHERE ID IN \((?<post_id>\d.+)\)/', $query, $matches);
+    if( !isset($matches['post_id']) ) {
+      return $query;
+    }
+    $query = $wpdb->prepare(
+      "SELECT *, $wpdb->postmeta.meta_value as post_name FROM $wpdb->posts 
+      LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID
+      WHERE ID = %d 
+      AND (
+        prg_postmeta.meta_key = %s
+      )
+      LIMIT 1", [
+        $matches['post_id'], 
+        "acfml_slug_$language"
+    ]);
+    return $query;
+  }
+
+  /**
+   * Posts join for single queries
+   *
+   * @param string $join
+   * @param \WP_Query $query
+   * @return string
+   */
+  public function posts_join($join, $query) {
+    global $wpdb;
+    if( $query->is_single() ) {
+      $join = "LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID";
+    }
+    return $join;
+  }
+
+  /**
+   * Posts where for single queries
+   *
+   * @param string $where
+   * @param \WP_Query $query
+   * @return string
+   */
+  public function posts_where($where, $query) {
+    $language = $this->get_current_language();
+    if( $query->is_single() ) {
+      $name = $query->get('name');
+      $where = " AND prg_posts.post_type = 'post'";
+      $where .= " 
+      AND (
+        prg_postmeta.meta_key = 'acfml_slug_$language'
+        AND
+        prg_postmeta.meta_value = '$name'
+      )";
+    } 
+    return $where;
   }
 }
