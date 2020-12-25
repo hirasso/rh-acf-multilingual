@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-25)
 
-- really only detect single get_post requests (#4124ad4)
+- query__get_post_in (#8cb6aaa)
+- really only detect single get_post requests (#06d9c6d)
 - even more custom SQL (#b611fc0)
 - Alter SQL directly (#7d9bda9)
 - cleaner prepare_request handling. Now only does some changes for post type 'post' (#c887277)

@@ -37,6 +37,7 @@ class ACF_Multilingual extends Singleton {
     
     add_filter('query', [$this, 'query__get_page_by_path']);
     add_filter('query', [$this, 'query__get_post']);
+    add_filter('query', [$this, 'query__get_post_in']);
     
     $this->add_link_filters();
     // links in the_content
@@ -424,7 +425,7 @@ class ACF_Multilingual extends Singleton {
       "tag_feed_link" => 10,
       "get_shortlink" => 10,
       "rest_url" => 10,
-      "post_type_link" => 10,
+      // "post_type_link" => 10,
       "post_type_archive_link" => 10,
       "redirect_canonical" => 10,
     ];
@@ -907,6 +908,7 @@ class ACF_Multilingual extends Singleton {
     // preg_match('/SELECT.+?_posts\.\*.+WHERE ID IN \((?<post_id>\d.+)\)/', $query, $matches_2);
     
     $post_id = $matches_1['post_id'] ?? $matches_2['post_id'] ?? null;
+    
     if( !$post_id ) return $query;
     
     $query = $wpdb->prepare(
@@ -917,7 +919,37 @@ class ACF_Multilingual extends Singleton {
         prg_postmeta.meta_key = %s
       )
       LIMIT 1", [
-        intval( $post_id ), 
+        $post_id, 
+        "acfml_slug_$language"
+    ]);
+    return $query;
+  }
+
+  /**
+   * Detect and overwrite the query for 'get_post'
+   *
+   * @param string $query
+   * @return string
+   */
+  public function query__get_post_in($query) {
+    global $wpdb;
+    $language = $this->get_current_language();
+    
+    preg_match('/SELECT.+?_posts\.\*.+WHERE ID IN \((?<post_ids_in>\d.+)\)/', $query, $matches);
+
+    $post_ids_in = $matches['post_ids_in'] ?? null;
+
+    if( !$post_ids_in ) return $query;
+
+    $query = $wpdb->prepare(
+      "SELECT *, $wpdb->postmeta.meta_value as post_name FROM $wpdb->posts 
+      LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID
+      WHERE ID IN (%s) 
+      AND (
+        prg_postmeta.meta_key = %s
+      )
+      LIMIT 1", [
+        $post_ids_in, 
         "acfml_slug_$language"
     ]);
     return $query;
