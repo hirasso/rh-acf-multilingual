@@ -904,7 +904,7 @@ class ACF_Multilingual extends Singleton {
     global $wpdb;
     $language = $this->get_current_language();
     preg_match('/SELECT \* FROM prg_posts WHERE ID = (?<post_id>\d) LIMIT 1/', $query, $matches_1);
-    preg_match('/SELECT.+?_posts\.\*.+WHERE ID IN \((?<post_id>\d.+)\)/', $query, $matches_2);
+    // preg_match('/SELECT.+?_posts\.\*.+WHERE ID IN \((?<post_id>\d.+)\)/', $query, $matches_2);
     
     $post_id = $matches_1['post_id'] ?? $matches_2['post_id'] ?? null;
     if( !$post_id ) return $query;

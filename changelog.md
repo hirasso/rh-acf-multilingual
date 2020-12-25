@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-25)
 
-- even more custom SQL (#11fc65f)
+- really only detect single get_post requests (#4124ad4)
+- even more custom SQL (#b611fc0)
 - Alter SQL directly (#7d9bda9)
 - cleaner prepare_request handling. Now only does some changes for post type 'post' (#c887277)
 - Alter the sql for get_page_by_path instead of rebuilding the  functionality. Reduced  sql-queries to 1! (#f460b7a)
