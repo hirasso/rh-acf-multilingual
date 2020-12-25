@@ -30,8 +30,9 @@ class ACF_Multilingual extends Singleton {
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('wp_head', [$this, 'wp_head']);
     add_action('request', [$this, 'prepare_request']);
-
-    add_filter('query', [$this, 'get_page_by_path__query']);
+    add_filter('pre_get_posts', [$this, 'pre_get_posts']);
+    
+    add_filter('query', [$this, 'query__get_page_by_path']);
     
     $this->add_link_filters();
     // links in the_content
@@ -549,6 +550,12 @@ class ACF_Multilingual extends Singleton {
     ]);
   }
 
+  public function pre_get_posts( $query ) {
+    if( is_admin() || !$query->is_main_query() ) return;
+    // $query->is_single = true;
+    // pre_dump($query);
+  }
+
   /**
    * Filter the request (inspired by qtranslate-slug)
    *
@@ -556,30 +563,24 @@ class ACF_Multilingual extends Singleton {
    * @return void
    */
   public function prepare_request($vars) {
-    
+    // do nothing in admin
     if( is_admin() ) return $vars;
-    // do nothing for default language
-    if( $this->get_current_language() === $this->get_default_language() ) return $vars;
-    $language = $this->get_current_language();
-    $path = $this->get_path($this->get_current_url());
 
-    if( $post = $this->get_post_by_path($path, $language) ) {
-      $vars['post_type'] = $post->post_type;
-      $vars['p'] = $post->ID;
-      unset($vars['attachment']);
-      unset($vars['name']);
-      unset($vars['pagename']);
-      unset($vars['error']);
-      unset($vars[get_post_type_object($post->post_type)->query_var]);
-
-      // @TODO check if there are cases where we have to fix canonical redirects
-      // redirect_canonical($requested_url, $do_redirect)
-      // remove_action('template_redirect', 'redirect_canonical');
-    }
+    // if we detected a post with type 'post' when using the modified
+    // get_page_by_path function, alter the $vars so that WP understands we 
+    // are looking for a 'post', not a 'page'
+    $pagename = $vars['pagename'] ?? null;
+    $queried_post_type = $vars['post_type'] ?? null;
     
-    // 
-
-    return $vars;
+    if( $pagename 
+        && !$queried_post_type 
+        && $post = get_page_by_path($pagename) ) {
+      if( $post->post_type === 'post' ) {
+        $vars['post_type'] = 'post';
+        return $vars;
+      }
+    }
+    return  $vars;
   }
 
   /**
@@ -841,16 +842,26 @@ class ACF_Multilingual extends Singleton {
     return $link;
   }
   
-
-  public function get_page_by_path__query($query) {
+  /**
+   * Detect and overwrite the query for get_page_by_path
+   *
+   * @param [type] $query
+   * @return void
+   */
+  public function query__get_page_by_path($query) {
     global $wpdb;
     $language = $this->language_for_page_by_path ?? $this->get_current_language();
-    // only run this if it is the query inside WP's get_page_by_path
-    if( strpos(trim($query), "SELECT ID, post_name, post_parent, post_type") !== 0 ) return $query;
-    // find $in_string and $post_type_in_string in $query
-    preg_match('/post_name IN \((.*?)\).+ post_type IN \((.*?)\)/ms', $query, $matches);
-    $in_string = $matches[1];
-    $post_type_in_string = $matches[2];
+    // detect correct query and find $in_string and $post_type_in_string
+    preg_match('/SELECT ID, post_name, post_parent, post_type.+post_name IN \((?<inString>.*?)\).+ post_type IN \((?<postTypeInString>.*?)\)/ms', $query, $matches);
+    // return the query if it doesn't match
+    if( !count($matches) ) return $query;
+    $post_type_in_string = $matches['postTypeInString'];
+    $post_types = array_map(function($item) {
+      return trim($item, "'");
+    }, explode(',', $matches['postTypeInString']) );
+    if( in_array('page', $post_types) ) $post_types[] = 'post';
+    $post_type_in_string = "'" . implode("','", $post_types) ."'";
+    // $post_types[] = 'post';
     // build the new query
     $query = 
         "SELECT ID, $wpdb->postmeta.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
@@ -859,9 +870,9 @@ class ACF_Multilingual extends Singleton {
           (
             $wpdb->postmeta.meta_key = 'acfml_slug_$language'
             AND
-            $wpdb->postmeta.meta_value IN ($in_string)
+            $wpdb->postmeta.meta_value IN ({$matches['inString']})
           )
-          AND $wpdb->posts.post_type IN ($post_type_in_string)";
+          AND $wpdb->posts.post_type IN ({$post_type_in_string})";
     return $query;
   }
 }
