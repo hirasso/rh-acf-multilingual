@@ -903,10 +903,12 @@ class ACF_Multilingual extends Singleton {
   public function query__get_post($query) {
     global $wpdb;
     $language = $this->get_current_language();
-    preg_match('/SELECT.+?_posts\.\*.+WHERE ID IN \((?<post_id>\d.+)\)/', $query, $matches);
-    if( !isset($matches['post_id']) ) {
-      return $query;
-    }
+    preg_match('/SELECT \* FROM prg_posts WHERE ID = (?<post_id>\d) LIMIT 1/', $query, $matches_1);
+    preg_match('/SELECT.+?_posts\.\*.+WHERE ID IN \((?<post_id>\d.+)\)/', $query, $matches_2);
+    
+    $post_id = $matches_1['post_id'] ?? $matches_2['post_id'] ?? null;
+    if( !$post_id ) return $query;
+    
     $query = $wpdb->prepare(
       "SELECT *, $wpdb->postmeta.meta_value as post_name FROM $wpdb->posts 
       LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID
@@ -915,7 +917,7 @@ class ACF_Multilingual extends Singleton {
         prg_postmeta.meta_key = %s
       )
       LIMIT 1", [
-        $matches['post_id'], 
+        intval( $post_id ), 
         "acfml_slug_$language"
     ]);
     return $query;
