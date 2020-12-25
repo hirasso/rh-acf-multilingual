@@ -36,8 +36,6 @@ class ACF_Multilingual extends Singleton {
     add_filter('posts_where', [$this, 'posts_where'], 10, 2);
     
     add_filter('query', [$this, 'query__get_page_by_path']);
-    add_filter('query', [$this, 'query__get_post']);
-    add_filter('query', [$this, 'query__get_post_in']);
     
     $this->add_link_filters();
     // links in the_content
@@ -425,7 +423,7 @@ class ACF_Multilingual extends Singleton {
       "tag_feed_link" => 10,
       "get_shortlink" => 10,
       "rest_url" => 10,
-      // "post_type_link" => 10,
+      "post_type_link" => 10,
       "post_type_archive_link" => 10,
       "redirect_canonical" => 10,
     ];
@@ -896,67 +894,7 @@ class ACF_Multilingual extends Singleton {
   }
 
   /**
-   * Detect and overwrite the query for 'get_post'
-   *
-   * @param string $query
-   * @return string
-   */
-  public function query__get_post($query) {
-    global $wpdb;
-    $language = $this->get_current_language();
-    preg_match('/SELECT \* FROM prg_posts WHERE ID = (?<post_id>\d) LIMIT 1/', $query, $matches_1);
-    // preg_match('/SELECT.+?_posts\.\*.+WHERE ID IN \((?<post_id>\d.+)\)/', $query, $matches_2);
-    
-    $post_id = $matches_1['post_id'] ?? $matches_2['post_id'] ?? null;
-    
-    if( !$post_id ) return $query;
-    
-    $query = $wpdb->prepare(
-      "SELECT *, $wpdb->postmeta.meta_value as post_name FROM $wpdb->posts 
-      LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID
-      WHERE ID = %d 
-      AND (
-        prg_postmeta.meta_key = %s
-      )
-      LIMIT 1", [
-        $post_id, 
-        "acfml_slug_$language"
-    ]);
-    return $query;
-  }
-
-  /**
-   * Detect and overwrite the query for 'get_post'
-   *
-   * @param string $query
-   * @return string
-   */
-  public function query__get_post_in($query) {
-    global $wpdb;
-    $language = $this->get_current_language();
-    
-    preg_match('/SELECT.+?_posts\.\*.+WHERE ID IN \((?<post_ids_in>\d.+)\)/', $query, $matches);
-
-    $post_ids_in = $matches['post_ids_in'] ?? null;
-
-    if( !$post_ids_in ) return $query;
-
-    $query = $wpdb->prepare(
-      "SELECT *, $wpdb->postmeta.meta_value as post_name FROM $wpdb->posts 
-      LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID
-      WHERE ID IN (%s) 
-      AND (
-        prg_postmeta.meta_key = %s
-      )
-      LIMIT 1", [
-        $post_ids_in, 
-        "acfml_slug_$language"
-    ]);
-    return $query;
-  }
-
-  /**
-   * Posts join for single queries
+   * Posts join for 
    *
    * @param string $join
    * @param \WP_Query $query
@@ -964,14 +902,15 @@ class ACF_Multilingual extends Singleton {
    */
   public function posts_join($join, $query) {
     global $wpdb;
-    if( $query->is_single() ) {
+    // For Single Posts
+    if( $query->is_main_query() && $query->is_single() ) {
       $join = "LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID";
     }
     return $join;
   }
 
   /**
-   * Posts where for single queries
+   * Posts where for 
    *
    * @param string $where
    * @param \WP_Query $query
@@ -979,9 +918,11 @@ class ACF_Multilingual extends Singleton {
    */
   public function posts_where($where, $query) {
     $language = $this->get_current_language();
-    if( $query->is_single() ) {
+    // For Single Posts
+    if( $query->is_main_query() && $query->is_single() ) {
+      $post_type = $query->get('post_type') ?: 'post';
       $name = $query->get('name');
-      $where = " AND prg_posts.post_type = 'post'";
+      $where = " AND prg_posts.post_type = '$post_type'";
       $where .= " 
       AND (
         prg_postmeta.meta_key = 'acfml_slug_$language'

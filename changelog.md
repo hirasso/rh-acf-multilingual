@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-25)
 
-- query__get_post_in (#8cb6aaa)
+- remove query__get_post_in, optimize single posts_where and posts_join (#e67d672)
+- query__get_post_in (#fa0d565)
 - really only detect single get_post requests (#06d9c6d)
 - even more custom SQL (#b611fc0)
 - Alter SQL directly (#7d9bda9)
