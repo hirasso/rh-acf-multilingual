@@ -519,7 +519,7 @@ class ACF_Multilingual extends Singleton {
    * @return void
    */
   public function filter_frontend_locale($locale) {
-    if( is_admin()() ) return $locale;
+    if( is_admin() ) return $locale;
     return str_replace('_', '-', $this->get_language_info($this->get_current_language())['locale']);
   }
 
