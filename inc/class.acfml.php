@@ -29,7 +29,6 @@ class ACF_Multilingual extends Singleton {
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('wp_head', [$this, 'wp_head']);
-    add_action('request', [$this, 'prepare_request']);
     add_filter('pre_get_posts', [$this, 'pre_get_posts']);
 
     add_filter('posts_join', [$this, 'posts_join'], 10, 2);
@@ -40,12 +39,6 @@ class ACF_Multilingual extends Singleton {
     add_action('init', [$this, 'add_link_filters']);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
-
-    // add_action('init', function() {
-    //   echo 'custom test:';
-    //   $qo = $this->get_queried_object_from_url('http://acf-multilingual.test/site/event/party/', 'en');
-    //   pre_dump( $qo );
-    // }, 12);
 
   }
 
@@ -338,15 +331,27 @@ class ACF_Multilingual extends Singleton {
    * @param string
    */
   public function detect_current_language() {
-    if( $this->is_frontend() ) {
-      $this->debug = true;
+    $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+    // ajax requests: check referrer to detect if called from frontend.
+    if( wp_doing_ajax() && $referrer && strpos($referrer, admin_url()) !== 0 ) {
+      $language = $this->get_language_in_url($referrer);
+    } elseif( !is_admin() ) {
       $language = $this->get_language_in_url($this->get_current_url());
-      $this->debug = false;
-      if( !$language ) $language = $this->get_default_language();
     } else {
       $language = $this->get_admin_language();
     }
+    if( !$language ) $language = $this->get_default_language();
     $this->language = $language;
+    define('ACFML_CURRENT_LANGUAGE', $language);
+  }
+
+  /**
+   * Resets the current language to the defined value
+   *
+   * @return void
+   */
+  public function reset_current_language() {
+    $this->language = defined('ACFML_CURRENT_LANGUAGE') ? ACFML_CURRENT_LANGUAGE : $this->get_default_language();
   }
 
   /**
@@ -389,11 +394,14 @@ class ACF_Multilingual extends Singleton {
     $language_in_url = $this->get_language_in_url($url);
     if( !$language_in_url ) $language_in_url = $this->get_default_language();
 
-    $qo = $this->get_queried_object_from_url($url, $language_in_url);
-    if( $qo instanceof \WP_Post ) {
-      return $this->get_post_link($qo, $requested_language);
-    } elseif( $qo instanceof \WP_Post_Type ) {
-      return $this->get_post_type_archive_link($qo->name, $requested_language);
+    $url_query = $this->get_query_from_url($url);
+    if( $url_query ) {
+      $queried_object = $url_query->get_queried_object();
+      if( $queried_object instanceof \WP_Post ) {
+        return $this->get_post_link($queried_object, $requested_language);
+      } elseif( $queried_object instanceof \WP_Post_Type ) {
+        return $this->get_post_type_archive_link($queried_object->name, $requested_language);
+      }
     }
     
     // if nothing special was found, return a 'dumb' converted url
@@ -511,17 +519,8 @@ class ACF_Multilingual extends Singleton {
    * @return void
    */
   public function filter_frontend_locale($locale) {
-    if( !$this->is_frontend() ) return $locale;
+    if( is_admin()() ) return $locale;
     return str_replace('_', '-', $this->get_language_info($this->get_current_language())['locale']);
-  }
-
-  /**
-   * Detect if on frontend
-   *
-   * @return Boolean
-   */
-  public function is_frontend() {
-    return !is_admin() && !wp_doing_ajax();
   }
 
   /**
@@ -562,49 +561,14 @@ class ACF_Multilingual extends Singleton {
   public function pre_get_posts( $query ) {
     if( is_admin() || !$query->is_main_query() ) return;
     $language = $this->get_current_language();
-    if( $query->is_single() ) {
-      // $query->set('name', '');
-      // $query->set('meta_key', "acfml_slug_$language");
-      // $query->set('meta_value', $query->get('name'));
-      // $query->set('meta_query', [
-      //   [
-      //     'key' => "acfml_slug_$language",
-      //     'value' => $query->get('name')
-      //   ]
-      // ]);
+    // This allows us to use get_page_by_path also for posts of type 'post'
+    $qo = $query->get_queried_object();
+    if( $qo instanceof \WP_Post ) {
+      $query->set('post_type', $qo->post_type);
     }
-    // pre_dump($query);
-    // pre_dump($query);
-    // $query->is_single = true;
-    // pre_dump($query);
   }
 
-  /**
-   * Filter the request (inspired by qtranslate-slug)
-   *
-   * @param Array $query
-   * @return void
-   */
-  public function prepare_request($vars) {
-    // do nothing in admin
-    if( is_admin() ) return $vars;
-    
-    // if we detected a post with type 'post' when using the modified
-    // get_page_by_path function, alter the $vars so that WP understands we 
-    // are looking for a 'post', not a 'page'
-    // $pagename = $vars['pagename'] ?? null;
-    // $queried_post_type = $vars['post_type'] ?? null;
-    
-    // if( $pagename 
-    //     && !$queried_post_type 
-    //     && $post = get_page_by_path($pagename) ) {
-    //   if( $post->post_type === 'post' ) {
-    //     $vars['post_type'] = 'post';
-    //     return $vars;
-    //   }
-    // }
-    return  $vars;
-  }
+  
 
   /**
    * Filter for 'the_content'
@@ -681,25 +645,23 @@ class ACF_Multilingual extends Singleton {
   }
 
   /**
-   * Does the same as \WP->parse_url, but with a custom URL and language
+   * Uses built-in WP functionality to parse and query for a given URL, but with a custom URL and language
    *
    * @param string|null $url
    * @param string|null $language
    * @return mixed one of null, \WP_Post, \WP_Post_Type, \WP_Term
    */
-  private function get_queried_object_from_url(?string $url = null, ?string $language = null) {
+  public function get_query_from_url(?string $url = null): ?\WP_Query {
     global $wp;
     // parse defaults
     $url = $url ?? $this->get_current_url();
-    $language = $language ?? $this->get_current_language();
 
     // get the path from the url, return early if none
     $path = $this->get_path($url);
     if( !$path ) return null;
 
     // overwrite the language for the time of the request
-    $_language = $this->get_current_language();
-    $this->language = $language;
+    $this->language = $this->get_language_in_url($url);
 
     // clone the global WP object
     $wp_clone = clone $wp;
@@ -717,28 +679,9 @@ class ACF_Multilingual extends Singleton {
     $query->query( $wp_clone->query_vars );
     
     // reset the language
-    $this->language = $_language;
+    $this->reset_current_language();
     
-    return $query->get_queried_object();
-  }
-
-  /**
-   * Get a post type 
-   *
-   * @param String $path
-   * @param String|null $language
-   * @return String|null
-   */
-  public function get_post_type_archive_by_path(String $path, ?String $language = null): ?string {
-    // prepare the path segments
-    $segments = explode( '/', trim( $path, '/' ) );
-    $segments = array_map( 'sanitize_title_for_query', $segments );
-    // loop through all post types and 
-    foreach( get_post_types() as $post_type ) {
-      if( !is_post_type_viewable($post_type) ) continue;
-      if( $this->get_post_type_archive_slug($post_type, $language) === $segments[0] ) return $post_type;
-    }
-    return null;
+    return $query;
   }
 
   /**
@@ -846,7 +789,7 @@ class ACF_Multilingual extends Singleton {
     $post_types = array_map(function($item) {
       return trim($item, "'");
     }, explode(',', $matches['postTypeInString']) );
-    // if( in_array('page', $post_types) ) $post_types[] = 'post';
+    if( in_array('page', $post_types) ) $post_types[] = 'post';
     $post_type_in_string = "'" . implode("','", $post_types) ."'";
     // build the new query
     $query = 

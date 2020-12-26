@@ -1,6 +1,7 @@
 #### 0.0.1 (2020-12-26)
 
-- get_queried_object_from_url (#11edc17)
+- Detect language from referrer in admin-ajax.php (#6bda50c)
+- get_queried_object_from_url (#1c5ace5)
 - remove query__get_post_in, optimize single posts_where and posts_join (#d1233d3)
 - query__get_post_in (#fa0d565)
 - really only detect single get_post requests (#06d9c6d)
