@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Multilingual_Fields extends Singleton {
+class Multilingual_Fields {
 
   // for which field types should 'is_multilingual' be available?
   private $multilingual_field_types = [

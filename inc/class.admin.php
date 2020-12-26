@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Admin extends Singleton {
+class Admin {
   
   private $prefix;
 
@@ -12,7 +12,6 @@ class Admin extends Singleton {
     $this->prefix = acfml()->get_prefix();
     add_action('admin_notices', [$this, 'show_admin_notices']);
     add_action('acf/init', [$this, 'acf_init']);
-    
   }
 
   /**

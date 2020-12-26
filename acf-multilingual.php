@@ -1,45 +1,111 @@
-<?php 
+<?php
+/**
+ * Plugin Name: ACF Multilingual
+ * Version: 0.0.1
+ * Author: Rasso Hilber
+ * Description: A lightweight solution to support multiple languages with WordPress and Advanced Custom Fields
+ * Author URI: https://rassohilber.com
+**/
 
-namespace ACFML;
+if( !defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if( ! class_exists('ACF_Multilingual') ) :
 
-require_once(__DIR__ . '/class.multilingual-fields.php');
-require_once(__DIR__ . '/class.admin.php');
-require_once(__DIR__ . '/class.multilingual-post-types.php');
-require_once(__DIR__ . '/class.multilingual-taxonomies.php');
-
-class ACF_Multilingual extends Singleton {
+class ACF_Multilingual {
 
   private $prefix = 'acfml';
   private $debug = false;
   private $language = null;
 
-  public function init() {
-    
-    Admin::getInstance();
-    Multilingual_Fields::getInstance();
-    Multilingual_Post_Types::getInstance();
-    Multilingual_Taxonomies::getInstance();
+  public function  __construct() {}
 
+  public function initialize() {
+    
+    $this->define( 'ACFML', true );
+    $this->define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
+    $this->define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
+
+    // Include classes.
+    $this->include('inc/class.admin.php');
+    $this->include('inc/class.multilingual-fields.php');
+    $this->include('inc/class.multilingual-post-types.php');
+    $this->include('inc/class.multilingual-taxonomies.php');
+
+    $this->new_instance('ACFML\Admin');
+    $this->new_instance('ACFML\Multilingual_Fields');
+    $this->new_instance('ACFML\Multilingual_Post_Types');
+    $this->new_instance('ACFML\Multilingual_Taxonomies');
+
+    $this->add_hooks();
+
+  }
+
+  /**
+   * define
+   *
+   * Defines a constant if doesnt already exist.
+   *
+   * @param	string $name The constant name.
+   * @param	mixed $value The constant value.
+   * @returnvoid
+   */
+  function define( $name, $value = true ) {
+    if( !defined($name) ) {
+      define( $name, $value );
+    }
+  }
+
+  /*
+   * include
+   *
+   * Includes a file within the ACFML plugin.
+   *
+   * @param	string $filename The specified file.
+   * @return	void
+   */
+  function include( $filename = '' ) {
+    $file_path = $this->get_file_path($filename);
+    if( file_exists($file_path) ) {
+      include_once($file_path);
+    }
+  }
+
+  /**
+   * get_path
+   *
+   * Returns the plugin path to a specified file.
+   *
+   * @param	string $filename The specified file.
+   * @return	string
+   */
+  public function get_file_path( $filename = '' ) {
+    return ACFML_PATH . ltrim($filename, '/');
+  }
+
+  /**
+   * Add filter and action hooks
+   *
+   * @return void
+   */
+  private function add_hooks() {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
     add_action('plugins_loaded', [$this, 'detect_current_language']);
-    add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX);
+    add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX-1);
+    
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('wp_head', [$this, 'wp_head']);
     add_filter('pre_get_posts', [$this, 'pre_get_posts']);
 
+    // query filters
     add_filter('posts_join', [$this, 'posts_join'], 10, 2);
     add_filter('posts_where', [$this, 'posts_where'], 10, 2);
-    
     add_filter('query', [$this, 'query__get_page_by_path']);
-    
+
     add_action('init', [$this, 'add_link_filters']);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
-
   }
 
   /**
@@ -117,23 +183,12 @@ class ACF_Multilingual extends Singleton {
    */
   private function asset_uri( $path ) {
     $uri = plugins_url( $path, __DIR__ );
-    $file = $this->get_plugin_path( $path );
+    $file = $this->get_file_path( $path );
     if( file_exists( $file ) ) {
       $version = filemtime( $file );
       $uri .= "?v=$version";
     }
     return $uri;
-  }
-
-  /**
-   * Helper function to get a file path inside this plugin's root folder
-   *
-   * @return void
-   */
-  function get_plugin_path( $path ) {
-    $path = ltrim( $path, '/' );
-    $file = dirname(__DIR__) . "/$path";
-    return $file;
   }
 
   /**
@@ -164,7 +219,7 @@ class ACF_Multilingual extends Singleton {
    */
   public function get_template($template_name, $value = null) {
     $value = $this->to_object($value);
-    $path = $this->get_plugin_path("templates/$template_name.php");
+    $path = $this->get_file_path("templates/$template_name.php");
     $path = apply_filters("$this->prefix/template/$template_name", $path);
     if( !file_exists($path) ) return "<p>$template_name: Template doesn't exist</p>";
     ob_start();
@@ -225,7 +280,7 @@ class ACF_Multilingual extends Singleton {
    * 
    * @return mixed                    Either a html string or an array
    */
-  public function get_language_switcher(?array $args = []) {
+  public function get_language_switcher(?array $args = [], bool $echo = false) {
     static $dropdown_count = 0;
     static $list_count = 0;
     $args = $this->to_object(wp_parse_args($args, [
@@ -255,7 +310,7 @@ class ACF_Multilingual extends Singleton {
       unset($language);
     }
     $languages = array_values($languages);
-
+    
     // return for special $format 'key:value'
     if( strpos($args->format, ':') !== false ) {
       $key_value = explode(':', $args->format);
@@ -342,7 +397,7 @@ class ACF_Multilingual extends Singleton {
     }
     if( !$language ) $language = $this->get_default_language();
     $this->language = $language;
-    define('ACFML_CURRENT_LANGUAGE', $language);
+    $this->define('ACFML_CURRENT_LANGUAGE', $language);
   }
 
   /**
@@ -631,7 +686,7 @@ class ACF_Multilingual extends Singleton {
    * @param string $url
    * @param string
    */
-  private function get_path(String $url): string {
+  private function get_url_path(String $url): string {
     $path = str_replace(home_url(), '', $url);
     $regex_languages = implode('|', $this->get_languages('slug'));
     $path = preg_replace("%/($regex_languages)(/|$|\?|#)%", '', $path);
@@ -657,7 +712,7 @@ class ACF_Multilingual extends Singleton {
     $url = $url ?? $this->get_current_url();
 
     // get the path from the url, return early if none
-    $path = $this->get_path($url);
+    $path = $this->get_url_path($url);
     if( !$path ) return null;
 
     // overwrite the language for the time of the request
@@ -844,4 +899,76 @@ class ACF_Multilingual extends Singleton {
     } 
     return $where;
   }
+
+  /**
+   * get_instance
+   *
+   * Returns an instance or null if doesn't exist.
+   *
+   * @param	string $class The instance class name.
+   * @return	object
+   */
+  public function get_instance( $class ) {
+    $name = strtolower($class);
+    return isset($this->instances[ $name ]) ? $this->instances[ $name ] : null;
+  }
+
+  /**
+   * new_instance
+   *
+   * Creates and stores an instance of the given class.
+   *
+   * @param	string $class The instance class name.
+   * @return	object
+   */
+  public function new_instance( $class, ...$args ) {
+    $instance = new $class($args);
+    $name = strtolower($class);
+    $this->instances[ $name ] = $instance;
+    return $instance;
+  }
 }
+
+/**
+ * acfml
+ *
+ * The main function responsible for returning the one true acfml instance to functions everywhere.
+ * Use this function like you would a global variable, except without needing to declare the global.
+ *
+ * Example: <?php $acfml = acfml(); ?>
+ *
+ * @param	void
+ * @return ACF_Multilingual
+ */
+function acfml():ACF_Multilingual {
+  global $acfml;
+
+  // Instantiate only once.
+  if( !isset($acfml) ) {
+    $acfml = new ACF_Multilingual();
+    $acfml->initialize();
+  }
+  return $acfml;
+}
+
+acfml(); // Instantiate
+
+endif; // class_exists check
+
+/**
+ * If ACF is defined, initialize the plugin.
+ * Otherwise, show a notice.
+ */
+function acfml_initialize_plugin() {
+  if( defined('ACF') ) {
+    init();
+  } elseif( current_user_can('manage_plugins') ) {
+    admin()->add_admin_notice(
+      'acf_missing',
+      wp_sprintf('ACF Multilingual is an extension for %s. Without it, it won\'t do anything.',
+        '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>'
+      )
+    );
+  }
+}
+// add_action('plugins_loded', __NAMESPACE__ . '\\initialize_plugin');

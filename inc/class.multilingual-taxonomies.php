@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Multilingual_Taxonomies extends Singleton {
+class Multilingual_Taxonomies {
   
   private $prefix;
   private $default_language;
