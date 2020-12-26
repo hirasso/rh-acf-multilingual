@@ -37,9 +37,16 @@ class ACF_Multilingual extends Singleton {
     
     add_filter('query', [$this, 'query__get_page_by_path']);
     
-    $this->add_link_filters();
+    add_action('init', [$this, 'add_link_filters']);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
+
+    // add_action('init', function() {
+    //   echo 'custom test:';
+    //   $qo = $this->get_queried_object_from_url('http://acf-multilingual.test/site/event/party/', 'en');
+    //   pre_dump( $qo );
+    // }, 12);
+
   }
 
   /**
@@ -382,14 +389,13 @@ class ACF_Multilingual extends Singleton {
     $language_in_url = $this->get_language_in_url($url);
     if( !$language_in_url ) $language_in_url = $this->get_default_language();
 
-    // if this is a post type archive page, get the url from the post type
-    if( $post_type = $this->get_post_type_archive_by_path($this->get_path($url), $language_in_url) ) {
-      return $this->get_post_type_archive_link($post_type, $requested_language);
+    $qo = $this->get_queried_object_from_url($url, $language_in_url);
+    if( $qo instanceof \WP_Post ) {
+      return $this->get_post_link($qo, $requested_language);
+    } elseif( $qo instanceof \WP_Post_Type ) {
+      return $this->get_post_type_archive_link($qo->name, $requested_language);
     }
-    // if this is a URL for a post, get the url from this
-    if( $post = $this->get_post_by_path($this->get_path($url), $language_in_url) ) {
-      return $this->get_post_link($post, $requested_language);
-    } 
+    
     // if nothing special was found, return a 'dumb' converted url
     $current_home_url = $this->home_url('', $language_in_url);
     $new_home_url = $this->home_url('', $requested_language);
@@ -444,7 +450,7 @@ class ACF_Multilingual extends Singleton {
    *
    * @return void
    */
-  private function add_link_filters() {
+  public function add_link_filters() {
     foreach( $this->get_link_filters() as $filter_name => $priority ) {
       add_filter($filter_name, [$this, 'convert_url'], intval($priority));
     }
@@ -675,81 +681,45 @@ class ACF_Multilingual extends Singleton {
   }
 
   /**
-   * Get a post by a URL path
+   * Does the same as \WP->parse_url, but with a custom URL and language
    *
-   * @param string $path
+   * @param string|null $url
    * @param string|null $language
-   * @return \WP_Post|null
+   * @return mixed one of null, \WP_Post, \WP_Post_Type, \WP_Term
    */
-  public function get_post_by_path(string $path, ?string $language = null): ?\WP_Post {
-    // return early if nothing found
+  private function get_queried_object_from_url(?string $url = null, ?string $language = null) {
+    global $wp;
+    // parse defaults
+    $url = $url ?? $this->get_current_url();
+    $language = $language ?? $this->get_current_language();
+
+    // get the path from the url, return early if none
+    $path = $this->get_path($url);
     if( !$path ) return null;
 
-    // setup variables
-    if( !$language ) $language = $this->get_current_language();
-    $post_type = ['post', 'page'];
+    // overwrite the language for the time of the request
+    $_language = $this->get_current_language();
+    $this->language = $language;
 
-    $query_vars = $this->parse_query_from_path($path);
+    // clone the global WP object
+    $wp_clone = clone $wp;
+    $query = new \WP_Query();
 
-    $path = '';
-    if( isset($query_vars['post_type']) && isset($query_vars['name']) ) {  // custom post type
-      $post_type = $query_vars['post_type'];
-      $path = $query_vars['name'];
-    } elseif( isset($query_vars['pagename']) ) {  // post type 'page'
-      $path = $query_vars['pagename'];
-    } elseif( isset($query_vars['name']) ) { // post type 'post'
-      $path = $query_vars['name'];
-    }
-    if( !$path ) return null;
+    $req_uri = $_SERVER['REQUEST_URI'];
+    $_SERVER['REQUEST_URI'] = $path;
+    $wp_clone->parse_request();
+    $wp_clone->build_query_string();
     
-    $this->language_for_page_by_path = $language;
-    $result = get_page_by_path($path, OBJECT, $post_type);
-    unset($this->language_for_page_by_path);
-    return $result;
+    $_SERVER['REQUEST_URI'] = $req_uri;
     
-  }
-
-  /**
-   * Looks for matches in the global $wp_rewrite object
-   *
-   * @param string $path
-   * @return array
-   */
-  private function parse_query_from_path( string $path ): array{
-    global $wp_rewrite;
-    $matched_rule = null;
-    $query_vars = [];
-    // look for the first matching rule
-    foreach ( (array) $wp_rewrite->wp_rewrite_rules() as $match => $query ) {
-      if( preg_match( "#^$match#", $path, $matches ) ) {
-        $matched_rule = $match;
-        break;
-      }
-    }
-    if( $matched_rule ) {
-      // Trim the query of everything up to the '?'.
-      $query = preg_replace( '!^.+\?!', '', $query );
-      // Substitute the substring matches into the query.
-      $query = addslashes( \WP_MatchesMapRegex::apply( $query, $matches ) );
-      // parse the query string
-      $query_vars = wp_parse_args($query);
-    }
-    // pre_dump($query_vars); // From here on we have valid query vars!!! PAARTY PAAAAARTY!!!
-
-    $custom_post_types = array_keys(get_post_types([
-      'public' => true,
-      '_builtin' => false,
-    ]));
-    foreach( $custom_post_types as $pt ) {
-      $cpt_query_var = get_post_type_object($pt)->query_var;
-      if( isset($query_vars[$cpt_query_var]) ) {
-        $query_vars['post_type'] = $pt;
-        $query_vars['name'] = $query_vars[$cpt_query_var];
-        unset($query_vars[$cpt_query_var]);
-      }
-    }
+    if( !count($wp_clone->query_vars) ) return null;
     
-    return $query_vars;
+    $query->query( $wp_clone->query_vars );
+    
+    // reset the language
+    $this->language = $_language;
+    
+    return $query->get_queried_object();
   }
 
   /**
@@ -867,7 +837,7 @@ class ACF_Multilingual extends Singleton {
    */
   public function query__get_page_by_path($query) {
     global $wpdb;
-    $language = $this->language_for_page_by_path ?? $this->get_current_language();
+    $language = $this->get_current_language();
     // detect correct query and find $in_string and $post_type_in_string
     preg_match('/SELECT ID, post_name, post_parent, post_type.+post_name IN \((?<inString>.*?)\).+ post_type IN \((?<postTypeInString>.*?)\)/ms', $query, $matches);
     // return the query if it doesn't match
@@ -878,7 +848,6 @@ class ACF_Multilingual extends Singleton {
     }, explode(',', $matches['postTypeInString']) );
     // if( in_array('page', $post_types) ) $post_types[] = 'post';
     $post_type_in_string = "'" . implode("','", $post_types) ."'";
-    // $post_types[] = 'post';
     // build the new query
     $query = 
         "SELECT ID, $wpdb->postmeta.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
