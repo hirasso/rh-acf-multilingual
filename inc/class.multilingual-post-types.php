@@ -14,24 +14,7 @@ class Multilingual_Post_Types {
   private $slug_field_key;
 
   public function __construct() {
-    add_action('registered_post_type', [$this, 'registered_post_type'], 10, 2);
 
-    // query filters
-    add_filter('pre_get_posts', [$this, 'pre_get_posts']);
-    add_filter('posts_join', [$this, 'posts_join'], 10, 2);
-    add_filter('posts_where', [$this, 'posts_where'], 10, 2);
-    add_filter('posts_fields_request', [$this, 'posts_fields_request'], 10, 2);
-    add_filter('query', [$this, 'query__get_page_by_path']);
-
-    add_action('acf/init', [$this, 'init']);
-  }
-
-  /**
-   * Init hook
-   *
-   * @return void
-   */
-  public function init() {
     // variables
     $this->prefix = acfml()->get_prefix();
     $this->default_language = acfml()->get_default_language();
@@ -41,6 +24,18 @@ class Multilingual_Post_Types {
 
     $this->slug_field_name = "{$this->prefix}_slug";
     $this->slug_field_key = "field_$this->slug_field_name";
+
+    add_action('registered_post_type', [$this, 'registered_post_type'], 10, 2);
+
+    add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array']);
+    add_action('init', [$this, 'flush_rewrite_rules'], 11);
+
+    // query filters
+    add_filter('pre_get_posts', [$this, 'pre_get_posts']);
+    add_filter('posts_join', [$this, 'posts_join'], 10, 2);
+    add_filter('posts_where', [$this, 'posts_where'], 10, 2);
+    add_filter('posts_fields_request', [$this, 'posts_fields_request'], 10, 2);
+    add_filter('query', [$this, 'query__get_page_by_path']);
 
     // hooks
     add_filter('the_title', [$this, 'single_post_title'], 10, 2);
@@ -52,12 +47,7 @@ class Multilingual_Post_Types {
 
     add_action('acf/save_post', [$this, 'save_post_slugs'], 11);
 
-    // methods
-    $this->setup_acf_fields();
-
-    add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array']);
-    add_action('init', [$this, 'flush_rewrite_rules'], 11);
-    
+    add_action('acf/init', [$this, 'setup_acf_fields']);
   }
 
   /**
@@ -169,7 +159,7 @@ class Multilingual_Post_Types {
    *
    * @return void
    */
-  private function setup_acf_fields() {
+  public function setup_acf_fields() {
     
     $post_types = $this->get_multilingual_post_types();
     
@@ -494,7 +484,7 @@ class Multilingual_Post_Types {
    */
   public function pre_get_posts( $query ) {
     if( is_admin() ) return;
-    $post_type = $query->get('post_type');
+    $post_type = $query->get('post_type') ?: ['post', 'page'];
     if( !$this->is_multilingual_post_type( is_array($post_type) ? $post_type[0] : $post_type ) ) return;
     $language = acfml()->get_current_language();
     $queried_object = $query->get_queried_object();
