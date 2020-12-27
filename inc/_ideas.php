@@ -6,18 +6,3 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
-/**
- * Idea: Replace the query of wp get_page_by_path so that it looks 
- * the current language's slug instead of post_name
- */
-$language = acfml()->get_current_language();
-$sql = "SELECT ID, $wpdb->postmeta.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
-LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID
-WHERE 
-(
-  $wpdb->postmeta.meta_key = 'acfml_slug_$language'
-  AND
-  $wpdb->postmeta.meta_value IN ($in_string)
-)
-AND $wpdb->posts.post_type IN ($post_type_in_string)";

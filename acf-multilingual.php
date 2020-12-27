@@ -537,9 +537,7 @@ class ACF_Multilingual {
    * @param string
    */
   public function convert_current_url($language) {
-    $this->debug = true;
     $url = $this->convert_url($this->get_current_url(), $language);
-    $this->debug = false;
     return $url;
   }
 
@@ -613,14 +611,34 @@ class ACF_Multilingual {
     ]);
   }
 
+  /**
+   * pre_get_posts
+   *
+   * modifies WP_Query to be language-aware
+   * 
+   * @param \WP_Query $query
+   * @return void
+   */
   public function pre_get_posts( $query ) {
-    if( is_admin() || !$query->is_main_query() ) return;
+    if( is_admin() ) return;
     $language = $this->get_current_language();
-    // This allows us to use get_page_by_path also for posts of type 'post'
-    $qo = $query->get_queried_object();
-    if( $qo instanceof \WP_Post ) {
-      $query->set('post_type', $qo->post_type);
+    $post_type = $query->get('post_type');
+    $queried_object = $query->get_queried_object();
+    // If the queried_object is a WP_Post, explicitly set the query's post_type to the post's post_type
+    if( $query->is_main_query() && !$post_type && $queried_object instanceof \WP_Post ) {
+      $query->set('post_type', $queried_object->post_type);
     }
+    // map query_var 'name' to tax_query => acfml_slug_$language
+    if( $slug = $query->get('name') ) {
+      $meta_query = $query->get('meta_query') ?: [];
+      $meta_query['acfml_slug'] = [
+        'key' => "acfml_slug_$language",
+        'value' => $slug
+      ];
+      $query->set('meta_query', $meta_query);
+      $query->set('name', '');
+    }
+    
   }
 
   
@@ -652,8 +670,8 @@ class ACF_Multilingual {
    * @param string
    */
   public function convert_urls_in_string($string) {
-    $string = preg_replace_callback('/href=[\'|\"](http.*?)[\'|\"]/', function($matches) {
-      $url = $matches[1];
+    $string = preg_replace_callback('/href=[\'|\"](?<url>http.*?)[\'|\"]/', function($matches) {
+      $url = $matches['url'];
       if( strpos($this->strip_protocol($url), $this->strip_protocol(home_url())) !== false ) {
         $url = $this->convert_url($url);
       }
@@ -837,26 +855,27 @@ class ACF_Multilingual {
     global $wpdb;
     $language = $this->get_current_language();
     // detect correct query and find $in_string and $post_type_in_string
-    preg_match('/SELECT ID, post_name, post_parent, post_type.+post_name IN \((?<inString>.*?)\).+ post_type IN \((?<postTypeInString>.*?)\)/ms', $query, $matches);
+    preg_match('/SELECT ID, post_name, post_parent, post_type.+post_name IN \((?<slugs_in_string>.*?)\).+ post_type IN \((?<post_type_in_string>.*?)\)/ms', $query, $matches);
     // return the query if it doesn't match
     if( !count($matches) ) return $query;
-    $post_type_in_string = $matches['postTypeInString'];
+    $post_type_in_string = $matches['post_type_in_string'];
     $post_types = array_map(function($item) {
       return trim($item, "'");
-    }, explode(',', $matches['postTypeInString']) );
+    }, explode(',', $matches['post_type_in_string']) );
     if( in_array('page', $post_types) ) $post_types[] = 'post';
     $post_type_in_string = "'" . implode("','", $post_types) ."'";
     // build the new query
-    $query = 
-        "SELECT ID, $wpdb->postmeta.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
+    $query = "SELECT 
+        ID, meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
         LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID
           WHERE 
           (
-            $wpdb->postmeta.meta_key = 'acfml_slug_$language'
+            meta_key = 'acfml_slug_$language'
             AND
-            $wpdb->postmeta.meta_value IN ({$matches['inString']})
+            meta_value IN ({$matches['slugs_in_string']})
           )
-          AND $wpdb->posts.post_type IN ({$post_type_in_string})";
+          AND post_type IN ({$post_type_in_string})
+          AND post_status NOT IN ('trash')";
     return $query;
   }
 
