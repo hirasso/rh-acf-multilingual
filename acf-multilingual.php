@@ -90,19 +90,12 @@ class ACF_Multilingual {
   private function add_hooks() {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
-    add_action('plugins_loaded', [$this, 'detect_current_language']);
+    add_action('plugins_loaded', [$this, 'detect_language']);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX-1);
     
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('wp_head', [$this, 'wp_head']);
-    add_filter('pre_get_posts', [$this, 'pre_get_posts']);
-
-    // query filters
-    add_filter('posts_join', [$this, 'posts_join'], 10, 2);
-    add_filter('posts_where', [$this, 'posts_where'], 10, 2);
-    add_filter('posts_fields_request', [$this, 'posts_fields_request'], 10, 2);
-    add_filter('query', [$this, 'query__get_page_by_path']);
 
     add_action('init', [$this, 'add_link_filters']);
     // links in the_content
@@ -386,7 +379,7 @@ class ACF_Multilingual {
    *
    * @param string
    */
-  public function detect_current_language() {
+  public function detect_language() {
     $referrer = $_SERVER['HTTP_REFERER'] ?? '';
     // ajax requests: check referrer to detect if called from frontend.
     if( wp_doing_ajax() && $referrer && strpos($referrer, admin_url()) !== 0 ) {
@@ -399,6 +392,19 @@ class ACF_Multilingual {
     if( !$language ) $language = $this->get_default_language();
     $this->language = $language;
     $this->define('ACFML_CURRENT_LANGUAGE', $language);
+  }
+
+  /**
+   * Switch to a langauge
+   *
+   * @param string $language    the slug of the language, e.g. 'en' or 'de'
+   * @return void
+   */
+  public function switch_to_language($language) {
+    $languages = $this->get_languages('slug');
+    if( !in_array($language, $languages) ) return false;
+    $this->language = $language;
+    return true;
   }
 
   /**
@@ -613,40 +619,6 @@ class ACF_Multilingual {
   }
 
   /**
-   * pre_get_posts
-   *
-   * modifies WP_Query to be language-aware
-   * 
-   * @param \WP_Query $query
-   * @return void
-   */
-  public function pre_get_posts( $query ) {
-    if( is_admin() ) return;
-    $language = $this->get_current_language();
-    $post_type = $query->get('post_type');
-    $queried_object = $query->get_queried_object();
-    // If the queried_object is a WP_Post, explicitly set the query's post_type to the post's post_type
-    if( $query->is_main_query() && !$post_type && $queried_object instanceof \WP_Post ) {
-      $query->set('post_type', $queried_object->post_type);
-    }
-    // map query_var 'name' to tax_query => acfml_slug_$language
-    if( $slug = $query->get('name') ) {
-      $meta_query = $query->get('meta_query') ?: [];
-      $meta_query['acfml_slug'] = [
-        'key' => "acfml_slug_$language",
-        'value' => $slug
-      ];
-      $meta_query['acfml_post_title'] = [
-        'key' => "acfml_post_title_$language",
-        'compare' => 'EXISTS'
-      ];
-      $query->set('meta_query', $meta_query);
-      $query->set('name', '');
-    }
-    
-  }
-
-  /**
    * Filter for 'the_content'
    *
    * @param string $value
@@ -848,87 +820,6 @@ class ACF_Multilingual {
     return $link;
   }
   
-  /**
-   * Detect and overwrite the query for get_page_by_path
-   *
-   * @param [type] $query
-   * @return void
-   */
-  public function query__get_page_by_path($query) {
-    global $wpdb;
-    $language = $this->get_current_language();
-    // detect correct query and find $in_string and $post_type_in_string
-    preg_match('/SELECT ID, post_name, post_parent, post_type.+post_name IN \((?<slugs_in_string>.*?)\).+ post_type IN \((?<post_type_in_string>.*?)\)/ms', $query, $matches);
-    // return the query if it doesn't match
-    if( !count($matches) ) return $query;
-    $post_type_in_string = $matches['post_type_in_string'];
-    $post_types = array_map(function($item) {
-      return trim($item, "'");
-    }, explode(',', $matches['post_type_in_string']) );
-    if( in_array('page', $post_types) ) $post_types[] = 'post';
-    $post_type_in_string = "'" . implode("','", $post_types) ."'";
-    // build the new query
-    $query = "SELECT 
-        ID, acfml_slug.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
-        INNER JOIN $wpdb->postmeta AS acfml_slug ON ( $wpdb->posts.ID = acfml_slug.post_id )
-          WHERE 
-          (
-            meta_key = 'acfml_slug_$language'
-            AND
-            meta_value IN ({$matches['slugs_in_string']})
-          )
-          AND post_type IN ({$post_type_in_string})
-          AND post_status NOT IN ('trash')";
-    
-    return $query;
-  }
-
-  /**
-   * Posts join for 
-   *
-   * @param string $join
-   * @param \WP_Query $query
-   * @return string
-   */
-  public function posts_join($join, $query) {
-    global $wpdb;
-    // For Single Posts
-    if( $query->is_main_query() && $query->is_single() ) {
-      $join = "LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID";
-    }
-    return $join;
-  }
-
-
-  public function posts_fields_request($fields, $query) {
-    global $wpdb;
-    // $fields = "*, meta_value AS post_name";
-    return $fields;
-  }
-
-  /**
-   * Posts where for 
-   *
-   * @param string $where
-   * @param \WP_Query $query
-   * @return string
-   */
-  public function posts_where($where, $query) {
-    $language = $this->get_current_language();
-    // For Single Posts
-    // if( $query->is_main_query() && $query->is_single() ) {
-    //   $post_type = $query->get('post_type') ?: 'post';
-    //   $name = $query->get('name');
-    //   $where = " AND prg_posts.post_type = '$post_type'";
-    //   $where .= " 
-    //   AND (
-    //     prg_postmeta.meta_key = 'acfml_slug_$language'
-    //     AND
-    //     prg_postmeta.meta_value = '$name'
-    //   )";
-    // } 
-    return $where;
-  }
 
   /**
    * get_instance

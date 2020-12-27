@@ -15,6 +15,14 @@ class Multilingual_Post_Types {
 
   public function __construct() {
     add_action('registered_post_type', [$this, 'registered_post_type'], 10, 2);
+
+    // query filters
+    add_filter('pre_get_posts', [$this, 'pre_get_posts']);
+    add_filter('posts_join', [$this, 'posts_join'], 10, 2);
+    add_filter('posts_where', [$this, 'posts_where'], 10, 2);
+    add_filter('posts_fields_request', [$this, 'posts_fields_request'], 10, 2);
+    add_filter('query', [$this, 'query__get_page_by_path']);
+
     add_action('acf/init', [$this, 'init']);
   }
 
@@ -151,7 +159,7 @@ class Multilingual_Post_Types {
    * @param string $post_type
    * @return Bool
    */
-  private function is_multilingual_post_type(String $post_type):Bool {
+  public function is_multilingual_post_type(String $post_type):Bool {
     return in_array($post_type, $this->get_multilingual_post_types());
   }
 
@@ -475,4 +483,151 @@ class Multilingual_Post_Types {
       $wp_post_types[$pt]->labels = get_post_type_labels($pt_object);
     }
   }
+
+  /**
+   * pre_get_posts
+   *
+   * modifies WP_Query to be language-aware
+   * 
+   * @param \WP_Query $query
+   * @return void
+   */
+  public function pre_get_posts( $query ) {
+    if( is_admin() ) return;
+    $post_type = $query->get('post_type');
+    if( !$this->is_multilingual_post_type( is_array($post_type) ? $post_type[0] : $post_type ) ) return;
+    $language = acfml()->get_current_language();
+    $queried_object = $query->get_queried_object();
+    // If the queried_object is a WP_Post, explicitly set the query's post_type to the post's post_type
+    if( $query->is_main_query() && !$post_type && $queried_object instanceof \WP_Post ) {
+      $query->set('post_type', $queried_object->post_type);
+    }
+
+    $meta_query = $query->get('meta_query') ?: [];
+    $meta_query['acfml_slug'] = [
+      'key' => "acfml_slug_$language",
+      'compare' => 'EXISTS'
+    ];
+    $meta_query['acfml_post_title'] = [
+      'key' => "acfml_post_title_$language",
+      'compare' => 'EXISTS'
+    ];
+    // map query_var 'name' to tax_query => acfml_slug_$language
+    if( $slug = $query->get('name') ) {
+      $meta_query['acfml_slug'] = [
+        'key' => "acfml_slug_$language",
+        'value' => $slug
+      ];
+      $query->set('name', '');
+    }
+    $query->set('meta_query', $meta_query);
+
+  }
+
+  /**
+   * Overwrite post_name and post_meta for $queries
+   * for supported post types
+   *
+   * @param string $fields
+   * @param \WP_Query $query
+   * @return string $fields
+   */
+  public function posts_fields_request($fields, $query): string {
+    global $wpdb;
+    $fields = "*";
+    $meta_query = $query->get('meta_query') ?: [];
+    $slug_index = array_search('acfml_slug', array_keys($meta_query));
+    if( $slug_index === 0 ) { // false or 0
+      $fields .= ", $wpdb->postmeta.meta_value as post_name";
+    } elseif( $slug_index !== false ) {
+      $fields .= ", mt$slug_index.meta_value as post_name";
+    }
+    $title_index = array_search('acfml_post_title', array_keys($meta_query));
+    if( $title_index === 0 ) {
+      $fields .= ", $wpdb->postmeta.meta_value as post_title";
+    } elseif( $title_index !== false ) {
+      $fields .= ", mt$title_index.meta_value as post_title";
+    }
+    return $fields;
+  }
+
+  /**
+   * Posts where for 
+   *
+   * @param string $where
+   * @param \WP_Query $query
+   * @return string
+   */
+  public function posts_where($where, $query) {
+    $language = acfml()->get_current_language();
+    // For Single Posts
+    // if( $query->is_main_query() && $query->is_single() ) {
+    //   $post_type = $query->get('post_type') ?: 'post';
+    //   $name = $query->get('name');
+    //   $where = " AND prg_posts.post_type = '$post_type'";
+    //   $where .= " 
+    //   AND (
+    //     prg_postmeta.meta_key = 'acfml_slug_$language'
+    //     AND
+    //     prg_postmeta.meta_value = '$name'
+    //   )";
+    // } 
+    return $where;
+  }
+
+
+  /**
+   * Detect and overwrite the query for get_page_by_path
+   *
+   * @param [type] $query
+   * @return void
+   */
+  public function query__get_page_by_path($query) {
+    global $wpdb;
+    $language = acfml()->get_current_language();
+    // detect correct query and find $in_string and $post_type_in_string
+    preg_match('/SELECT ID, post_name, post_parent, post_type.+post_name IN \((?<slugs_in_string>.*?)\).+ post_type IN \((?<post_type_in_string>.*?)\)/ms', $query, $matches);
+    // return the query if it doesn't match
+    if( !count($matches) ) return $query;
+    // prepare post types
+    $post_types = array_map(function($item) {
+      return trim($item, "'");
+    }, explode(',', $matches['post_type_in_string']) );
+    if( in_array('page', $post_types) ) {
+      $post_types = array_merge(['post'], $post_types);
+    }
+    $post_type_in_string = "'" . implode("','", $post_types) ."'";
+    // build the new query
+    $query = "SELECT 
+        ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
+        INNER JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
+          WHERE 
+          (
+            meta_key = 'acfml_slug_$language'
+            AND
+            meta_value IN ({$matches['slugs_in_string']})
+          )
+          AND post_type IN ({$post_type_in_string})
+          AND post_status NOT IN ('trash')";
+
+    return $query;
+  }
+
+  /**
+   * Posts join for 
+   *
+   * @param string $join
+   * @param \WP_Query $query
+   * @return string
+   */
+  public function posts_join($join, $query) {
+    global $wpdb;
+    // For Single Posts
+    if( $query->is_main_query() && $query->is_single() ) {
+      // $join = "INNER JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID";
+    }
+    return $join;
+  }
+
+
 }
