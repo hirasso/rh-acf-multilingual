@@ -101,6 +101,7 @@ class ACF_Multilingual {
     // query filters
     add_filter('posts_join', [$this, 'posts_join'], 10, 2);
     add_filter('posts_where', [$this, 'posts_where'], 10, 2);
+    add_filter('posts_fields_request', [$this, 'posts_fields_request'], 10, 2);
     add_filter('query', [$this, 'query__get_page_by_path']);
 
     add_action('init', [$this, 'add_link_filters']);
@@ -635,13 +636,15 @@ class ACF_Multilingual {
         'key' => "acfml_slug_$language",
         'value' => $slug
       ];
+      $meta_query['acfml_post_title'] = [
+        'key' => "acfml_post_title_$language",
+        'compare' => 'EXISTS'
+      ];
       $query->set('meta_query', $meta_query);
       $query->set('name', '');
     }
     
   }
-
-  
 
   /**
    * Filter for 'the_content'
@@ -866,8 +869,8 @@ class ACF_Multilingual {
     $post_type_in_string = "'" . implode("','", $post_types) ."'";
     // build the new query
     $query = "SELECT 
-        ID, meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
-        LEFT JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID
+        ID, acfml_slug.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
+        INNER JOIN $wpdb->postmeta AS acfml_slug ON ( $wpdb->posts.ID = acfml_slug.post_id )
           WHERE 
           (
             meta_key = 'acfml_slug_$language'
@@ -876,6 +879,7 @@ class ACF_Multilingual {
           )
           AND post_type IN ({$post_type_in_string})
           AND post_status NOT IN ('trash')";
+    
     return $query;
   }
 
@@ -895,6 +899,13 @@ class ACF_Multilingual {
     return $join;
   }
 
+
+  public function posts_fields_request($fields, $query) {
+    global $wpdb;
+    // $fields = "*, meta_value AS post_name";
+    return $fields;
+  }
+
   /**
    * Posts where for 
    *
@@ -905,17 +916,17 @@ class ACF_Multilingual {
   public function posts_where($where, $query) {
     $language = $this->get_current_language();
     // For Single Posts
-    if( $query->is_main_query() && $query->is_single() ) {
-      $post_type = $query->get('post_type') ?: 'post';
-      $name = $query->get('name');
-      $where = " AND prg_posts.post_type = '$post_type'";
-      $where .= " 
-      AND (
-        prg_postmeta.meta_key = 'acfml_slug_$language'
-        AND
-        prg_postmeta.meta_value = '$name'
-      )";
-    } 
+    // if( $query->is_main_query() && $query->is_single() ) {
+    //   $post_type = $query->get('post_type') ?: 'post';
+    //   $name = $query->get('name');
+    //   $where = " AND prg_posts.post_type = '$post_type'";
+    //   $where .= " 
+    //   AND (
+    //     prg_postmeta.meta_key = 'acfml_slug_$language'
+    //     AND
+    //     prg_postmeta.meta_value = '$name'
+    //   )";
+    // } 
     return $where;
   }
 
