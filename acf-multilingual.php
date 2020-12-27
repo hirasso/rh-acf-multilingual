@@ -176,7 +176,7 @@ class ACF_Multilingual {
    * @param string
    */
   private function asset_uri( $path ) {
-    $uri = plugins_url( $path, __DIR__ );
+    $uri = plugins_url( $path, __FILE__ );
     $file = $this->get_file_path( $path );
     if( file_exists( $file ) ) {
       $version = filemtime( $file );
@@ -303,8 +303,14 @@ class ACF_Multilingual {
       }
       unset($language);
     }
-    $languages = array_values($languages);
     
+    $languages = array_filter($languages, function($language) {
+      return !empty($language['url']);
+    });
+    
+    if( count($languages) < 2 ) return false;
+
+
     // return for special $format 'key:value'
     if( strpos($args->format, ':') !== false ) {
       $key_value = explode(':', $args->format);
@@ -412,7 +418,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function reset_current_language() {
+  public function switch_to_current_language() {
     $this->language = defined('ACFML_CURRENT_LANGUAGE') ? ACFML_CURRENT_LANGUAGE : $this->get_default_language();
   }
 
@@ -433,10 +439,19 @@ class ACF_Multilingual {
   /**
    * Get language
    *
-   * @param string
+   * @return string
    */
-  public function get_current_language() {
+  public function get_current_language(): string {
     return $this->language ?? $this->get_default_language();
+  }
+
+  /**
+   * Check if the current language is the default
+   *
+   * @return bool
+   */
+  public function current_language_is_default(): bool {
+    return $this->get_current_language() === $this->get_default_language();
   }
 
   /**
@@ -727,7 +742,7 @@ class ACF_Multilingual {
     $query->query( $wp_clone->query_vars );
     
     // reset the language
-    $this->reset_current_language();
+    $this->switch_to_current_language();
     
     return $query;
   }
@@ -753,7 +768,7 @@ class ACF_Multilingual {
    * @param string $language
    * @param string
    */
-  public function get_post_link( \WP_Post $post, String $language ): string {
+  public function get_post_link( \WP_Post $post, String $language, bool $check_active = true ): string {
     global $wp_rewrite;
     
     $meta_key = "{$this->prefix}_slug_{$language}";
@@ -765,13 +780,9 @@ class ACF_Multilingual {
     // if the post is the front page, return home page in requested language
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
 
-    // $this->remove_link_filters();
-    // $default_permalink = get_permalink($post);
-    // $this->add_link_filters();
-
-    // if( $language === $this->get_default_language() ) {
-    //   return $default_permalink;
-    // }
+    $is_active = (bool) intval( get_post_meta($post->ID, "acfml_active_$language", true) );
+    if( $language === $this->get_default_language() ) $is_active = true;
+    if( $check_active && !$is_active ) return '';
 
     // add possible custom post type's rewrite slug and front to segments
     $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;

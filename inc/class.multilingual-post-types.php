@@ -31,7 +31,7 @@ class Multilingual_Post_Types {
     add_action('init', [$this, 'flush_rewrite_rules'], 11);
 
     // query filters
-    add_filter('pre_get_posts', [$this, 'pre_get_posts']);
+    add_filter('pre_get_posts', [$this, 'pre_get_posts'], 999);
     add_filter('posts_join', [$this, 'posts_join'], 10, 2);
     add_filter('posts_where', [$this, 'posts_where'], 10, 2);
     add_filter('posts_fields_request', [$this, 'posts_fields_request'], 10, 2);
@@ -45,7 +45,7 @@ class Multilingual_Post_Types {
     add_action("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
     add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
 
-    add_action('acf/save_post', [$this, 'save_post_slugs'], 11);
+    add_action('acf/save_post', [$this, 'save_post'], 11);
 
     add_action('acf/init', [$this, 'setup_acf_fields']);
   }
@@ -208,14 +208,23 @@ class Multilingual_Post_Types {
       add_filter("acf/prepare_field/key=field_acfml_slug_$lang", function($field) use ($lang) {
         global $post;
         if( !$field ) return $field;
-        $post_link = acfml()->get_post_link($post, $lang);
+        $post_link = acfml()->get_post_link($post, $lang, false);
         $slug = $field['value'] ?: $post->post_name;
         $prepend = preg_replace("#$slug/?$#", '', $post_link);
         if( !$field['value'] ) $field['placeholder'] = $post->post_name;
         $field['prepend'] = $prepend;
-        if( in_array($post->post_status, ['publish'] ) ) {
-          $field['append'] = sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
+        
+        $active_key = "acfml_active_$lang";
+        $is_active = $lang === acfml()->get_default_language() ? true : (bool) get_field($active_key, $post->ID);
+        $checked = checked($is_active, true, false);
+        $append = "";
+        if( $lang !== acfml()->get_default_language() ) {
+          $append .= sprintf("<label class='button acfml-active-toggle'><input type='checkbox' $checked name='$active_key' value='1'>%s</label>", __('Activate'));
         }
+        if( $is_active && in_array($post->post_status, ['publish'] ) ) {
+          $append .= sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
+        }
+        $field['append'] = $append;
         return $field;
       });
     }
@@ -332,7 +341,7 @@ class Multilingual_Post_Types {
    * @param Int $post_id
    * @return Void
    */
-  function save_post_slugs($post_id):Void {
+  function save_post($post_id):Void {
     // cache WP locale, so that we can temporarily overwrite it
     // during the slug generation
     $cached_locale = get_locale();
@@ -357,6 +366,8 @@ class Multilingual_Post_Types {
       // do nothing for the default language
       if( $lang === $this->default_language ) continue;
       $post_titles[$lang] = acfml()->get_field_or("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
+      $is_active = intval(($_POST["acfml_active_$lang"] ?? 0));
+      update_post_meta($post_id, "acfml_active_$lang", $is_active);
     }
 
     // generate slugs for every language
@@ -378,12 +389,12 @@ class Multilingual_Post_Types {
     }
     // save slug of the default language to the post_name
     if( isset($post_name) ) {
-      remove_action('acf/save_post', [$this, 'save_post_slugs']);
+      remove_action('acf/save_post', [$this, 'save_post']);
       wp_update_post([
         'ID' => $post_id,
         'post_name' => $post_name
       ]);
-      add_action('acf/save_post', [$this, 'save_post_slugs']);
+      add_action('acf/save_post', [$this, 'save_post']);
     }
   }
 
@@ -484,15 +495,15 @@ class Multilingual_Post_Types {
    */
   public function pre_get_posts( $query ) {
     if( is_admin() ) return;
+    $language = acfml()->get_current_language();
+    if( $language === acfml()->get_default_language() ) return;
     $post_type = $query->get('post_type') ?: ['post', 'page'];
     if( !$this->is_multilingual_post_type( is_array($post_type) ? $post_type[0] : $post_type ) ) return;
-    $language = acfml()->get_current_language();
     $queried_object = $query->get_queried_object();
     // If the queried_object is a WP_Post, explicitly set the query's post_type to the post's post_type
     if( $query->is_main_query() && !$post_type && $queried_object instanceof \WP_Post ) {
       $query->set('post_type', $queried_object->post_type);
     }
-
     $meta_query = $query->get('meta_query') ?: [];
     $meta_query['acfml_slug'] = [
       'key' => "acfml_slug_$language",
@@ -501,6 +512,11 @@ class Multilingual_Post_Types {
     $meta_query['acfml_post_title'] = [
       'key' => "acfml_post_title_$language",
       'compare' => 'EXISTS'
+    ];
+    $meta_query['acfml_is_active'] = [
+      'key' => "acfml_active_$language",
+      'value' => 1,
+      'type' => 'NUMERIC'
     ];
     // map query_var 'name' to tax_query => acfml_slug_$language
     if( $slug = $query->get('name') ) {
@@ -575,6 +591,7 @@ class Multilingual_Post_Types {
   public function query__get_page_by_path($query) {
     global $wpdb;
     $language = acfml()->get_current_language();
+    if( acfml()->current_language_is_default() ) return $query;
     // detect correct query and find $in_string and $post_type_in_string
     preg_match('/SELECT ID, post_name, post_parent, post_type.+post_name IN \((?<slugs_in_string>.*?)\).+ post_type IN \((?<post_type_in_string>.*?)\)/ms', $query, $matches);
     // return the query if it doesn't match
@@ -591,11 +608,18 @@ class Multilingual_Post_Types {
     $query = "SELECT 
         ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
         INNER JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
+        INNER JOIN $wpdb->postmeta AS acfml_mt2 ON ( $wpdb->posts.ID = acfml_mt2.post_id )
           WHERE 
           (
-            meta_key = 'acfml_slug_$language'
+            acfml_mt1.meta_key = 'acfml_slug_$language'
             AND
-            meta_value IN ({$matches['slugs_in_string']})
+            acfml_mt1.meta_value IN ({$matches['slugs_in_string']})
+          )
+          AND 
+          (
+            acfml_mt2.meta_key = 'acfml_active_$language'
+            AND
+            acfml_mt2.meta_value LIKE '1'
           )
           AND post_type IN ({$post_type_in_string})
           AND post_status NOT IN ('trash')";
