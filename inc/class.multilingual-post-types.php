@@ -13,6 +13,9 @@ class Multilingual_Post_Types {
   private $slug_field_name;
   private $slug_field_key;
 
+  private $public_field_name;
+  private $public_field_key;
+
   public function __construct() {
 
     // variables
@@ -24,6 +27,9 @@ class Multilingual_Post_Types {
 
     $this->slug_field_name = "{$this->prefix}_slug";
     $this->slug_field_key = "field_$this->slug_field_name";
+
+    $this->public_field_name = "{$this->prefix}_public";
+    $this->public_field_key = "field_$this->public_field_name";
 
     add_action('registered_post_type', [$this, 'registered_post_type'], 10, 2);
 
@@ -181,9 +187,9 @@ class Multilingual_Post_Types {
     // create the title field group
     acf_add_local_field_group([
       'key' => $this->field_group_key,
-      'title' => "Title",
+      'title' => __("Title") . ', ' . __("Settings"),
       'menu_order' => -1000,
-      'style' => 'seamless',
+      // 'style' => 'seamless',
       'position' => 'acf_after_title',
       'location' => $location,
     ]);
@@ -220,9 +226,9 @@ class Multilingual_Post_Types {
         $is_language_published = $this->is_language_published($lang, $post->ID);
         $checked = checked($is_language_published, true, false);
         $append = "";
-        if( $lang !== acfml()->get_default_language() ) {
-          $append .= sprintf("<label class='button acf-js-tooltip' title='%s'><input type='checkbox' $checked name='acfml_published_$lang' value='1'>%s</label>", __('Activate this if you are finished translating.'), __('Public'));
-        }
+        // if( $lang !== acfml()->get_default_language() ) {
+        //   $append .= sprintf("<label class='button acf-js-tooltip' title='%s'><input type='checkbox' $checked name='acfml_published_$lang' value='1'>%s</label>", __('Activate this if you are finished translating.'), __('Public'));
+        // }
         if( $is_language_published && in_array($post->post_status, ['publish'] ) ) {
           $append .= sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
         }
@@ -231,12 +237,11 @@ class Multilingual_Post_Types {
       });
     }
     
-    // create the field for slugs
+    // create the slug field
     acf_add_local_field(array(
       'key' => $this->slug_field_key,
       'name' => $this->slug_field_name,
       'label' => __('Permalink'),
-      'instructions' => __('If left empty, one will be generated from the title for each language.', $this->prefix),
       'type' => 'text',
       'acfml_multilingual' => true,
       'acfml_ui_listen_to' => $this->title_field_name,
@@ -245,7 +250,27 @@ class Multilingual_Post_Types {
       'parent' => $this->field_group_key,
       'prepend' => '/',
       'wrapper' => [
+        'width' => '70',
         'class' => str_replace('_', '-', $this->slug_field_name),
+      ]
+    ));
+
+    // create the field for making translations public
+    acf_add_local_field(array(
+      'key' => $this->public_field_key,
+      'name' => $this->public_field_name,
+      'label' => __('Public'),
+      'type' => 'true_false',
+      'ui' => true,
+      'acfml_multilingual' => true,
+      'default_value' => 1,
+      'acfml_ui_listen_to' => $this->title_field_name,
+      'acfml_ui' => false,
+      // 'readonly' => true,
+      'parent' => $this->field_group_key,
+      'wrapper' => [
+        'width' => '30',
+        'class' => str_replace('_', '-', $this->public_field_name),
       ]
     ));
 

@@ -8,7 +8,7 @@ class Multilingual_Fields {
 
   // for which field types should 'acfml_multilingual' be available?
   private $multilingual_field_types = [
-    'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object', 'group'
+    'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object', 'true_false'
   ];
 
   private $prefix;
@@ -73,6 +73,7 @@ class Multilingual_Fields {
    */
   public function load_multilingual_field( $field ) {
     global $post, $post_type;
+    
     // return of no $field
     if( !is_array($field) ) return $field;
     // return of on acf-field-group edit screen
@@ -115,6 +116,7 @@ class Multilingual_Fields {
     $field_classes = explode(' ', $field['wrapper']['class']);
     $field_classes[] = "acfml-multilingual-field";
     // Change the $field to a group that will hold all sub-fields for all languages
+    
     $field = array_merge( $field, [
       'label' => $label,
       'type' => 'group',
@@ -122,7 +124,7 @@ class Multilingual_Fields {
       'sub_fields' => $sub_fields,
       'required' => false,
       'wrapper' => [
-        'width' >= $field['wrapper']['width'],
+        'width' => $field['wrapper']['width'],
         'class' => implode(' ', $field_classes),
         'id' => $field['wrapper']['id'],
       ],
