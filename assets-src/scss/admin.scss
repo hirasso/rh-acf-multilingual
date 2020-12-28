@@ -17,8 +17,22 @@
 .acfml-field > .acf-input > .acf-input-wrap {
   
 }
-.acfml-field > .acf-label {
+.acfml-field > .acf-label,
+.acf-field-acfml-slug > .acf-label,
+.acf-field-acfml-lang-public > .acf-label {
   display: none;
+}
+.acfml-lang-public.acfml-is-default-language {
+  .acf-true-false {
+    opacity: 0.6;
+  }
+  pointer-events: none;
+  user-select: none;
+}
+.acf-field-acfml-lang-public .acfml-field > .acf-label,
+.acf-field-acfml-slug .acfml-field > .acf-label {
+  display: block;
+  margin-top: -5px;
 }
 .acfml-tabs-wrap {
   display: flex;
@@ -89,6 +103,10 @@
     margin: 0 0 3px;
     background-color: #fff;
   }
+}
+.acf-fields > .acf-field-acfml-post-title {
+  
+  padding-bottom: 0;
 }
 
 .acfml-supports-post-title #post-body-content #acf_after_title-sortables,

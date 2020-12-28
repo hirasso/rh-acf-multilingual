@@ -84,9 +84,7 @@ class Multilingual_Fields {
 
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
-
     $languages = acfml()->get_languages('slug');
-    
     foreach( $languages as $id => $lang ) {
       // prepare wrapper
       $wrapper = $field['wrapper'];
@@ -103,6 +101,7 @@ class Multilingual_Fields {
         // Only the default language of a sub-field should be required
         'required' => $lang === $default_language && $field['required'],
         'acfml_multilingual' => 0,
+        'acfml_multilingual_subfield' => 1,
         'wrapper' => $wrapper,
       ]);
       // add the subfield
@@ -162,9 +161,10 @@ class Multilingual_Fields {
    * @return mixed
    */
   public function inject_previous_multilingual_default_language_value( $value, $post_id, $field ) {
+    if( !empty($field['acfml_multilingual_subfield']) ) return $value;
     if( !empty($field['acfml_multilingual']) ) return $value;
     $default_language = acfml()->get_default_language();
-    if( !$value ) $value = get_field("{$field['name']}_{$default_language}", $post_id, false);
+    if( $value === "" ) $value = get_field("{$field['name']}_{$default_language}", $post_id, false);
     return $value;
   }
 
@@ -229,6 +229,9 @@ class Multilingual_Fields {
   public function field_wrapper_attributes($wrapper, $field) {
     if( $switch_with = $field['acfml_ui_listen_to'] ?? null ) {
       $wrapper['data-acfml-ui-listen-to'] = $switch_with;
+    }
+    if( !empty($field['acfml_multilingual_subfield']) && acfml()->is_default_language($field['_name']) ) {
+      $wrapper['class'] .= ' acfml-is-default-language';
     }
     return $wrapper;
   }

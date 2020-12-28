@@ -8,12 +8,16 @@ class Multilingual_Post_Types {
   
   private $prefix;
   private $default_language;
-  private $title_field_name;
 
-  private $slug_field_name;
+  private $field_group_key;
+
+  private $title_field_name = "acfml_post_title";
+  private $title_field_key;
+
+  private $slug_field_name = "acfml_slug";
   private $slug_field_key;
 
-  private $public_field_name;
+  private $public_field_name = "acfml_lang_public";
   private $public_field_key;
 
   public function __construct() {
@@ -21,15 +25,11 @@ class Multilingual_Post_Types {
     // variables
     $this->prefix = acfml()->get_prefix();
     $this->default_language = acfml()->get_default_language();
-    $this->title_field_name = "{$this->prefix}_post_title";
-    $this->title_field_key = "field_{$this->title_field_name}";
-    $this->field_group_key = "group_{$this->title_field_name}";
-
-    $this->slug_field_name = "{$this->prefix}_slug";
-    $this->slug_field_key = "field_$this->slug_field_name";
-
-    $this->public_field_name = "{$this->prefix}_public";
-    $this->public_field_key = "field_$this->public_field_name";
+    
+    $this->field_group_key    = "group_{$this->title_field_name}";
+    $this->title_field_key    = "field_{$this->title_field_name}";
+    $this->slug_field_key     = "field_{$this->slug_field_name}";
+    $this->public_field_key   = "field_{$this->public_field_name}";
 
     add_action('registered_post_type', [$this, 'registered_post_type'], 10, 2);
 
@@ -189,7 +189,7 @@ class Multilingual_Post_Types {
       'key' => $this->field_group_key,
       'title' => __("Title") . ', ' . __("Settings"),
       'menu_order' => -1000,
-      // 'style' => 'seamless',
+      'style' => 'seamless',
       'position' => 'acf_after_title',
       'location' => $location,
     ]);
@@ -223,16 +223,9 @@ class Multilingual_Post_Types {
         $field['prepend'] = $prepend;
         
         // add the 'View' to the $field's 'append' option
-        $is_language_published = $this->is_language_published($lang, $post->ID);
-        $checked = checked($is_language_published, true, false);
-        $append = "";
-        // if( $lang !== acfml()->get_default_language() ) {
-        //   $append .= sprintf("<label class='button acf-js-tooltip' title='%s'><input type='checkbox' $checked name='acfml_published_$lang' value='1'>%s</label>", __('Activate this if you are finished translating.'), __('Public'));
-        // }
-        if( $is_language_published && in_array($post->post_status, ['publish'] ) ) {
-          $append .= sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
+        if( $this->is_language_public($lang, $post->ID) && in_array($post->post_status, ['publish'] ) ) {
+          $field['append'] .= sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
         }
-        $field['append'] = $append;
         return $field;
       });
     }
@@ -259,14 +252,15 @@ class Multilingual_Post_Types {
     acf_add_local_field(array(
       'key' => $this->public_field_key,
       'name' => $this->public_field_name,
-      'label' => __('Public'),
+      'label' => __('Status'),
       'type' => 'true_false',
       'ui' => true,
+      'ui_on_text' => __('Public'),
+      'ui_off_text' => __('Draft'),
       'acfml_multilingual' => true,
       'default_value' => 1,
       'acfml_ui_listen_to' => $this->title_field_name,
       'acfml_ui' => false,
-      // 'readonly' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
         'width' => '30',
@@ -276,9 +270,9 @@ class Multilingual_Post_Types {
 
   }
 
-  public function is_language_published(string $lang, int $post_id) {
+  public function is_language_public(string $lang, int $post_id) {
     if( acfml()->is_default_language($lang) ) return true;
-    return (bool) intval(get_post_meta($post_id, "acfml_published_$lang", true));
+    return get_field("acfml_lang_public_$lang", $post_id);
   }
 
   /**
@@ -376,6 +370,7 @@ class Multilingual_Post_Types {
    * @return Void
    */
   function save_post($post_id):Void {
+    
     // cache WP locale, so that we can temporarily overwrite it
     // during the slug generation
     $cached_locale = get_locale();
@@ -400,7 +395,6 @@ class Multilingual_Post_Types {
       // do nothing for the default language
       if( $lang === $this->default_language ) continue;
       $post_titles[$lang] = acfml()->get_field_or("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
-      update_post_meta($post_id, "acfml_published_$lang", intval(($_POST["acfml_published_$lang"] ?? 0)));
     }
 
     // generate slugs for every language
@@ -531,6 +525,7 @@ class Multilingual_Post_Types {
     $language = acfml()->get_current_language();
     if( acfml()->is_default_language($language) ) return;
     $post_type = $query->get('post_type') ?: ['post', 'page'];
+    $query->set('post_type', $post_type);
     if( !$this->acfml_multilingual_post_type( is_array($post_type) ? $post_type[0] : $post_type ) ) return;
     // If the queried_object is a WP_Post, explicitly set the query's post_type to the post's post_type
     $queried_object = $query->get_queried_object();
@@ -547,11 +542,12 @@ class Multilingual_Post_Types {
       'key' => "acfml_post_title_$language",
       'compare' => 'EXISTS'
     ];
-    $meta_query['acfml_published'] = [
-      'key' => "acfml_published_$language",
+    $meta_query['acfml_lang_public'] = [
+      'key' => "acfml_lang_public_$language",
       'value' => 1,
       'type' => 'NUMERIC'
     ];
+    
     // map query_var 'name' to tax_query => acfml_slug_$language
     if( $slug = $query->get('name') ) {
       $meta_query['acfml_slug'] = [
@@ -560,6 +556,7 @@ class Multilingual_Post_Types {
       ];
       $query->set('name', '');
     }
+    
     $query->set('meta_query', $meta_query);
 
   }

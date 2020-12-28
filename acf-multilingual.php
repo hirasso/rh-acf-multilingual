@@ -377,7 +377,7 @@ class ACF_Multilingual {
   public function get_default_language(): string {
     $lang = apply_filters("$this->prefix/default_language", 'en');
     if( !$this->language_exists($lang) ) {
-      throw new Exception("ACFML Error: Default Language $lang doesn't exist", 1);
+      throw new Exception(sprintf("ACFML Error: Default Language '%s' doesn't exist", $lang));
     }
     return $lang;
   }
@@ -790,11 +790,9 @@ class ACF_Multilingual {
    * @param string $language
    * @param string
    */
-  public function get_post_link( \WP_Post $post, String $language, bool $check_active = true ): string {
+  public function get_post_link( \WP_Post $post, String $language, bool $check_public = true ): string {
     global $wp_rewrite;
 
-    
-    
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type_object = get_post_type_object($post->post_type);
     $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
@@ -804,9 +802,9 @@ class ACF_Multilingual {
     // if the post is the front page, return home page in requested language
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
 
-    $is_active = (bool) intval( get_post_meta($post->ID, "acfml_published_$language", true) );
-    if( $this->is_default_language($language) ) $is_active = true;
-    if( $check_active && !$is_active ) return '';
+    $is_public = get_field("acfml_published_$language", $post->ID);
+    if( $this->is_default_language($language) ) $is_public = true;
+    if( $check_public && !$is_public ) return '';
 
     // add possible custom post type's rewrite slug and front to segments
     $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
