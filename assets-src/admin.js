@@ -19,9 +19,10 @@ export default class ACFML {
    */
   initLanguageTabs() {
     acf.addAction('acfml/switch_language', ($field, language) => {
-      if( $field.hasClass('acfml-post-title') ) {
-        this.switchLanguage($('.acfml-slug'), language);
-      }
+      // don't do anything if listening to anotherfield
+      if( $field.data('acfml-ui-listen-to') ) return;
+      // switch possibly listening other fields
+      this.switchLanguage($(`[data-acfml-ui-listen-to="${$field.data('name')}"]`), language);
     })
     $(document).on('click', '.acfml-tab', e => {
       e.preventDefault();
@@ -34,7 +35,7 @@ export default class ACFML {
       e.preventDefault();
       const $el = $(e.target);
       const language = $el.attr('data-language');
-      this.switchLanguage($('.acfml-multilingual-field:not(.acfml-slug)'), language);
+      this.switchLanguage($('.acfml-multilingual-field:not([data-acfml-ui-listen-to])'), language);
     })
   }
 

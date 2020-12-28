@@ -304,9 +304,9 @@ class ACF_Multilingual {
       unset($language);
     }
     
-    $languages = array_filter($languages, function($language) {
-      return !empty($language['url']);
-    });
+    // $languages = array_filter($languages, function($language) {
+    //   return !empty($language['url']);
+    // });
     
     if( count($languages) < 2 ) return false;
 
@@ -381,9 +381,18 @@ class ACF_Multilingual {
   }
 
   /**
-   * Set current language
+   * Check if a language is the default language
    *
-   * @param string
+   * @param string $language
+   * @return boolean
+   */
+  public function is_default_language( string $language ): bool {
+    return $language === $this->get_default_language();
+  }
+
+  /**
+   * Detect language in different contexts
+   *
    */
   public function detect_language() {
     $referrer = $_SERVER['HTTP_REFERER'] ?? '';
@@ -770,6 +779,8 @@ class ACF_Multilingual {
    */
   public function get_post_link( \WP_Post $post, String $language, bool $check_active = true ): string {
     global $wp_rewrite;
+
+    
     
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type_object = get_post_type_object($post->post_type);
@@ -780,8 +791,8 @@ class ACF_Multilingual {
     // if the post is the front page, return home page in requested language
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
 
-    $is_active = (bool) intval( get_post_meta($post->ID, "acfml_active_$language", true) );
-    if( $language === $this->get_default_language() ) $is_active = true;
+    $is_active = (bool) intval( get_post_meta($post->ID, "acfml_published_$language", true) );
+    if( $this->is_default_language($language) ) $is_active = true;
     if( $check_active && !$is_active ) return '';
 
     // add possible custom post type's rewrite slug and front to segments

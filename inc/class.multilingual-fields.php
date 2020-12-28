@@ -6,9 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class Multilingual_Fields {
 
-  // for which field types should 'is_multilingual' be available?
+  // for which field types should 'acfml_multilingual' be available?
   private $multilingual_field_types = [
-    'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object'
+    'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object', 'group'
   ];
 
   private $prefix;
@@ -39,6 +39,7 @@ class Multilingual_Fields {
     add_filter("acf/format_value/type=group", [$this, 'format_multilingual_field_value'], 12, 3);
     add_action("acf/render_field/type=group", [$this, 'render_multilingual_field'], 5);
     add_filter("acf/load_value/type=group", [$this, 'inject_previous_monolingual_value'], 10, 3);
+    add_filter("acf/field_wrapper_attributes", [$this, "field_wrapper_attributes"], 10, 2);
   }
 
   /**
@@ -52,7 +53,7 @@ class Multilingual_Fields {
     acf_render_field_setting( $field, array(
       'label'			=> __('Multilingual?'),
       'instructions'	=> '',
-      'name'			=> 'is_multilingual',
+      'name'			=> 'acfml_multilingual',
       'type'			=> 'true_false',
       'ui'			=> 1,
     ), false);
@@ -60,7 +61,7 @@ class Multilingual_Fields {
   }
 
   /**
-   * Load multilingual fields. If a fields 'is_multilingual' setting is set to 'true', then:
+   * Load multilingual fields. If a fields 'acfml_multilingual' setting is set to 'true', then:
    * 
    *    - create one sub-field for each language with the same type of the field (e.g. text, textarea, ...)
    *    - create a field with type 'group' that will hold the different sub-fields
@@ -78,7 +79,7 @@ class Multilingual_Fields {
     $post_type = $_GET['post_type'] ?? get_post_type();
     if( $post_type === 'acf-field-group' ) return $field;
     // bail early if field is empty or not multilingual
-    if( empty($field['is_multilingual']) ) return $field;
+    if( empty($field['acfml_multilingual']) ) return $field;
 
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
@@ -100,9 +101,10 @@ class Multilingual_Fields {
         '_name' => "$lang",
         // Only the default language of a sub-field should be required
         'required' => $lang === $default_language && $field['required'],
-        'is_multilingual' => 0,
-        'wrapper' => $wrapper
+        'acfml_multilingual' => 0,
+        'wrapper' => $wrapper,
       ]);
+      acf_add_local_field($sub_field);
       
       // add the subfield
       $sub_fields[] = $sub_field;
@@ -110,6 +112,8 @@ class Multilingual_Fields {
     // Add 'required'-indicator to the groups label, if it is set to required
     $label = $field['label'];
     if( $field['required'] ) $label .= " <span class=\"acf-required\">*</span>";
+    $field_classes = explode(' ', $field['wrapper']['class']);
+    $field_classes[] = "acfml-multilingual-field";
     // Change the $field to a group that will hold all sub-fields for all languages
     $field = array_merge( $field, [
       'label' => $label,
@@ -119,7 +123,7 @@ class Multilingual_Fields {
       'required' => false,
       'wrapper' => [
         'width' >= $field['wrapper']['width'],
-        'class' => $field['wrapper']['class'] . " acfml-multilingual-field",
+        'class' => implode(' ', $field_classes),
         'id' => $field['wrapper']['id'],
       ],
     ]);
@@ -158,7 +162,7 @@ class Multilingual_Fields {
    * @return mixed
    */
   public function inject_previous_multilingual_default_language_value( $value, $post_id, $field ) {
-    if( !empty($field['is_multilingual']) ) return $value;
+    if( !empty($field['acfml_multilingual']) ) return $value;
     $default_language = acfml()->get_default_language();
     if( !$value ) $value = get_field("{$field['name']}_{$default_language}", $post_id, false);
     return $value;
@@ -189,6 +193,8 @@ class Multilingual_Fields {
     if( !$this->is_acfml_group($field) ) return;
     $default_language = acfml()->get_default_language();
     $languages = acfml()->get_languages();
+    $show_ui = $field['acfml_ui'] ?? true;
+    if( !$show_ui ) return;
     // maybe remove default language
     ob_start(); ?>
     <div class="acfml-tabs-wrap">
@@ -210,7 +216,7 @@ class Multilingual_Fields {
    * @return Boolean
    */
   private function is_acfml_group($field) {
-    return is_array($field) && $field['type'] === 'group' && !empty($field['is_multilingual']);
+    return is_array($field) && $field['type'] === 'group' && !empty($field['acfml_multilingual']);
   }
 
   /**
@@ -220,7 +226,10 @@ class Multilingual_Fields {
    * @param Array $field
    * @return Array
    */
-  public function acf_field_wrapper_attributes($wrapper, $field) {
+  public function field_wrapper_attributes($wrapper, $field) {
+    if( $switch_with = $field['acfml_ui_listen_to'] ?? null ) {
+      $wrapper['data-acfml-ui-listen-to'] = $switch_with;
+    }
     return $wrapper;
   }
   

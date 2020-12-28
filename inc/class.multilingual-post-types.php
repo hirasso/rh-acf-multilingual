@@ -149,7 +149,7 @@ class Multilingual_Post_Types {
    * @param string $post_type
    * @return Bool
    */
-  public function is_multilingual_post_type(String $post_type):Bool {
+  public function acfml_multilingual_post_type(String $post_type):Bool {
     return in_array($post_type, $this->get_multilingual_post_types());
   }
 
@@ -195,7 +195,7 @@ class Multilingual_Post_Types {
       'placeholder' => __( 'Add title' ),
       'name' => $this->title_field_name,
       'type' => 'text',
-      'is_multilingual' => true,
+      'acfml_multilingual' => true,
       'required' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
@@ -205,23 +205,25 @@ class Multilingual_Post_Types {
 
     // prepare slug fields for each language
     foreach( acfml()->get_languages('slug') as $lang ) {
+      
       add_filter("acf/prepare_field/key=field_acfml_slug_$lang", function($field) use ($lang) {
         global $post;
         if( !$field ) return $field;
+        // add the post link base to the $field's 'prepend' option
         $post_link = acfml()->get_post_link($post, $lang, false);
         $slug = $field['value'] ?: $post->post_name;
         $prepend = preg_replace("#$slug/?$#", '', $post_link);
         if( !$field['value'] ) $field['placeholder'] = $post->post_name;
         $field['prepend'] = $prepend;
         
-        $active_key = "acfml_active_$lang";
-        $is_active = $lang === acfml()->get_default_language() ? true : (bool) get_field($active_key, $post->ID);
-        $checked = checked($is_active, true, false);
+        // add the 'View' to the $field's 'append' option
+        $is_language_published = $this->is_language_published($lang, $post->ID);
+        $checked = checked($is_language_published, true, false);
         $append = "";
         if( $lang !== acfml()->get_default_language() ) {
-          $append .= sprintf("<label class='button acfml-active-toggle'><input type='checkbox' $checked name='$active_key' value='1'>%s</label>", __('Activate'));
+          $append .= sprintf("<label class='button acf-js-tooltip' title='%s'><input type='checkbox' $checked name='acfml_published_$lang' value='1'>%s</label>", __('Activate this if you are finished translating.'), __('Public'));
         }
-        if( $is_active && in_array($post->post_status, ['publish'] ) ) {
+        if( $is_language_published && in_array($post->post_status, ['publish'] ) ) {
           $append .= sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
         }
         $field['append'] = $append;
@@ -236,7 +238,9 @@ class Multilingual_Post_Types {
       'label' => __('Permalink'),
       'instructions' => __('If left empty, one will be generated from the title for each language.', $this->prefix),
       'type' => 'text',
-      'is_multilingual' => true,
+      'acfml_multilingual' => true,
+      'acfml_ui_listen_to' => $this->title_field_name,
+      'acfml_ui' => false,
       // 'readonly' => true,
       'parent' => $this->field_group_key,
       'prepend' => '/',
@@ -245,6 +249,11 @@ class Multilingual_Post_Types {
       ]
     ));
 
+  }
+
+  public function is_language_published(string $lang, int $post_id) {
+    if( acfml()->is_default_language($lang) ) return true;
+    return (bool) intval(get_post_meta($post_id, "acfml_published_$lang", true));
   }
 
   /**
@@ -350,7 +359,7 @@ class Multilingual_Post_Types {
     $post = get_post($post_id);
 
     // bail early if the post type is not multilingual
-    if( !$this->is_multilingual_post_type($post->post_type) ) return;
+    if( !$this->acfml_multilingual_post_type($post->post_type) ) return;
 
     // bail early based on the post's status
     if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;
@@ -366,8 +375,7 @@ class Multilingual_Post_Types {
       // do nothing for the default language
       if( $lang === $this->default_language ) continue;
       $post_titles[$lang] = acfml()->get_field_or("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
-      $is_active = intval(($_POST["acfml_active_$lang"] ?? 0));
-      update_post_meta($post_id, "acfml_active_$lang", $is_active);
+      update_post_meta($post_id, "acfml_published_$lang", intval(($_POST["acfml_published_$lang"] ?? 0)));
     }
 
     // generate slugs for every language
@@ -496,14 +504,15 @@ class Multilingual_Post_Types {
   public function pre_get_posts( $query ) {
     if( is_admin() ) return;
     $language = acfml()->get_current_language();
-    if( $language === acfml()->get_default_language() ) return;
+    if( acfml()->is_default_language($language) ) return;
     $post_type = $query->get('post_type') ?: ['post', 'page'];
-    if( !$this->is_multilingual_post_type( is_array($post_type) ? $post_type[0] : $post_type ) ) return;
-    $queried_object = $query->get_queried_object();
+    if( !$this->acfml_multilingual_post_type( is_array($post_type) ? $post_type[0] : $post_type ) ) return;
     // If the queried_object is a WP_Post, explicitly set the query's post_type to the post's post_type
+    $queried_object = $query->get_queried_object();
     if( $query->is_main_query() && !$post_type && $queried_object instanceof \WP_Post ) {
       $query->set('post_type', $queried_object->post_type);
     }
+    // build the meta query
     $meta_query = $query->get('meta_query') ?: [];
     $meta_query['acfml_slug'] = [
       'key' => "acfml_slug_$language",
@@ -513,8 +522,8 @@ class Multilingual_Post_Types {
       'key' => "acfml_post_title_$language",
       'compare' => 'EXISTS'
     ];
-    $meta_query['acfml_is_active'] = [
-      'key' => "acfml_active_$language",
+    $meta_query['acfml_published'] = [
+      'key' => "acfml_published_$language",
       'value' => 1,
       'type' => 'NUMERIC'
     ];
@@ -615,15 +624,15 @@ class Multilingual_Post_Types {
             AND
             acfml_mt1.meta_value IN ({$matches['slugs_in_string']})
           )
-          AND 
-          (
-            acfml_mt2.meta_key = 'acfml_active_$language'
-            AND
-            acfml_mt2.meta_value LIKE '1'
-          )
+          -- AND 
+          -- (
+          --   acfml_mt2.meta_key = 'acfml_published_$language'
+          --   AND
+          --   acfml_mt2.meta_value LIKE 1
+          -- )
           AND post_type IN ({$post_type_in_string})
           AND post_status NOT IN ('trash')";
-
+    
     return $query;
   }
 

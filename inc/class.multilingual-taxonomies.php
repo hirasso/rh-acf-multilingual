@@ -76,7 +76,7 @@ class Multilingual_Taxonomies {
       'instructions' => __('The name is how it appears on your site.'),
       'name' => $this->field_name,
       'type' => 'text',
-      'is_multilingual' => true,
+      'acfml_multilingual' => true,
       'required' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
