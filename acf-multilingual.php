@@ -242,9 +242,6 @@ class ACF_Multilingual {
       ],
     ];
     $languages = apply_filters("$this->prefix/languages", $languages);
-    foreach( $languages as &$language ) {
-      $language['is_default'] = $language['slug'] === $this->get_default_language();
-    }
     if( $format === 'slug' ) return array_column($languages, 'slug');
     return $languages;
   }
@@ -287,10 +284,11 @@ class ACF_Multilingual {
     ]));
     $languages = $this->get_languages();
     foreach( $languages as $key => &$language ) {
+      $language['is_default'] = $this->is_default_language($language['slug']);
       $language['is_current'] = $language['slug'] === $this->get_current_language();
       $language['element_classes'] = [];
       if( $language['is_current'] ) $language['element_classes'][] = 'is-current-language';
-      if( $language['is_default'] ) $language['element_classes'][] = 'is-default-language';
+      if( $this->is_default_language($language) ) $language['element_classes'][] = 'is-default-language';
       if( $args->hide_current && $language['is_current'] ) unset($languages[$key]);
       $language['url'] = $args->url ? $this->convert_url($args->url, $language['slug']) : $this->convert_current_url($language['slug']);
       switch( $args->display_names_as ) {
@@ -376,8 +374,22 @@ class ACF_Multilingual {
    *
    * @param string
    */
-  public function get_default_language() {
-    return apply_filters("$this->prefix/default_language", 'en');
+  public function get_default_language(): string {
+    $lang = apply_filters("$this->prefix/default_language", 'en');
+    if( !$this->language_exists($lang) ) {
+      throw new Exception("ACFML Error: Default Language $lang doesn't exist", 1);
+    }
+    return $lang;
+  }
+
+  /**
+   * Check if a language exists
+   *
+   * @param string $lang
+   * @return bool
+   */
+  private function language_exists($lang): bool {
+    return in_array($lang, array_column($this->get_languages(), 'slug'));
   }
 
   /**
@@ -386,7 +398,7 @@ class ACF_Multilingual {
    * @param string $language
    * @return boolean
    */
-  public function is_default_language( string $language ): bool {
+  public function is_default_language( $language ): bool {
     return $language === $this->get_default_language();
   }
 
@@ -636,6 +648,7 @@ class ACF_Multilingual {
     $languages = $this->get_languages();
     foreach( $languages as &$language ) {
       $language['url'] = $this->convert_current_url($language['slug']);
+      $language['is_default'] = $this->is_default_language($language['slug']);
     }
     echo $this->get_template('meta-tags', [
       'languages' => $languages,

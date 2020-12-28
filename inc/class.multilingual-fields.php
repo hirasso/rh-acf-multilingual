@@ -61,10 +61,10 @@ class Multilingual_Fields {
   }
 
   /**
-   * Load multilingual fields. If a fields 'acfml_multilingual' setting is set to 'true', then:
+   * Load multilingual fields. If a field's 'acfml_multilingual' setting is set to 'true', then:
    * 
    *    - create one sub-field for each language with the same type of the field (e.g. text, textarea, ...)
-   *    - create a field with type 'group' that will hold the different sub-fields
+   *    - create a field of type 'group' that will hold the different sub-fields
    *    – if the field is set to 'required', set the sub-field for the default language to required,
    *      but not the group itself
    *
@@ -79,7 +79,7 @@ class Multilingual_Fields {
     // return of on acf-field-group edit screen
     $post_type = $_GET['post_type'] ?? get_post_type();
     if( $post_type === 'acf-field-group' ) return $field;
-    // bail early if field is empty or not multilingual
+    // bail early if the field is not multilingual
     if( empty($field['acfml_multilingual']) ) return $field;
 
     $default_language = acfml()->get_default_language();
@@ -105,8 +105,6 @@ class Multilingual_Fields {
         'acfml_multilingual' => 0,
         'wrapper' => $wrapper,
       ]);
-      acf_add_local_field($sub_field);
-      
       // add the subfield
       $sub_fields[] = $sub_field;
     }
