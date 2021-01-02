@@ -19,3 +19,4 @@
   ✔ Filter for translation in document title
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
   ❍ Don't `load_previous_default_language_value` for children of translatable fields
+  ❍ Check Language Switcher

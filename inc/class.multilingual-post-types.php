@@ -522,39 +522,19 @@ class Multilingual_Post_Types {
    */
   public function pre_get_posts( $query ) {
     if( is_admin() ) return;
-    if( $query->is_main_query() ) {
-      pre_dump($query);
-    }
+    // if( $query->is_main_query() ) {
+    //   pre_dump($query);
+    // }
     $language = acfml()->get_current_language();
     if( acfml()->is_default_language($language) ) return;
 
     $post_type = $query->get('post_type') ?: false;
     
-    // if( $post_type && $query->is_singular() ) {
-    //   $pt_object = get_post_type_object($post_type);
-    //   $post = get_page_by_path($query->get('name'), OBJECT, $post_type);
-    //   if( $post ) {
-    //     // $query->set('p', $post->ID);
-    //     $query->set('name', '');
-    //     $query->set('post_type', 'event');
-    //     $query->set('p', $post->ID);
-    //     $query->set($pt_object->query_var, '');
-    //   }
-    // }
     
-    // $post_type = $query->get('post_type') ?: ['post', 'page'];
-    // pre_dump($query);
-    // $query->set('post_type', $post_type);
-    // if( !$this->acfml_multilingual_post_type( is_array($post_type) ? $post_type[0] : $post_type ) ) return;
-    // If the queried_object is a WP_Post, explicitly set the query's post_type to the post's post_type
-    // $queried_object = $query->get_queried_object();
-    // if( $query->is_main_query() && !$post_type && $queried_object instanceof \WP_Post ) {
-    //   $query->set('post_type', $queried_object->post_type);
-    // }
     // build the meta query
     $meta_query = $query->get('meta_query') ?: [];
-    // prepare for single query
-    if( $query->is_single() ) {
+    // prepare for single query of type 'post'
+    if( !$post_type && $query->is_single() ) {
       $meta_query['acfml_slug'] = [
         'key' => "acfml_slug_$language",
         'value' => $query->get('name')
@@ -581,15 +561,6 @@ class Multilingual_Post_Types {
       ]
     ];
     
-    
-    // map query_var 'name' to tax_query => acfml_slug_$language
-    // if( $slug = $query->get('name') ) {
-    //   $meta_query['acfml_slug'] = [
-    //     'key' => "acfml_slug_$language",
-    //     'value' => $slug
-    //   ];
-    //   $query->set('name', '');
-    // }
     
     $query->set('meta_query', $meta_query);
 
