@@ -61,8 +61,18 @@ class Multilingual_Post_Types {
    *
    * @return Array
    */
-  private function get_multilingual_post_types() {
+  public function get_multilingual_post_types() {
     return array_unique( apply_filters("acfml/multilingual_post_types", []) );
+  }
+
+  /**
+   * Check if a given post type is multilingual
+   *
+   * @param string $post_type
+   * @return boolean
+   */
+  public function is_multilingual_post_type( $post_type ):bool {
+    return in_array($post_type, $this->get_multilingual_post_types());
   }
   
   /**
@@ -270,9 +280,16 @@ class Multilingual_Post_Types {
 
   }
 
-  public function is_language_public(string $lang, int $post_id) {
+  /**
+   * Check if a language for a post is set to public
+   *
+   * @param string $lang
+   * @param integer $post_id
+   * @return boolean
+   */
+  public function is_language_public(string $lang, int $post_id):bool {
     if( acfml()->is_default_language($lang) ) return true;
-    return get_field("acfml_lang_public_$lang", $post_id);
+    return (bool) get_field("acfml_lang_public_$lang", $post_id);
   }
 
   /**

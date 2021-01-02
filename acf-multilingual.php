@@ -31,10 +31,11 @@ class ACF_Multilingual {
     $this->include('inc/class.multilingual-post-types.php');
     $this->include('inc/class.multilingual-taxonomies.php');
 
-    $this->new_instance('ACFML\Admin');
-    $this->new_instance('ACFML\Multilingual_Fields');
-    $this->new_instance('ACFML\Multilingual_Post_Types');
-    $this->new_instance('ACFML\Multilingual_Taxonomies');
+    $this->admin = new ACFML\Admin();
+    $this->multilingual_fields = new ACFML\Multilingual_Fields();
+    $this->multilingual_post_types = new ACFML\Multilingual_Post_Types();
+    $this->multilingual_taxonomies = new ACFML\Multilingual_Taxonomies();
+    
 
     $this->add_hooks();
 
@@ -290,7 +291,9 @@ class ACF_Multilingual {
       if( $language['is_current'] ) $language['element_classes'][] = 'is-current-language';
       if( $this->is_default_language($language) ) $language['element_classes'][] = 'is-default-language';
       if( $args->hide_current && $language['is_current'] ) unset($languages[$key]);
+      $this->debug = true;
       $language['url'] = $args->url ? $this->convert_url($args->url, $language['slug']) : $this->convert_current_url($language['slug']);
+      $this->debug = false;
       switch( $args->display_names_as ) {
         case 'name':
           $language['display_name'] = $language['name'];
@@ -495,12 +498,17 @@ class ACF_Multilingual {
     if( !$language_in_url ) $language_in_url = $this->get_default_language();
 
     $url_query = $this->get_query_from_url($url);
+    
     if( $url_query ) {
       $queried_object = $url_query->get_queried_object();
+      // if( $this->debug ) pre_dump( $queried_object );
+      
       if( $queried_object instanceof \WP_Post ) {
-        return $this->get_post_link($queried_object, $requested_language);
+        $new_url = $this->get_post_link($queried_object, $requested_language);
+        return $new_url;
       } elseif( $queried_object instanceof \WP_Post_Type ) {
-        return $this->get_post_type_archive_link($queried_object->name, $requested_language);
+        $new_url = $this->get_post_type_archive_link($queried_object->name, $requested_language);
+        return $new_url;
       }
     }
     
@@ -711,7 +719,7 @@ class ACF_Multilingual {
   /**
    * Get path from URL
    *
-   * – removes home url and language
+   * – removes home url 
    * – removes query
    * – removes leading and trailing slashes
    * 
@@ -720,14 +728,13 @@ class ACF_Multilingual {
    */
   private function get_url_path(String $url): string {
     $path = str_replace(home_url(), '', $url);
-    $regex_languages = implode('|', $this->get_languages('slug'));
-    $path = preg_replace("%/($regex_languages)(/|$|\?|#)%", '', $path);
     $path = explode('?', $path)[0];
     $path = trim($path, '/');
     // prepare the $path
     $path     = rawurlencode( urldecode( $path ) );
     $path     = str_replace( '%2F', '/', $path );
     $path     = str_replace( '%20', ' ', $path );
+    
     return $path;
   }
 
@@ -740,16 +747,17 @@ class ACF_Multilingual {
    */
   public function get_query_from_url(?string $url = null): ?\WP_Query {
     global $wp, $wp_the_query;
-    $_wp_query = $wp_the_query;
+    $_wp_the_query = $wp_the_query;
     // parse defaults
     $url = $url ?? $this->get_current_url();
 
     // get the path from the url, return early if none
     $path = $this->get_url_path($url);
+    
     if( !$path ) return null;
 
     // overwrite the language for the time of the request
-    $this->language = $this->get_language_in_url($url);
+    $this->switch_to_language($this->get_language_in_url($url));
 
     // clone the global WP object
     $wp_clone = clone $wp;
@@ -758,13 +766,14 @@ class ACF_Multilingual {
     $_SERVER['REQUEST_URI'] = $path;
     $wp_clone->parse_request();
     $wp_clone->build_query_string();
-    if( !count($wp_clone->query_vars) ) return null;
+    // if( !count($wp_clone->query_vars) ) return null;
     $_SERVER['REQUEST_URI'] = $req_uri;
     
     $query = new \WP_Query();
     $wp_the_query = $query;
     $query->query( $wp_clone->query_vars );
-    $wp_the_query = $_wp_query;
+    
+    $wp_the_query = $_wp_the_query;
     // reset the language
     $this->switch_to_current_language();
     
@@ -792,8 +801,19 @@ class ACF_Multilingual {
    * @param string $language
    * @param string
    */
-  public function get_post_link( \WP_Post $post, String $language, bool $check_public = true ): string {
+  public function get_post_link( \WP_Post $post, String $language, bool $check_lang_public = true ): string {
     global $wp_rewrite;
+
+    $fallback_url = apply_filters('acfml/post_link_fallback', $this->home_url('/', $language));
+    
+    // bail early if the requested post type is not multilingual
+    if( !$this->multilingual_post_types->is_multilingual_post_type($post->post_type) ) {
+      $this->remove_link_filters();
+      $link = get_permalink($post->ID);
+      $this->add_link_filters();
+      return $link;
+    }
+    
 
     $meta_key = "{$this->prefix}_slug_{$language}";
     $post_type_object = get_post_type_object($post->post_type);
@@ -804,9 +824,12 @@ class ACF_Multilingual {
     // if the post is the front page, return home page in requested language
     if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
 
-    $is_public = get_field("acfml_published_$language", $post->ID);
-    if( $this->is_default_language($language) ) $is_public = true;
-    if( $check_public && !$is_public ) return '';
+    $acfml_lang_public = get_field("acfml_lang_public_$language", $post->ID);
+    if( 
+      !$this->is_default_language($language) 
+      && $check_lang_public 
+      && !is_null($acfml_lang_public)
+      && intval($acfml_lang_public) === 0 ) return $fallback_url;
 
     // add possible custom post type's rewrite slug and front to segments
     $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
@@ -855,34 +878,6 @@ class ACF_Multilingual {
     return $link;
   }
   
-
-  /**
-   * get_instance
-   *
-   * Returns an instance or null if doesn't exist.
-   *
-   * @param	string $class The instance class name.
-   * @return	object
-   */
-  public function get_instance( $class ) {
-    $name = strtolower($class);
-    return isset($this->instances[ $name ]) ? $this->instances[ $name ] : null;
-  }
-
-  /**
-   * new_instance
-   *
-   * Creates and stores an instance of the given class.
-   *
-   * @param	string $class The instance class name.
-   * @return	object
-   */
-  public function new_instance( $class, ...$args ) {
-    $instance = new $class($args);
-    $name = strtolower($class);
-    $this->instances[ $name ] = $instance;
-    return $instance;
-  }
 }
 
 /**
