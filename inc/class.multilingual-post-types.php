@@ -521,32 +521,28 @@ class Multilingual_Post_Types {
    * @return void
    */
   public function pre_get_posts( $query ) {
-    if( is_admin() ) return;
-    // if( $query->is_main_query() ) {
-    //   pre_dump($query);
-    // }
+    if( !$query->is_main_query() ) return;
+
     $language = acfml()->get_current_language();
     if( acfml()->is_default_language($language) ) return;
 
     $post_type = $query->get('post_type') ?: false;
+    $post_type_object = get_post_type_object($post_type);
     
-    
-    // build the meta query
+    // bootstrap meta query
     $meta_query = $query->get('meta_query') ?: [];
     // prepare for single query of type 'post'
-    if( !$post_type && $query->is_single() ) {
+    if( !is_post_type_hierarchical($post_type) && $query->is_single() ) {
       $meta_query['acfml_slug'] = [
         'key' => "acfml_slug_$language",
         'value' => $query->get('name')
       ];
-      $query->set('name', '');
+      // for posts of post type 'post'
+      unset($query->query_vars['name']);
+      // for custom post types
+      if( $post_type_object ) unset($query->query_vars[$post_type_object->query_var]);
     }
-    // pre_dump($query);
     
-    // $meta_query['acfml_post_title'] = [
-    //   'key' => "acfml_post_title_$language",
-    //   'compare' => 'EXISTS'
-    // ];
     // Allow posts to be set to non-public
     $meta_query['acfml_lang_public'] = [
       'relation' => 'OR',
@@ -560,7 +556,6 @@ class Multilingual_Post_Types {
         'compare' => 'NOT EXISTS',
       ]
     ];
-    
     
     $query->set('meta_query', $meta_query);
 

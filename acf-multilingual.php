@@ -308,11 +308,13 @@ class ACF_Multilingual {
     
     if( count($languages) < 2 ) return false;
 
-
     // return for special $format 'key:value'
     if( strpos($args->format, ':') !== false ) {
       $key_value = explode(':', $args->format);
-      return array_combine(array_column($languages, $key_value[0]),array_column($languages, $key_value[1]));
+      return array_combine( 
+        array_column($languages, $key_value[0]), 
+        array_column($languages, $key_value[1]) 
+      );
     }
     // return other formats
     switch( $args->format ) {
@@ -737,7 +739,8 @@ class ACF_Multilingual {
    * @return mixed one of null, \WP_Post, \WP_Post_Type, \WP_Term
    */
   public function get_query_from_url(?string $url = null): ?\WP_Query {
-    global $wp;
+    global $wp, $wp_the_query;
+    $_wp_query = $wp_the_query;
     // parse defaults
     $url = $url ?? $this->get_current_url();
 
@@ -750,19 +753,18 @@ class ACF_Multilingual {
 
     // clone the global WP object
     $wp_clone = clone $wp;
-    $query = new \WP_Query();
 
     $req_uri = $_SERVER['REQUEST_URI'];
     $_SERVER['REQUEST_URI'] = $path;
     $wp_clone->parse_request();
     $wp_clone->build_query_string();
-    
+    if( !count($wp_clone->query_vars) ) return null;
     $_SERVER['REQUEST_URI'] = $req_uri;
     
-    if( !count($wp_clone->query_vars) ) return null;
-    
+    $query = new \WP_Query();
+    $wp_the_query = $query;
     $query->query( $wp_clone->query_vars );
-    
+    $wp_the_query = $_wp_query;
     // reset the language
     $this->switch_to_current_language();
     
