@@ -522,40 +522,74 @@ class Multilingual_Post_Types {
    */
   public function pre_get_posts( $query ) {
     if( is_admin() ) return;
+    if( $query->is_main_query() ) {
+      pre_dump($query);
+    }
     $language = acfml()->get_current_language();
     if( acfml()->is_default_language($language) ) return;
-    $post_type = $query->get('post_type') ?: ['post', 'page'];
-    $query->set('post_type', $post_type);
-    if( !$this->acfml_multilingual_post_type( is_array($post_type) ? $post_type[0] : $post_type ) ) return;
+
+    $post_type = $query->get('post_type') ?: false;
+    
+    // if( $post_type && $query->is_singular() ) {
+    //   $pt_object = get_post_type_object($post_type);
+    //   $post = get_page_by_path($query->get('name'), OBJECT, $post_type);
+    //   if( $post ) {
+    //     // $query->set('p', $post->ID);
+    //     $query->set('name', '');
+    //     $query->set('post_type', 'event');
+    //     $query->set('p', $post->ID);
+    //     $query->set($pt_object->query_var, '');
+    //   }
+    // }
+    
+    // $post_type = $query->get('post_type') ?: ['post', 'page'];
+    // pre_dump($query);
+    // $query->set('post_type', $post_type);
+    // if( !$this->acfml_multilingual_post_type( is_array($post_type) ? $post_type[0] : $post_type ) ) return;
     // If the queried_object is a WP_Post, explicitly set the query's post_type to the post's post_type
-    $queried_object = $query->get_queried_object();
-    if( $query->is_main_query() && !$post_type && $queried_object instanceof \WP_Post ) {
-      $query->set('post_type', $queried_object->post_type);
-    }
+    // $queried_object = $query->get_queried_object();
+    // if( $query->is_main_query() && !$post_type && $queried_object instanceof \WP_Post ) {
+    //   $query->set('post_type', $queried_object->post_type);
+    // }
     // build the meta query
     $meta_query = $query->get('meta_query') ?: [];
-    $meta_query['acfml_slug'] = [
-      'key' => "acfml_slug_$language",
-      'compare' => 'EXISTS'
-    ];
-    $meta_query['acfml_post_title'] = [
-      'key' => "acfml_post_title_$language",
-      'compare' => 'EXISTS'
-    ];
-    $meta_query['acfml_lang_public'] = [
-      'key' => "acfml_lang_public_$language",
-      'value' => 1,
-      'type' => 'NUMERIC'
-    ];
-    
-    // map query_var 'name' to tax_query => acfml_slug_$language
-    if( $slug = $query->get('name') ) {
+    // prepare for single query
+    if( $query->is_single() ) {
       $meta_query['acfml_slug'] = [
         'key' => "acfml_slug_$language",
-        'value' => $slug
+        'value' => $query->get('name')
       ];
       $query->set('name', '');
     }
+    // pre_dump($query);
+    
+    // $meta_query['acfml_post_title'] = [
+    //   'key' => "acfml_post_title_$language",
+    //   'compare' => 'EXISTS'
+    // ];
+    // Allow posts to be set to non-public
+    $meta_query['acfml_lang_public'] = [
+      'relation' => 'OR',
+      [
+        'key' => "acfml_lang_public_$language",
+        'value' => 1,
+        'type' => 'NUMERIC'
+      ],
+      [
+        'key' => "acfml_lang_public_$language",
+        'compare' => 'NOT EXISTS',
+      ]
+    ];
+    
+    
+    // map query_var 'name' to tax_query => acfml_slug_$language
+    // if( $slug = $query->get('name') ) {
+    //   $meta_query['acfml_slug'] = [
+    //     'key' => "acfml_slug_$language",
+    //     'value' => $slug
+    //   ];
+    //   $query->set('name', '');
+    // }
     
     $query->set('meta_query', $meta_query);
 
@@ -621,6 +655,7 @@ class Multilingual_Post_Types {
    */
   public function query__get_page_by_path($query) {
     global $wpdb;
+    
     $language = acfml()->get_current_language();
     if( acfml()->current_language_is_default() ) return $query;
     // detect correct query and find $in_string and $post_type_in_string
@@ -628,30 +663,25 @@ class Multilingual_Post_Types {
     // return the query if it doesn't match
     if( !count($matches) ) return $query;
     // prepare post types
-    $post_types = array_map(function($item) {
-      return trim($item, "'");
-    }, explode(',', $matches['post_type_in_string']) );
-    if( in_array('page', $post_types) ) {
-      $post_types = array_merge(['post'], $post_types);
-    }
-    $post_type_in_string = "'" . implode("','", $post_types) ."'";
+    $slug_in_string = $matches['slugs_in_string'];
+    $post_type_in_string = $matches['post_type_in_string'];
+    // $post_types = array_map(function($item) {
+    //   return trim($item, "'");
+    // }, explode(',', $post_type_in_string) );
+    // if( in_array('page', $post_types) ) {
+    //   $post_types = array_merge(['post'], $post_types);
+    // }
+    // $post_type_in_string = "'" . implode("','", $post_types) ."'";
     // build the new query
-    $query = "SELECT 
-        ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
-        INNER JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
-        INNER JOIN $wpdb->postmeta AS acfml_mt2 ON ( $wpdb->posts.ID = acfml_mt2.post_id )
+    $query = "
+    SELECT ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
+        LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
           WHERE 
           (
             acfml_mt1.meta_key = 'acfml_slug_$language'
             AND
-            acfml_mt1.meta_value IN ({$matches['slugs_in_string']})
+            acfml_mt1.meta_value IN ({$slug_in_string})
           )
-          -- AND 
-          -- (
-          --   acfml_mt2.meta_key = 'acfml_published_$language'
-          --   AND
-          --   acfml_mt2.meta_value LIKE 1
-          -- )
           AND post_type IN ({$post_type_in_string})
           AND post_status NOT IN ('trash')";
     
