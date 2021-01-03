@@ -33,10 +33,10 @@ class Multilingual_Fields {
     foreach( $multilingual_field_types as $field_type ) {
       add_action("acf/render_field_settings/type=$field_type", [$this, 'render_field_settings'], 9);
       add_filter("acf/load_field/type=$field_type", [$this, 'load_multilingual_field'], 20);
-      add_filter("acf/load_value/type=$field_type", [$this, 'inject_previous_multilingual_default_language_value'], 10, 3);
     }
     // add hooks for generated multilingual fields (type of those will be 'group')
-    add_filter("acf/format_value/type=group", [$this, 'format_multilingual_field_value'], 12, 3);
+    add_filter("acf/format_value/type=group", [$this, 'format_multilingual_value'], 12, 3);
+    add_filter("acf/update_value/type=group", [$this, 'update_multilingual_value'], 12, 3);
     add_action("acf/render_field/type=group", [$this, 'render_multilingual_field'], 5);
     add_filter("acf/load_value/type=group", [$this, 'inject_previous_monolingual_value'], 10, 3);
     add_filter("acf/field_wrapper_attributes", [$this, "field_wrapper_attributes"], 10, 2);
@@ -153,22 +153,6 @@ class Multilingual_Fields {
   }
 
   /**
-   * Inject a previous multilingual default language value
-   *
-   * @param mixed $value
-   * @param int $post_id
-   * @param array $field
-   * @return mixed
-   */
-  public function inject_previous_multilingual_default_language_value( $value, $post_id, $field ) {
-    if( !empty($field['acfml_multilingual_subfield']) ) return $value;
-    if( !empty($field['acfml_multilingual']) ) return $value;
-    $default_language = acfml()->get_default_language();
-    if( $value === "" ) $value = get_field("{$field['name']}_{$default_language}", $post_id, false);
-    return $value;
-  }
-
-  /**
    * Formats a fields value
    *
    * @param Mixed $value
@@ -176,10 +160,25 @@ class Multilingual_Fields {
    * @param Array $field
    * @return Mixed formatted value
    */
-  public function format_multilingual_field_value( $value, $post_id, $field ) {
+  public function format_multilingual_value( $value, $post_id, $field ) {
     if( !$this->is_acfml_group($field) ) return $value;
     $language = acfml()->get_current_language();
     $value = !empty($value[$language]) ? $value[$language] : ($value[acfml()->get_default_language()] ?? null);
+    return $value;
+  }
+
+  /**
+   * Write the default language's $value to the group $value itself
+   *
+   * @param mixed $value
+   * @param int $post_id
+   * @param array $field
+   * @return mixed
+   */
+  public function update_multilingual_value( $value, $post_id, $field ) {
+    if( !$this->is_acfml_group($field) ) return $value;
+    $default_language = acfml()->get_default_language();
+    $value = get_field("{$field['name']}_$default_language", $post_id, false);
     return $value;
   }
 
