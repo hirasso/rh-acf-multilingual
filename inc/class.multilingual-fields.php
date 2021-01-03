@@ -51,11 +51,11 @@ class Multilingual_Fields {
   public function render_field_settings( $field ) {
 
     acf_render_field_setting( $field, array(
-      'label'			=> __('Multilingual?'),
+      'label'         => __('Multilingual?'),
       'instructions'	=> '',
-      'name'			=> 'acfml_multilingual',
-      'type'			=> 'true_false',
-      'ui'			=> 1,
+      'name'          => 'acfml_multilingual',
+      'type'          => 'true_false',
+      'ui'            => 1,
     ), false);
 
   }
