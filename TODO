@@ -18,4 +18,3 @@
   ✔ Use WP Cache get_post_by_path calls
   ✔ Filter for translation in document title
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
-  ❍ Don't `load_previous_default_language_value` for children of translatable fields
