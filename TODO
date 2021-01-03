@@ -18,3 +18,5 @@
   ✔ Use WP Cache get_post_by_path calls
   ✔ Filter for translation in document title
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
+  ❍ Check url_to_postid
+  ❍ permastruct for get_post_link
