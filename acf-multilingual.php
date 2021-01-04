@@ -17,6 +17,36 @@ class ACF_Multilingual {
   private $debug = false;
   private $language = null;
 
+  /**
+   * ACFML_Admin instance
+   *
+   * @var ACFML\ACFML_Admin
+   */
+  public $acfml_admin; 
+
+  /**
+   * ACFML_Fields instance
+   *
+   * @var ACFML\ACFML_Fields
+   */
+  public $acfml_fields; 
+
+  /**
+   * ACFML_Post_Types instance
+   *
+   * @var ACFML\ACFML_Post_Types
+   */
+  public $acfml_post_types;
+
+  /**
+   * ACFML_Taxonomies instance
+   *
+   * @var ACFML\ACFML_Taxonomies
+   */
+  public $acfml_taxonomies; 
+
+  
+
   public function  __construct() {}
 
   public function initialize() {
@@ -26,16 +56,15 @@ class ACF_Multilingual {
     $this->define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 
     // Include classes.
-    $this->include('inc/class.admin.php');
-    $this->include('inc/class.multilingual-fields.php');
-    $this->include('inc/class.multilingual-post-types.php');
-    $this->include('inc/class.multilingual-taxonomies.php');
-
-    $this->admin = new ACFML\Admin();
-    $this->multilingual_fields = new ACFML\Multilingual_Fields();
-    $this->multilingual_post_types = new ACFML\Multilingual_Post_Types();
-    $this->multilingual_taxonomies = new ACFML\Multilingual_Taxonomies();
-    
+    $this->include('inc/class.acfml-admin.php');
+    $this->include('inc/class.acfml-fields.php');
+    $this->include('inc/class.acfml-post-types.php');
+    $this->include('inc/class.acfml-taxonomies.php');
+    // Instanciate classes
+    $this->acfml_admin = new ACFML\ACFML_Admin();
+    $this->acfml_fields = new ACFML\ACFML_Fields();
+    $this->acfml_post_types = new ACFML\ACFML_Post_Types();
+    $this->acfml_taxonomies = new ACFML\ACFML_Taxonomies();
 
     $this->add_hooks();
 
@@ -481,27 +510,6 @@ class ACF_Multilingual {
   }
 
   /**
-   * Convert an URL for a language
-   * 
-   * This function is hooked to manny WP link filters. 
-   * It will first disable those hooks, then get the actual converted url, then re-activate the hooks
-   * 
-   * @param string $url
-   * @param string $language
-   * 
-   * @return string $url
-   */
-  public function convert_url(string $url, string $requested_language = null): string {
-    // prevent infinite loops
-    $this->remove_link_filters();
-    // convert the url
-    $url = $this->get_converted_url( $url, $requested_language );
-    // re-avtivate link filters
-    $this->add_link_filters();
-    return $url;
-  }
-
-  /**
   * Convert an URL for a language
   *
   * @param string $url
@@ -509,7 +517,7 @@ class ACF_Multilingual {
   * 
   * @return string $url
   */
-  private function get_converted_url( string $url, string $requested_language = null ): string {
+  public function convert_url( string $url, string $requested_language = null ): string {
 
     if( !$requested_language ) $requested_language = $this->get_current_language();
     // bail early if this URL points towards the WP content directory
@@ -519,11 +527,11 @@ class ACF_Multilingual {
       $queried_object = $url_query->get_queried_object();
       // if( $this->debug ) pre_dump( $queried_object );
 
-      if( $queried_object instanceof \WP_Post && $this->multilingual_post_types->is_multilingual_post_type($queried_object->post_type) ) {
-        $new_url = $this->multilingual_post_types->get_post_link($queried_object, $requested_language);
+      if( $queried_object instanceof \WP_Post && $this->acfml_post_types->is_multilingual_post_type($queried_object->post_type) ) {
+        $new_url = $this->acfml_post_types->get_post_link($queried_object, $requested_language);
         return $new_url;
       } elseif( $queried_object instanceof \WP_Post_Type ) {
-        $new_url = $this->get_post_type_archive_link($queried_object->name, $requested_language);
+        $new_url = $this->acfml_post_types->get_post_type_archive_link($queried_object->name, $requested_language);
         return $new_url;
       }
     }    
@@ -606,7 +614,7 @@ class ACF_Multilingual {
   *
   * @return void
   */
-  private function remove_link_filters() {
+  public function remove_link_filters() {
     foreach( $this->get_link_filters() as $filter_name => $priority ) {
       remove_filter($filter_name, [$this, 'convert_url']);
     }
@@ -809,44 +817,9 @@ class ACF_Multilingual {
     return $query;
   }
 
-  /**
-   * Get the archive slug for a post type
-   *
-   * @param string $post_type
-   * @param string $language
-   * @return string|null
-   */
-  public function get_post_type_archive_slug( string $post_type, string $language ): ?string {
-    $post_type_object = get_post_type_object($post_type);
-    if( !$post_type_object || !$post_type_object->has_archive ) return null;
-    $default_archive_slug = is_string($post_type_object->has_archive) ? $post_type_object->has_archive : $post_type;
-    return $post_type_object->acfml[$language]['archive_slug'] ?? $default_archive_slug;
-  }
+  
 
-  /**
-   * Get post type archive url for a language
-   *
-   * @param string $post_type_object
-   * @param string $language
-   * @return string|null
-   */
-  private function get_post_type_archive_link( string $post_type, string $language ): ?string {
-    
-    $this->remove_link_filters();
-    $link = get_post_type_archive_link($post_type);
-    $path = trim(str_replace(home_url(), '', $link), '/');
-    $this->add_link_filters();
-
-    $default_archive_slug = $this->get_post_type_archive_slug($post_type, $this->get_default_language());
-    $archive_slug = $this->get_post_type_archive_slug($post_type, $language);
-    if( !$archive_slug ) return $link;
-
-    $path = preg_replace("#$default_archive_slug$#", $archive_slug, $path);
-    $path = user_trailingslashit($path);
-    $link = $this->home_url("/$path", $language);
-    $link = apply_filters('acfml/post_type_archive_link', $link, $post_type, $language);
-    return $link;
-  }
+  
   
 }
 

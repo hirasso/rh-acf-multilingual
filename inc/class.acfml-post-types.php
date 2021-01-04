@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Multilingual_Post_Types {
+class ACFML_Post_Types {
   
   private $prefix;
   private $default_language;
@@ -702,14 +702,23 @@ class Multilingual_Post_Types {
     $post_type_object = get_post_type_object($post->post_type);
     $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
     $segments = [];
-    $url = acfml()->simple_convert_url(get_permalink($post, true), $language);
     $postname_tag = "";
 
+    acfml()->remove_link_filters();
+    // get the unfiltered permalink
+    $permalink_native = get_permalink($post);
+    // get the permalink for the post, leaving the %postname% tag untouched
+    $link_template = get_permalink($post, true);
+    acfml()->add_link_filters();
+
     // return the default permalink if the language is the default one
-    if( acfml()->is_default_language($language) ) return get_permalink($post);
+    if( acfml()->is_default_language($language) ) return $permalink_native;
+
+    // convert the permalink's base to the requestes $language
+    $link_template = acfml()->simple_convert_url($link_template, $language);
 
     // if the post is the front page, return home page in requested language
-    if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
+    if( $this->post_is_front_page($post->ID) ) return acfml()->home_url('/', $language);
 
     // check if the language for the requested post is public
     $acfml_lang_public = get_field("acfml_lang_public_$language", $post->ID);
@@ -738,7 +747,7 @@ class Multilingual_Post_Types {
     $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
     $acfml_rewrite_slug = ($post_type_object->acfml[$language]['rewrite_slug']) ?? null;
     if( $rewrite_slug = $acfml_rewrite_slug ?: $default_rewrite_slug ) {
-      $url = str_replace("/$default_rewrite_slug/", "/$rewrite_slug/", $url);
+      $link_template = str_replace("/$default_rewrite_slug/", "/$rewrite_slug/", $link_template);
     }
 
     // add slugs for all ancestors to segments
@@ -752,10 +761,59 @@ class Multilingual_Post_Types {
 
     $postname = implode('/', $segments);
 
-    $url = str_replace($postname_tag, $postname, $url);
+    $link = str_replace($postname_tag, $postname, $link_template);
 
-    return $url;
+    return $link;
   }
 
+  /**
+   * Check if a post is used as the front page
+   *
+   * @param Int $post_id
+   * @return bool
+   */
+  private function post_is_front_page($post_id): bool {
+    return get_option("show_on_front") === "page" && $post_id === intval(get_option('page_on_front'));
+  }
+
+  /**
+   * Get the archive slug for a post type
+   *
+   * @param string $post_type
+   * @param string $language
+   * @return string|null
+   */
+  private function get_post_type_archive_slug( string $post_type, string $language ): ?string {
+    $post_type_object = get_post_type_object($post_type);
+    if( !$post_type_object || !$post_type_object->has_archive ) return null;
+    $default_archive_slug = is_string($post_type_object->has_archive) ? $post_type_object->has_archive : $post_type;
+    return $post_type_object->acfml[$language]['archive_slug'] ?? $default_archive_slug;
+  }
+
+  /**
+   * Get post type archive url for a language
+   *
+   * @param string $post_type_object
+   * @param string $language
+   * @return string|null
+   */
+  public function get_post_type_archive_link( string $post_type, string $language ): ?string {
+
+    acfml()->remove_link_filters();
+    $link = get_post_type_archive_link($post_type);
+    acfml()->add_link_filters();
+
+    $path = trim(str_replace(home_url(), '', $link), '/');
+
+    $default_archive_slug = $this->get_post_type_archive_slug($post_type, acfml()->get_default_language());
+    $archive_slug = $this->get_post_type_archive_slug($post_type, $language);
+    if( !$archive_slug ) return $link;
+
+    $path = preg_replace("#$default_archive_slug$#", $archive_slug, $path);
+    $path = user_trailingslashit($path);
+    $link = acfml()->home_url("/$path", $language);
+    $link = apply_filters('acfml/post_type_archive_link', $link, $post_type, $language);
+    return $link;
+  }
 
 }
