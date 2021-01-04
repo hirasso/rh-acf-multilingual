@@ -482,41 +482,70 @@ class ACF_Multilingual {
 
   /**
    * Convert an URL for a language
-   *
+   * 
+   * This function is hooked to manny WP link filters. 
+   * It will first disable those hooks, then get the actual converted url, then re-activate the hooks
+   * 
    * @param string $url
    * @param string $language
    * 
    * @return string $url
    */
   public function convert_url(string $url, string $requested_language = null): string {
-    
+    // prevent infinite loops
+    $this->remove_link_filters();
+    // convert the url
+    $url = $this->get_converted_url( $url, $requested_language );
+    // re-avtivate link filters
+    $this->add_link_filters();
+    return $url;
+  }
+
+  /**
+  * Convert an URL for a language
+  *
+  * @param string $url
+  * @param string $language
+  * 
+  * @return string $url
+  */
+  private function get_converted_url( string $url, string $requested_language = null ): string {
+
     if( !$requested_language ) $requested_language = $this->get_current_language();
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
-    // get language from requested URL
-    $language_in_url = $this->get_language_in_url($url);
-    if( !$language_in_url ) $language_in_url = $this->get_default_language();
 
-    $url_query = $this->get_query_from_url($url);
-    
-    if( $url_query ) {
+    if( $url_query = $this->get_query_from_url($url) ) {
       $queried_object = $url_query->get_queried_object();
       // if( $this->debug ) pre_dump( $queried_object );
-      
-      if( $queried_object instanceof \WP_Post ) {
-        $new_url = $this->get_post_link($queried_object, $requested_language);
+
+      if( $queried_object instanceof \WP_Post && $this->multilingual_post_types->is_multilingual_post_type($queried_object->post_type) ) {
+        $new_url = $this->multilingual_post_types->get_post_link($queried_object, $requested_language);
         return $new_url;
       } elseif( $queried_object instanceof \WP_Post_Type ) {
         $new_url = $this->get_post_type_archive_link($queried_object->name, $requested_language);
         return $new_url;
       }
-    }
-    
-    // if nothing special was found, return a 'dumb' converted url
-    $current_home_url = $this->home_url('', $language_in_url);
+    }    
+
+    // if nothing special was found, only inject the language code
+    $url = $this->simple_convert_url($url, $requested_language);
+
+    return $url;
+  }
+
+  /**
+   * Simply replaces the language code in an URL, or strips it for the default language
+   *
+   * @param string $url
+   * @param string $requested_language
+   * @return string
+   */
+  public function simple_convert_url( string $url, string $requested_language = null ): string {
+    $current_language = $this->get_language_in_url($url) ?: $this->get_default_language();
+    $current_home_url = $this->home_url('', $current_language);
     $new_home_url = $this->home_url('', $requested_language);
     $url = str_replace($current_home_url, $new_home_url, $url);
-    
     return $url;
   }
 
@@ -792,65 +821,6 @@ class ACF_Multilingual {
     if( !$post_type_object || !$post_type_object->has_archive ) return null;
     $default_archive_slug = is_string($post_type_object->has_archive) ? $post_type_object->has_archive : $post_type;
     return $post_type_object->acfml[$language]['archive_slug'] ?? $default_archive_slug;
-  }
-
-  /**
-   * Get translated permalink for a post
-   *
-   * @param \WP_Post $post
-   * @param string $language
-   * @param string
-   */
-  public function get_post_link( \WP_Post $post, String $language, bool $check_lang_public = true ): string {
-    global $wp_rewrite;
-
-    $fallback_url = apply_filters('acfml/post_link_fallback', $this->home_url('/', $language));
-    
-    // bail early if the requested post type is not multilingual
-    if( !$this->multilingual_post_types->is_multilingual_post_type($post->post_type) ) {
-      $this->remove_link_filters();
-      $link = get_permalink($post->ID);
-      $this->add_link_filters();
-      return $link;
-    }
-    
-
-    $meta_key = "{$this->prefix}_slug_{$language}";
-    $post_type_object = get_post_type_object($post->post_type);
-    $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
-    $segments = [];
-    $url = '';
-
-    // if the post is the front page, return home page in requested language
-    if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
-
-    $acfml_lang_public = get_field("acfml_lang_public_$language", $post->ID);
-    if( 
-      !$this->is_default_language($language) 
-      && $check_lang_public 
-      && !is_null($acfml_lang_public)
-      && intval($acfml_lang_public) === 0 ) return $fallback_url;
-
-    // add possible custom post type's rewrite slug and front to segments
-    $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
-    $acfml_rewrite_slug = ($post_type_object->acfml[$language]['rewrite_slug']) ?? null;
-    if( $rewrite_slug = $acfml_rewrite_slug ?: $default_rewrite_slug ) {
-      $segments[] = $rewrite_slug;
-    }
-
-    // add slugs for all ancestors to segments
-    foreach( $ancestors as $ancestor_id ) {
-      $ancestor = get_post($ancestor_id);
-      $segments[] = $this->get_field_or($meta_key, $ancestor->post_name, $ancestor_id);
-    }
-
-    // add slug for requested post to segments
-    $segments[] = $this->get_field_or($meta_key, $post->post_name, $post->ID);
-    
-    $path = user_trailingslashit(implode('/', $segments));
-    $url = $this->home_url("/$path", $language);
-    
-    return $url;
   }
 
   /**

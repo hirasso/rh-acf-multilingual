@@ -226,7 +226,7 @@ class Multilingual_Post_Types {
         global $post;
         if( !$field ) return $field;
         // add the post link base to the $field's 'prepend' option
-        $post_link = acfml()->get_post_link($post, $lang, false);
+        $post_link = $this->get_post_link($post, $lang, false);
         $slug = $field['value'] ?: $post->post_name;
         $prepend = preg_replace("#$slug/?$#", '', $post_link);
         if( !$field['value'] ) $field['placeholder'] = $post->post_name;
@@ -685,6 +685,76 @@ class Multilingual_Post_Types {
       // $join = "INNER JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID";
     }
     return $join;
+  }
+
+  /**
+   * Get translated permalink for a post
+   *
+   * @param \WP_Post $post
+   * @param string $language
+   * @param string
+   */
+  public function get_post_link( \WP_Post $post, String $language, bool $check_lang_public = true ): string {
+
+    $fallback_url = apply_filters('acfml/post_link_fallback', acfml()->home_url('/', $language));
+
+    $slug_meta_key = "{$this->prefix}_slug_{$language}";
+    $post_type_object = get_post_type_object($post->post_type);
+    $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
+    $segments = [];
+    $url = acfml()->simple_convert_url(get_permalink($post, true), $language);
+    $postname_tag = "";
+
+    // return the default permalink if the language is the default one
+    if( acfml()->is_default_language($language) ) return get_permalink($post);
+
+    // if the post is the front page, return home page in requested language
+    if( $post->ID === intval(get_option('page_on_front')) ) return $this->home_url('/', $language);
+
+    // check if the language for the requested post is public
+    $acfml_lang_public = get_field("acfml_lang_public_$language", $post->ID);
+    if( 
+      !acfml()->is_default_language($language) 
+      && $check_lang_public 
+      && !is_null($acfml_lang_public)
+      && intval($acfml_lang_public) === 0 ) {
+        return $fallback_url;
+      }
+
+    // determine post's rewrite tag for %postname% 
+    switch( $post->post_type ) {
+      case 'post':
+      $postname_tag = "%postname%";
+      break;
+      case 'page':
+      $postname_tag = "%pagename%";
+      break;
+      default:
+      $postname_tag = "%$post->post_type%"; // custom post types
+      break;
+    }
+
+    // add possible custom post type's rewrite slug and front to segments
+    $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
+    $acfml_rewrite_slug = ($post_type_object->acfml[$language]['rewrite_slug']) ?? null;
+    if( $rewrite_slug = $acfml_rewrite_slug ?: $default_rewrite_slug ) {
+      $url = str_replace("/$default_rewrite_slug/", "/$rewrite_slug/", $url);
+    }
+
+    // add slugs for all ancestors to segments
+    foreach( $ancestors as $ancestor_id ) {
+      $ancestor = get_post($ancestor_id);
+      $segments[] = acfml()->get_field_or($slug_meta_key, $ancestor->post_name, $ancestor_id);
+    }
+
+    // add slug for requested post to segments
+    $segments[] = acfml()->get_field_or($slug_meta_key, $post->post_name, $post->ID);
+
+    $postname = implode('/', $segments);
+
+    $url = str_replace($postname_tag, $postname, $url);
+
+    return $url;
   }
 
 
