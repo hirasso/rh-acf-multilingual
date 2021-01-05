@@ -643,7 +643,7 @@ class ACFML_Post_Types {
     $post_type_object = get_post_type_object($post->post_type);
     $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
     $segments = [];
-    $postname_tag = "";
+    $postname_rewrite_tag = "";
 
     acfml()->remove_link_filters();
     // get the unfiltered permalink
@@ -681,13 +681,13 @@ class ACFML_Post_Types {
     switch( $post->post_type ) {
       case 'post':
       case 'attachment':
-      $postname_tag = "%postname%";
+      $postname_rewrite_tag = "%postname%";
       break;
       case 'page':
-      $postname_tag = "%pagename%";
+      $postname_rewrite_tag = "%pagename%";
       break;
       default:
-      $postname_tag = "%$post->post_type%"; // custom post types
+      $postname_rewrite_tag = "%$post->post_type%"; // custom post types
       break;
     }
 
@@ -709,7 +709,7 @@ class ACFML_Post_Types {
 
     $postname = implode('/', $segments);
 
-    $link = str_replace($postname_tag, $postname, $link_template);
+    $link = str_replace($postname_rewrite_tag, $postname, $link_template);
 
     return $link;
   }
