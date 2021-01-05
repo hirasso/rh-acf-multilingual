@@ -38,9 +38,6 @@ class ACFML_Post_Types {
 
     // query filters
     add_filter('pre_get_posts', [$this, 'pre_get_posts'], 999);
-    add_filter('posts_join', [$this, 'posts_join'], 10, 2);
-    add_filter('posts_where', [$this, 'posts_where'], 10, 2);
-    add_filter('posts_fields_request', [$this, 'posts_fields_request'], 10, 2);
     add_filter('query', [$this, 'query__get_page_by_path']);
 
     // hooks
@@ -63,7 +60,7 @@ class ACFML_Post_Types {
    */
   public function get_multilingual_post_types() {
     $post_types = array_unique( apply_filters("acfml/multilingual_post_types", []) );
-    // attachments are not supported
+    // attachments are not supported. They are horrible edge cases :P
     unset($post_types['attachment']);
     return $post_types;
   }
@@ -588,57 +585,6 @@ class ACFML_Post_Types {
 
   }
 
-  /**
-   * Overwrite post_name and post_meta for $queries
-   * for supported post types
-   *
-   * @param string $fields
-   * @param \WP_Query $query
-   * @return string $fields
-   */
-  public function posts_fields_request($fields, $query): string {
-    global $wpdb;
-    $fields = "*";
-    $meta_query = $query->get('meta_query') ?: [];
-    $slug_index = array_search('acfml_slug', array_keys($meta_query));
-    if( $slug_index === 0 ) { // false or 0
-      $fields .= ", $wpdb->postmeta.meta_value as post_name";
-    } elseif( $slug_index !== false ) {
-      $fields .= ", mt$slug_index.meta_value as post_name";
-    }
-    $title_index = array_search('acfml_post_title', array_keys($meta_query));
-    if( $title_index === 0 ) {
-      $fields .= ", $wpdb->postmeta.meta_value as post_title";
-    } elseif( $title_index !== false ) {
-      $fields .= ", mt$title_index.meta_value as post_title";
-    }
-    return $fields;
-  }
-
-  /**
-   * Posts where for 
-   *
-   * @param string $where
-   * @param \WP_Query $query
-   * @return string
-   */
-  public function posts_where($where, $query) {
-    $language = acfml()->get_current_language();
-    // For Single Posts
-    // if( $query->is_main_query() && $query->is_single() ) {
-    //   $post_type = $query->get('post_type') ?: 'post';
-    //   $name = $query->get('name');
-    //   $where = " AND prg_posts.post_type = '$post_type'";
-    //   $where .= " 
-    //   AND (
-    //     prg_postmeta.meta_key = 'acfml_slug_$language'
-    //     AND
-    //     prg_postmeta.meta_value = '$name'
-    //   )";
-    // } 
-    return $where;
-  }
-
 
   /**
    * Detect and overwrite the query for get_page_by_path
@@ -666,8 +612,7 @@ class ACFML_Post_Types {
     //   $post_types = array_merge(['post'], $post_types);
     // }
     // $post_type_in_string = "'" . implode("','", $post_types) ."'";
-    
-    // build the new query
+    // build the query for custom slugs
     $slug_query = "
     SELECT ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
         LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
@@ -679,24 +624,9 @@ class ACFML_Post_Types {
           )
           AND post_type IN ({$post_type_in_string})
           AND post_status NOT IN ('trash')";
+    // combine both queries. The first for non-translated slugs, the second for translated ones.
     $query = "($query) UNION ($slug_query)";
     return $query;
-  }
-
-  /**
-   * Posts join for 
-   *
-   * @param string $join
-   * @param \WP_Query $query
-   * @return string
-   */
-  public function posts_join($join, $query) {
-    global $wpdb;
-    // For Single Posts
-    if( $query->is_main_query() && $query->is_single() ) {
-      // $join = "INNER JOIN $wpdb->postmeta ON $wpdb->postmeta.post_id = $wpdb->posts.ID";
-    }
-    return $join;
   }
 
   /**
