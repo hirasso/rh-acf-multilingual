@@ -543,7 +543,7 @@ class ACFML_Post_Types {
     $language = acfml()->get_current_language();
     if( acfml()->is_default_language($language) ) return;
 
-    $post_type = $query->get('post_type') ?: false;
+    $post_type = $query->queried_object->post_type ?? $query->get('post_type') ?: false;
     $post_type_object = get_post_type_object($post_type);
     
     // bootstrap meta query
@@ -551,8 +551,15 @@ class ACFML_Post_Types {
     // prepare for single query of type 'post'
     if( !is_post_type_hierarchical($post_type) && $query->is_single() ) {
       $meta_query['acfml_slug'] = [
-        'key' => "acfml_slug_$language",
-        'value' => $query->get('name')
+        'relation' => 'OR',
+        [
+          'key' => "acfml_slug_$language",
+          'value' => $query->get('name')
+        ], 
+        [
+          'key' => "acfml_slug_$language",
+          'compare' => 'NOT EXISTS'
+        ]
       ];
       // for posts of post type 'post'
       unset($query->query_vars['name']);
@@ -651,12 +658,14 @@ class ACFML_Post_Types {
     // $post_types = array_map(function($item) {
     //   return trim($item, "'");
     // }, explode(',', $post_type_in_string) );
+    // pre_dump( $post_types );
     // if( in_array('page', $post_types) ) {
     //   $post_types = array_merge(['post'], $post_types);
     // }
     // $post_type_in_string = "'" . implode("','", $post_types) ."'";
+    
     // build the new query
-    $query = "
+    $slug_query = "
     SELECT ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
         LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
           WHERE 
@@ -667,7 +676,7 @@ class ACFML_Post_Types {
           )
           AND post_type IN ({$post_type_in_string})
           AND post_status NOT IN ('trash')";
-    
+    $query = "($query) UNION ($slug_query)";
     return $query;
   }
 
@@ -714,6 +723,12 @@ class ACFML_Post_Types {
     // return the default permalink if the language is the default one
     if( acfml()->is_default_language($language) ) return $permalink_native;
 
+    // remove possible parent page uri from attachment urls
+    if( $post->post_type === 'attachment' && $post->post_parent ) {
+      $parent_uri = get_page_uri($post->post_parent);
+      $link_template = str_replace("/$parent_uri", '', $link_template);
+    }
+    
     // convert the permalink's base to the requestes $language
     $link_template = acfml()->simple_convert_url($link_template, $language);
 
@@ -733,6 +748,7 @@ class ACFML_Post_Types {
     // determine post's rewrite tag for %postname% 
     switch( $post->post_type ) {
       case 'post':
+      case 'attachment':
       $postname_tag = "%postname%";
       break;
       case 'page':

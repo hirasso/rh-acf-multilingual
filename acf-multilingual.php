@@ -527,7 +527,7 @@ class ACF_Multilingual {
       $queried_object = $url_query->get_queried_object();
       // if( $this->debug ) pre_dump( $queried_object );
 
-      if( $queried_object instanceof \WP_Post && $this->acfml_post_types->is_multilingual_post_type($queried_object->post_type) ) {
+      if( $queried_object instanceof \WP_Post ) {
         $new_url = $this->acfml_post_types->get_post_link($queried_object, $requested_language);
         return $new_url;
       } elseif( $queried_object instanceof \WP_Post_Type ) {
