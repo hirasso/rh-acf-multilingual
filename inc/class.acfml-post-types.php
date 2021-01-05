@@ -62,7 +62,10 @@ class ACFML_Post_Types {
    * @return Array
    */
   public function get_multilingual_post_types() {
-    return array_unique( apply_filters("acfml/multilingual_post_types", []) );
+    $post_types = array_unique( apply_filters("acfml/multilingual_post_types", []) );
+    // attachments are not supported
+    unset($post_types['attachment']);
+    return $post_types;
   }
 
   /**
@@ -728,7 +731,7 @@ class ACFML_Post_Types {
       $parent_uri = get_page_uri($post->post_parent);
       $link_template = str_replace("/$parent_uri", '', $link_template);
     }
-    
+
     // convert the permalink's base to the requestes $language
     $link_template = acfml()->simple_convert_url($link_template, $language);
 
