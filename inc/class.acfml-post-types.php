@@ -640,7 +640,6 @@ class ACFML_Post_Types {
 
     $fallback_url = apply_filters('acfml/post_link_fallback', acfml()->home_url('/', $language));
 
-    $slug_meta_key = "{$this->prefix}_slug_{$language}";
     $post_type_object = get_post_type_object($post->post_type);
     $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
     $segments = [];
@@ -702,17 +701,29 @@ class ACFML_Post_Types {
     // add slugs for all ancestors to segments
     foreach( $ancestors as $ancestor_id ) {
       $ancestor = get_post($ancestor_id);
-      $segments[] = acfml()->get_field_or($slug_meta_key, $ancestor->post_name, $ancestor_id);
+      $segments[] = $this->get_post_slug($ancestor, $language);
     }
 
     // add slug for requested post to segments
-    $segments[] = acfml()->get_field_or($slug_meta_key, $post->post_name, $post->ID);
+    $segments[] = $this->get_post_slug($post, $language);
 
     $postname = implode('/', $segments);
 
     $link = str_replace($postname_tag, $postname, $link_template);
 
     return $link;
+  }
+
+  /**
+   * Get the slug for a post
+   *
+   * @param \WP_Post $post
+   * @param string $language
+   * @return string
+   */
+  private function get_post_slug( \WP_Post $post, string $language ): string { 
+    if( !$this->is_multilingual_post_type($post->post_type) ) return $post->post_name;
+    return acfml()->get_field_or("{$this->slug_field_name}_{$language}", $post->post_name, $post->ID);
   }
 
   /**
