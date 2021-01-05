@@ -128,6 +128,7 @@ class ACF_Multilingual {
     add_action('wp_head', [$this, 'wp_head']);
 
     add_action('init', [$this, 'add_link_filters']);
+    add_action('init', [$this, 'detect_preferred_language'], 1);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
   }
@@ -318,7 +319,7 @@ class ACF_Multilingual {
       $language['is_current'] = $language['slug'] === $this->get_current_language();
       $language['element_classes'] = [];
       if( $language['is_current'] ) $language['element_classes'][] = 'is-current-language';
-      if( $this->is_default_language($language) ) $language['element_classes'][] = 'is-default-language';
+      if( $this->is_default_language($language['slug']) ) $language['element_classes'][] = 'is-default-language';
       if( $args->hide_current && $language['is_current'] ) unset($languages[$key]);
       $this->debug = true;
       $language['url'] = $args->url ? $this->convert_url($args->url, $language['slug']) : $this->convert_current_url($language['slug']);
@@ -432,8 +433,18 @@ class ACF_Multilingual {
    * @param string $language
    * @return boolean
    */
-  public function is_default_language( $language ): bool {
+  public function is_default_language( string $language ): bool {
     return $language === $this->get_default_language();
+  }
+
+  /**
+   * Check if a given language is the current language
+   *
+   * @param string $language
+   * @return boolean
+   */
+  public function is_current_language( string $language ): bool {
+    return $language === $this->get_current_language();
   }
 
   /**
@@ -817,9 +828,46 @@ class ACF_Multilingual {
     return $query;
   }
 
-  
+  public function detect_preferred_language() {
+    if( is_admin() || is_robots() ) return;
+    
+    $languages = $this->get_languages('slug');
+    $user_lang = strtolower(substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2));
+    $cookie_lang = $_COOKIE['language'] ?? null;
+    
+    $lang = $cookie_lang ?? $user_lang;
+    if( !in_array($lang, $languages) ) $lang = $this->get_default_language();
 
-  
+    
+    if( !$this->is_internal_referrer() && $cookie_lang && !$this->is_current_language($cookie_lang) ) {
+      $redirect_url = $this->convert_current_url($user_lang);
+      wp_redirect( $redirect_url );
+      exit;
+    } else {
+      setcookie("language", $this->get_current_language(), (DAY_IN_SECONDS * 365), '/');
+    }
+
+    // if( $lang !== $this->get_current_language($languages) ) {
+    //   $redirect_url = $this->convert_current_url($user_lang);
+    //   wp_redirect( $redirect_url );
+    //   exit;
+    // }
+    // setcookie("language", null, 0, '/'); // 86400 = 1 day
+    // setcookie("language", 'de', 0, '/'); // 86400 = 1 day
+  }
+
+  /**
+   * Checks if the current referrer comes from our frontend
+   *
+   * @return boolean
+   */
+  private function is_internal_referrer(): bool {
+    $referrer = $_SERVER['HTTP_REFERER'] ?? null;
+    if( !$referrer ) return false;
+    $home_url_parsed = parse_url(get_option('home'));
+    $referrer_parsed = parse_url($referrer);
+    return $home_url_parsed['host'] === $referrer_parsed['host'];
+  }
   
 }
 

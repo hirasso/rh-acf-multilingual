@@ -116,9 +116,9 @@
 .acfml-supports-post-title #titlediv {
   display: none;
 }
-.acf-fields>.acfml-post-title,
-.acf-fields>.acf-field-acfml-slug {
-  
+.acf-fields>.acfml-post-title .acf-input-wrap {
+  padding: 2px;
+  margin: -2px;
 }
 
 

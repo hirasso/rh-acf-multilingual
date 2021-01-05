@@ -226,9 +226,14 @@ class ACFML_Post_Types {
         global $post;
         if( !$field ) return $field;
         // add the post link base to the $field's 'prepend' option
-        $post_link = $this->get_post_link($post, $lang, false);
+        $_post_status = $post->post_status;
+        $post->post_status = 'publish';
+        $post_link = $this->get_post_link($post, $lang, [
+          'check_lang_public' => false
+        ]);
+        $post->post_status = $_post_status;
         $slug = $field['value'] ?: $post->post_name;
-        $prepend = preg_replace("#$slug/?$#", '', $post_link);
+        $prepend = trailingslashit(preg_replace("#$slug/?$#", '', $post_link));
         if( !$field['value'] ) $field['placeholder'] = $post->post_name;
         $field['prepend'] = $prepend;
         
@@ -634,9 +639,14 @@ class ACFML_Post_Types {
    *
    * @param \WP_Post $post
    * @param string $language
+   * @param array $args
    * @param string
    */
-  public function get_post_link( \WP_Post $post, String $language, bool $check_lang_public = true ): string {
+  public function get_post_link( \WP_Post $post, String $language, array $args = [] ): string {
+    
+    $args = acfml()->to_object(wp_parse_args($args, [
+      'check_lang_public' => true
+    ]));
 
     $fallback_url = apply_filters('acfml/post_link_fallback', acfml()->home_url('/', $language));
 
@@ -645,12 +655,10 @@ class ACFML_Post_Types {
     $segments = [];
     $postname_rewrite_tag = "";
 
-    acfml()->remove_link_filters();
     // get the unfiltered permalink
-    $permalink_native = get_permalink($post);
+    $permalink_native = $this->get_unfiltered_permalink($post);
     // get the permalink for the post, leaving the %postname% tag untouched
-    $link_template = get_permalink($post, true);
-    acfml()->add_link_filters();
+    $link_template = $this->get_unfiltered_permalink($post, true);
 
     // return the default permalink if the language is the default one
     if( acfml()->is_default_language($language) ) return $permalink_native;
@@ -671,7 +679,7 @@ class ACFML_Post_Types {
     $acfml_lang_public = get_field("acfml_lang_public_$language", $post->ID);
     if( 
       !acfml()->is_default_language($language) 
-      && $check_lang_public 
+      && $args->check_lang_public 
       && !is_null($acfml_lang_public)
       && intval($acfml_lang_public) === 0 ) {
         return $fallback_url;
@@ -711,6 +719,24 @@ class ACFML_Post_Types {
 
     $link = str_replace($postname_rewrite_tag, $postname, $link_template);
 
+    return $link;
+  }
+
+  /**
+   * Get the unfiltered permalink for a post
+   *
+   * @param \WP_post $post
+   * @param boolean $leavename
+   * @param boolean $is_sample_permalink
+   * @return string
+   */
+  private function get_unfiltered_permalink($post, $leavename = false, $is_sample_permalink = false): string {
+    $_post_status = $post->post_status;
+    if( $is_sample_permalink ) $post->post_status = 'publish';
+    acfml()->remove_link_filters();
+    $link = get_permalink($post, $leavename);
+    acfml()->add_link_filters();
+    $post->post_status = $_post_status;
     return $link;
   }
 
