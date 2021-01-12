@@ -608,30 +608,45 @@ class ACFML_Post_Types {
     if( !count($matches) ) return $query;
     // prepare post types
     $slug_in_string = $matches['slugs_in_string'];
-    $post_type_in_string = $matches['post_type_in_string'];
-    // $post_types = array_map(function($item) {
-    //   return trim($item, "'");
-    // }, explode(',', $post_type_in_string) );
-    // pre_dump( $post_types );
-    // if( in_array('page', $post_types) ) {
-    //   $post_types = array_merge(['post'], $post_types);
-    // }
-    // $post_type_in_string = "'" . implode("','", $post_types) ."'";
-    // build the query for custom slugs
-    $slug_query = "
-    SELECT ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
-        LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
+    $post_types = $this->in_string_to_array($matches['post_type_in_string']);
+
+    $queries = [];
+    foreach( $post_types as $post_type ) {
+      if( $this->is_multilingual_post_type($post_type) ) {
+        $queries[] = "(
+          SELECT ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
+          LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
           WHERE 
           (
             acfml_mt1.meta_key = 'acfml_slug_$language'
             AND
             acfml_mt1.meta_value IN ({$slug_in_string})
           )
-          AND post_type IN ({$post_type_in_string})
-          AND post_status NOT IN ('trash')";
-    // combine both queries. The first for non-translated slugs, the second for translated ones.
-    $query = "($query) UNION ($slug_query)";
+          AND post_type = '$post_type'
+          AND post_status NOT IN ('trash')
+        )";
+      } else {
+        $queries[] = "(
+          SELECT ID, post_name, post_parent, post_type
+          FROM prg_posts
+          WHERE post_name IN ($slug_in_string)
+          AND post_type = '$post_type'
+        )";
+      }
+    }
+    $query = implode(" UNION ", $queries);
+
     return $query;
+  }
+
+  /**
+   * Convert an sql in_string to an array
+   *
+   * @param string $in_string     This expects a string like "'something', 'something_else'"
+   * @return array
+   */
+  private function in_string_to_array( string $in_string ): array {
+    return explode("','", trim($in_string, "'"));
   }
 
   /**
