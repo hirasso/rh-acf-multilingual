@@ -74,8 +74,11 @@ export default class ACFML {
    * Multilingual Post Titles
    */
   initMultilingualPostTitle() {
-    acf.addAction(`ready_field/key=field_acfml_post_title_${acfml.defaultLanguage}`, $field => {
+    acf.addAction(`ready_field/name=acfml_post_title`, $field => {
       $('#titlediv').remove();
+      $('[data-setting="title"]').remove();
+    });
+    acf.addAction(`ready_field/key=field_acfml_post_title_${acfml.defaultLanguage}`, $field => {
       if( !acfml.isMobile && !$field.val() ) $field.$input().focus();
     });
     acf.addAction(`ready_field/key=field_acfml_slug`, $field => {

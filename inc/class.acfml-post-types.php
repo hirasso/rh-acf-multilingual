@@ -61,7 +61,7 @@ class ACFML_Post_Types {
   public function get_multilingual_post_types() {
     $post_types = array_unique( apply_filters("acfml/multilingual_post_types", []) );
     // attachments are not supported. They are horrible edge cases :P
-    unset($post_types['attachment']);
+    // unset($post_types['attachment']);
     return $post_types;
   }
 
@@ -183,15 +183,21 @@ class ACFML_Post_Types {
     if( !count($post_types) ) return;
 
     // generate location rules for multilingual titles
-    $location = [];
+    $locations = [];
     foreach( $post_types as $pt ) {
-      $location[] = [
-        [
-          'param' => 'post_type',
-          'operator' => '==',
-          'value' => $pt
-        ]
+      $location = [
+        'param' => 'post_type',
+        'operator' => '==',
+        'value' => $pt
       ];
+      if( $pt === 'attachment' ) {
+        $location = [
+          'param' => 'attachment',
+          'operator' => '==',
+          'value' => 'all'
+        ];
+      }
+      $locations[] = [$location];
     }
     
     // create the title field group
@@ -201,7 +207,7 @@ class ACFML_Post_Types {
       'menu_order' => -1000,
       'style' => 'seamless',
       'position' => 'acf_after_title',
-      'location' => $location,
+      'location' => $locations,
     ]);
     
     // create the title field
@@ -224,12 +230,13 @@ class ACFML_Post_Types {
       
       add_filter("acf/prepare_field/key=field_acfml_slug_$lang", function($field) use ($lang) {
         global $post;
-        if( !$field ) return $field;
+        
+        if( !$field || empty($post) ) return $field;
         // add the post link base to the $field's 'prepend' option
         $_post_status = $post->post_status;
         $post->post_status = 'publish';
         $post_link = $this->get_post_link($post, $lang, [
-          'check_lang_public' => false
+          'check_lang_public' => false,
         ]);
         $post->post_status = $_post_status;
         $slug = $field['value'] ?: $post->post_name;
@@ -271,7 +278,7 @@ class ACFML_Post_Types {
       'type' => 'true_false',
       'ui' => true,
       'ui_on_text' => __('Public'),
-      'ui_off_text' => __('Draft'),
+      'ui_off_text' => __('Hidden'),
       'acfml_multilingual' => true,
       'default_value' => 1,
       'acfml_ui_listen_to' => $this->title_field_name,
@@ -478,17 +485,22 @@ class ACFML_Post_Types {
     $check_post_name = true;
     
     while( $check_post_name ) {
-      $posts = get_posts([
+      $args = [
         'post_type' => $post->post_type,
         'post_parent' => $post->post_parent,
         'posts_per_page' => 1,
         'post__not_in' => [$post->ID],
         'meta_key' => $meta_key,
         'meta_value' => $slug,
-        'post_status' => ['publish', 'future', 'private']
-      ]);
+        'post_status' => ['publish', 'future', 'private', 'draft']
+      ];
+      if( $post->post_type === 'attachment' ) {
+        $args['post_type'] = 'page';
+        unset($args['post_parent']);
+      }
+      $posts = get_posts($args);
       if( count($posts) ) {
-        $count ++;
+        $count += $count === 0 ? 2 : 1;
         $check_post_name = true;
         $slug = "$original_slug-$count";
       } else {
@@ -670,10 +682,16 @@ class ACFML_Post_Types {
     $segments = [];
     $postname_rewrite_tag = "";
 
+    acfml()->remove_link_filters();
     // get the unfiltered permalink
-    $permalink_native = $this->get_unfiltered_permalink($post);
+    $permalink_native = get_permalink($post);
     // get the permalink for the post, leaving the %postname% tag untouched
-    $link_template = $this->get_unfiltered_permalink($post, true);
+    $link_template = get_permalink($post, true);
+    if( $post->post_type === 'attachment' ) {
+      $permalink_native = get_attachment_link($post);
+      $link_template = get_attachment_link($post, true);
+    }
+    acfml()->add_link_filters();
 
     // return the default permalink if the language is the default one
     if( acfml()->is_default_language($language) ) return $permalink_native;
@@ -734,24 +752,6 @@ class ACFML_Post_Types {
 
     $link = str_replace($postname_rewrite_tag, $postname, $link_template);
 
-    return $link;
-  }
-
-  /**
-   * Get the unfiltered permalink for a post
-   *
-   * @param \WP_post $post
-   * @param boolean $leavename
-   * @param boolean $is_sample_permalink
-   * @return string
-   */
-  private function get_unfiltered_permalink($post, $leavename = false, $is_sample_permalink = false): string {
-    $_post_status = $post->post_status;
-    if( $is_sample_permalink ) $post->post_status = 'publish';
-    acfml()->remove_link_filters();
-    $link = get_permalink($post, $leavename);
-    acfml()->add_link_filters();
-    $post->post_status = $_post_status;
     return $link;
   }
 
