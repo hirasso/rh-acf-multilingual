@@ -584,6 +584,8 @@ class ACF_Multilingual {
       "year_link" => 10,
       "page_link" => 10,
       "post_link" => 10,
+      "post_type_link" => 10,
+      "attachment_link" => 10,
       "category_link" => 10,
       "category_feed_link" => 10,
       "tag_link" => 10,
@@ -593,16 +595,10 @@ class ACF_Multilingual {
       "tag_feed_link" => 10,
       "get_shortlink" => 10,
       "rest_url" => 10,
-      "post_type_link" => 10,
-      "attachment_link" => 10,
       "post_type_archive_link" => 10,
       "redirect_canonical" => 10,
     ];
 
-    // get_attachment_link()
-    // add_filter('wp_get_attachment_url', function($url) {
-    //   pre_dump($url);
-    // });
     /**
     * Filter the Links that should be converted. 
     * Should return an array like this:

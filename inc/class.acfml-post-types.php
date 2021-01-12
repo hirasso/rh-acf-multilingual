@@ -48,7 +48,7 @@ class ACFML_Post_Types {
     add_action("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
     add_action('wp_insert_post_data', [$this, 'wp_insert_post_data'], 10, 2);
 
-    add_action('acf/save_post', [$this, 'save_post'], 11);
+    add_action('acf/save_post', [$this, 'save_post'], 20);
 
     add_action('acf/init', [$this, 'setup_acf_fields']);
   }
@@ -399,6 +399,7 @@ class ACFML_Post_Types {
    * @return Void
    */
   function save_post($post_id):Void {
+    global $locale;
     
     // cache WP locale, so that we can temporarily overwrite it
     // during the slug generation
@@ -441,16 +442,18 @@ class ACFML_Post_Types {
       $slug = $this->get_unique_post_slug( $slug, get_post($post_id), $lang );
       // save the unique slug to the database
       update_field("{$this->slug_field_name}_{$lang}", $slug, $post_id);
+      // if default language, set post_name for updating the post itself
       if( $lang === $this->default_language ) $post_name = $slug;
     }
+    
     // save slug of the default language to the post_name
     if( isset($post_name) ) {
       remove_action('acf/save_post', [$this, 'save_post']);
       wp_update_post([
         'ID' => $post_id,
-        'post_name' => $post_name
+        'post_name' => $post_name,
       ]);
-      add_action('acf/save_post', [$this, 'save_post']);
+      add_action('acf/save_post', [$this, 'save_post'], 20);
     }
   }
 
@@ -568,15 +571,10 @@ class ACFML_Post_Types {
     // prepare for single query of type 'post'
     if( !is_post_type_hierarchical($post_type) && $query->is_single() ) {
       $meta_query['acfml_slug'] = [
-        'relation' => 'OR',
         [
           'key' => "acfml_slug_$language",
           'value' => $query->get('name')
-        ], 
-        [
-          'key' => "acfml_slug_$language",
-          'compare' => 'NOT EXISTS'
-        ]
+        ],
       ];
       // for posts of post type 'post'
       unset($query->query_vars['name']);
@@ -632,7 +630,7 @@ class ACFML_Post_Types {
           (
             acfml_mt1.meta_key = 'acfml_slug_$language'
             AND
-            acfml_mt1.meta_value IN ({$slug_in_string})
+            acfml_mt1.meta_value IN ($slug_in_string)
           )
           AND post_type = '$post_type'
           AND post_status NOT IN ('trash')
@@ -643,9 +641,11 @@ class ACFML_Post_Types {
           FROM prg_posts
           WHERE post_name IN ($slug_in_string)
           AND post_type = '$post_type'
+          AND post_status NOT IN ('trash')
         )";
       }
     }
+
     $query = implode(" UNION ", $queries);
 
     return $query;
@@ -687,10 +687,6 @@ class ACFML_Post_Types {
     $permalink_native = get_permalink($post);
     // get the permalink for the post, leaving the %postname% tag untouched
     $link_template = get_permalink($post, true);
-    if( $post->post_type === 'attachment' ) {
-      $permalink_native = get_attachment_link($post);
-      $link_template = get_attachment_link($post, true);
-    }
     acfml()->add_link_filters();
 
     // return the default permalink if the language is the default one
@@ -702,7 +698,7 @@ class ACFML_Post_Types {
       $link_template = str_replace("/$parent_uri", '', $link_template);
     }
 
-    // convert the permalink's base to the requestes $language
+    // convert the permalink's base to the requested $language
     $link_template = acfml()->simple_convert_url($link_template, $language);
 
     // if the post is the front page, return home page in requested language
