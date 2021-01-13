@@ -548,9 +548,7 @@ class ACF_Multilingual {
     }    
 
     // if nothing special was found, only inject the language code
-    $url = $this->simple_convert_url($url, $requested_language);
-
-    return $url;
+    return $this->simple_convert_url($url, $requested_language);
   }
 
   /**
@@ -575,40 +573,38 @@ class ACF_Multilingual {
    */
   private function get_link_filters():array {
     $filters = [
-      "author_feed_link" => 10,
-      "author_link" => 10,
-      "get_comment_author_url_link" => 10,
-      "post_comments_feed_link" => 10,
-      "day_link" => 10,
-      "month_link" => 10,
-      "year_link" => 10,
-      "page_link" => 10,
-      "post_link" => 10,
-      "post_type_link" => 10,
-      "attachment_link" => 10,
-      "category_link" => 10,
-      "category_feed_link" => 10,
-      "tag_link" => 10,
-      "term_link" => 10,
-      "the_permalink" => 10,
-      "feed_link" => 10,
-      "tag_feed_link" => 10,
-      "get_shortlink" => 10,
-      "rest_url" => 10,
-      "post_type_archive_link" => 10,
-      "redirect_canonical" => 10,
+      "simple" => [
+        "author_feed_link" => 10,
+        "author_link" => 10,
+        "get_comment_author_url_link" => 10,
+        "post_comments_feed_link" => 10,
+        "day_link" => 10,
+        "month_link" => 10,
+        "year_link" => 10,
+        "category_link" => 10,
+        "category_feed_link" => 10,
+        "tag_link" => 10,
+        "term_link" => 10,
+        "feed_link" => 10,
+        "tag_feed_link" => 10,
+        "get_shortlink" => 10,
+        "rest_url" => 10,
+      ],
+      "complex" => [
+        "page_link" => 10,
+        "post_link" => 10,
+        "post_type_link" => 10,
+        "attachment_link" => 10,
+        "the_permalink" => 10,
+        "post_type_archive_link" => 10,
+        "redirect_canonical" => 10,
+      ],
     ];
 
-    /**
-    * Filter the Links that should be converted. 
-    * Should return an array like this:
-    * 
-    * array(
-    *  "wp_filter_name" => priority,
-    *  "another_wp_filter_name" => priority,
-    * )
-    */
-    return apply_filters("acfml/link_filters", $filters);
+    $filters['simple'] = apply_filters("acfml/simple_link_filters", $filters['simple']);
+    $filters['complex'] = apply_filters("acfml/complex_link_filters", $filters['complex']);
+
+    return $filters;
   }
 
   /**
@@ -617,7 +613,11 @@ class ACF_Multilingual {
    * @return void
    */
   public function add_link_filters() {
-    foreach( $this->get_link_filters() as $filter_name => $priority ) {
+    $filters = $this->get_link_filters();
+    foreach( $filters['simple'] as $filter_name => $priority ) {
+      add_filter($filter_name, [$this, 'simple_convert_url'], intval($priority));
+    }
+    foreach( $filters['complex'] as $filter_name => $priority ) {
       add_filter($filter_name, [$this, 'convert_url'], intval($priority));
     }
   }
@@ -628,7 +628,11 @@ class ACF_Multilingual {
   * @return void
   */
   public function remove_link_filters() {
-    foreach( $this->get_link_filters() as $filter_name => $priority ) {
+    $filters = $this->get_link_filters();
+    foreach( $filters['simple'] as $filter_name => $priority ) {
+      remove_filter($filter_name, [$this, 'simple_convert_url']);
+    }
+    foreach( $filters['complex'] as $filter_name => $priority ) {
       remove_filter($filter_name, [$this, 'convert_url']);
     }
   }
