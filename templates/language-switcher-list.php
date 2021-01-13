@@ -1,10 +1,10 @@
 <?php ob_start(); ?>
   <?php foreach( $value->languages as $language ) : ?>
   <li 
-    class="<?= $value->element_class ?>_item <?= implode(' ', $language->element_classes) ?>"
+    class="<?= $value->element_class ?>_item <?= implode(' ', $language->html_classes) ?>"
     data-language="<?= $language->slug ?>">
     <a 
-      class="<?= $value->element_class ?>_link <?= implode(' ', $language->element_classes) ?>" 
+      class="<?= $value->element_class ?>_link <?= implode(' ', $language->html_classes) ?>" 
       href="<?= $language->url ?>"
       data-language="<?= $language->slug ?>">
       <?= $language->display_name ?>

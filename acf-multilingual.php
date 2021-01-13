@@ -317,9 +317,9 @@ class ACF_Multilingual {
     foreach( $languages as $key => &$language ) {
       $language['is_default'] = $this->is_default_language($language['slug']);
       $language['is_current'] = $language['slug'] === $this->get_current_language();
-      $language['element_classes'] = [];
-      if( $language['is_current'] ) $language['element_classes'][] = 'is-current-language';
-      if( $this->is_default_language($language['slug']) ) $language['element_classes'][] = 'is-default-language';
+      $language['html_classes'] = [];
+      if( $language['is_current'] ) $language['html_classes'][] = 'is-current-language';
+      if( $this->is_default_language($language['slug']) ) $language['html_classes'][] = 'is-default-language';
       if( $args->hide_current && $language['is_current'] ) unset($languages[$key]);
       $this->debug = true;
       $language['url'] = $args->url ? $this->convert_url($args->url, $language['slug']) : $this->convert_current_url($language['slug']);
