@@ -39,6 +39,7 @@ class ACFML_Post_Types {
     // query filters
     add_filter('pre_get_posts', [$this, 'pre_get_posts'], 999);
     add_filter('query', [$this, 'query__get_page_by_path']);
+    add_filter('query', [$this, 'query__find_post_by_old_slug']);
 
     // hooks
     add_filter('the_title', [$this, 'single_post_title'], 10, 2);
@@ -61,7 +62,7 @@ class ACFML_Post_Types {
   public function get_multilingual_post_types() {
     $post_types = array_unique( apply_filters("acfml/multilingual_post_types", []) );
     // attachments are not supported. They are horrible edge cases :P
-    // unset($post_types['attachment']);
+    unset($post_types['attachment']);
     return $post_types;
   }
 
@@ -648,6 +649,21 @@ class ACFML_Post_Types {
 
     $query = implode(" UNION ", $queries);
 
+    return $query;
+  }
+
+  /**
+   * Multilingual find_post_by_old_slug
+   *
+   * @param string $query
+   * @return string
+   */
+  public function query__find_post_by_old_slug($query) {
+    $language = acfml()->get_current_language();
+    if( acfml()->is_default_language($language) ) return $query;
+    if( strpos($query, '_wp_old_slug') === false ) return $query;
+    $query = str_replace('_wp_old_slug', "_wp_old_slug_$language", $query);
+    pre_dump( $query );
     return $query;
   }
 

@@ -464,6 +464,7 @@ class ACF_Multilingual {
     if( !$language ) $language = $this->get_default_language();
     $this->language = $language;
     $this->define('ACFML_CURRENT_LANGUAGE', $language);
+    return $language;
   }
 
   /**
@@ -508,7 +509,7 @@ class ACF_Multilingual {
    * @return string
    */
   public function get_current_language(): string {
-    return $this->language ?? $this->get_default_language();
+    return $this->language ?? $this->detect_language();
   }
 
   /**
