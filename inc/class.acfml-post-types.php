@@ -38,6 +38,7 @@ class ACFML_Post_Types {
 
     // query filters
     add_filter('pre_get_posts', [$this, 'pre_get_posts'], 999);
+    add_action('template_redirect', [$this, 'prepare_old_slug_redirect'], 8 );
     add_filter('query', [$this, 'query__get_page_by_path']);
     add_filter('query', [$this, 'query__find_post_by_old_slug']);
 
@@ -665,6 +666,18 @@ class ACFML_Post_Types {
     $query = str_replace('_wp_old_slug', "_wp_old_slug_$language", $query);
     pre_dump( $query );
     return $query;
+  }
+
+  /**
+   * Re-injects the query var 'name', if a 404 was detected. 
+   *
+   * @return void
+   */
+  public function prepare_old_slug_redirect() {
+    global $wp_query;
+    if( is_404() ) {
+      $wp_query->query_vars['name'] = $wp_query->query['name'] ?? '';
+    }
   }
 
   /**
