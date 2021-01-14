@@ -120,7 +120,7 @@ class ACF_Multilingual {
   private function add_hooks() {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
-    add_action('plugins_loaded', [$this, 'detect_language']);
+    //add_action('plugins_loaded', [$this, 'detect_language']);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX-1);
     
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
@@ -275,6 +275,16 @@ class ACF_Multilingual {
     $languages = apply_filters("$this->prefix/languages", $languages);
     if( $format === 'slug' ) return array_column($languages, 'slug');
     return $languages;
+  }
+
+  /**
+   * Checks if a language is enabled
+   *
+   * @param string $language
+   * @return boolean
+   */
+  public function is_language_enabled( string $language ): bool {
+    return in_array($language, $this->get_languages('slug'));
   }
 
   /**
@@ -452,6 +462,7 @@ class ACF_Multilingual {
    *
    */
   public function detect_language() {
+    global $locale;
     $referrer = $_SERVER['HTTP_REFERER'] ?? '';
     // ajax requests: check referrer to detect if called from frontend.
     if( wp_doing_ajax() && $referrer && strpos($referrer, admin_url()) !== 0 ) {
@@ -459,7 +470,8 @@ class ACF_Multilingual {
     } elseif( !is_admin() ) {
       $language = $this->get_language_in_url($this->get_current_url());
     } else {
-      $language = $this->get_admin_language();
+      $locale_front = explode('_', $locale)[0];
+      if( $this->is_language_enabled($locale_front) ) $language = $locale_front;
     }
     if( !$language ) $language = $this->get_default_language();
     $this->language = $language;
@@ -509,7 +521,8 @@ class ACF_Multilingual {
    * @return string
    */
   public function get_current_language(): string {
-    return $this->language ?? $this->detect_language();
+    $language = $this->language ?? $this->detect_language();
+    return $language;
   }
 
   /**
@@ -530,14 +543,14 @@ class ACF_Multilingual {
   * @return string $url
   */
   public function convert_url( string $url, string $requested_language = null ): string {
-
+    
     if( !$requested_language ) $requested_language = $this->get_current_language();
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
 
     if( $url_query = $this->get_query_from_url($url) ) {
       $queried_object = $url_query->get_queried_object();
-      // if( $this->debug ) pre_dump( $queried_object );
+      pre_dump( $url_query );
 
       if( $queried_object instanceof \WP_Post ) {
         $new_url = $this->acfml_post_types->get_post_link($queried_object, $requested_language);
@@ -575,30 +588,29 @@ class ACF_Multilingual {
   private function get_link_filters():array {
     $filters = [
       "simple" => [
-        "author_feed_link" => 10,
-        "author_link" => 10,
-        "get_comment_author_url_link" => 10,
-        "post_comments_feed_link" => 10,
-        "day_link" => 10,
-        "month_link" => 10,
-        "year_link" => 10,
-        "category_link" => 10,
-        "category_feed_link" => 10,
-        "tag_link" => 10,
-        "term_link" => 10,
-        "feed_link" => 10,
-        "tag_feed_link" => 10,
-        "get_shortlink" => 10,
-        "rest_url" => 10,
+        // "author_feed_link" => 10,
+        // "author_link" => 10,
+        // "get_comment_author_url_link" => 10,
+        // "post_comments_feed_link" => 10,
+        // "day_link" => 10,
+        // "month_link" => 10,
+        // "year_link" => 10,
+        // "category_link" => 10,
+        // "category_feed_link" => 10,
+        // "tag_link" => 10,
+        // "term_link" => 10,
+        // "feed_link" => 10,
+        // "tag_feed_link" => 10,
+        // "get_shortlink" => 10,
+        // "rest_url" => 10,
       ],
       "complex" => [
-        "page_link" => 10,
         "post_link" => 10,
-        "post_type_link" => 10,
-        "attachment_link" => 10,
-        "the_permalink" => 10,
-        "post_type_archive_link" => 10,
-        "redirect_canonical" => 10,
+        // "page_link" => 10,
+        // "post_type_link" => 10,
+        // "attachment_link" => 10,
+        // "post_type_archive_link" => 10,
+        // "redirect_canonical" => 10,
       ],
     ];
 
