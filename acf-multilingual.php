@@ -68,6 +68,10 @@ class ACF_Multilingual {
 
     $this->add_hooks();
 
+    // add_action('init', function() {
+    //   pre_dump(get_permalink(272), true);
+    // }, 20);
+
   }
 
   /**
@@ -572,11 +576,11 @@ class ACF_Multilingual {
     if( !$requested_language ) $requested_language = $this->get_current_language();
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
-
-    if( $url_query = $this->get_query_from_url($url) ) {
+    
+    if( $url_query = $this->url_to_wp_query($url) ) {
       
       $queried_object = $url_query->get_queried_object();
-
+      
       if( $queried_object instanceof \WP_Post ) {
         $new_url = $this->acfml_post_types->get_post_link($queried_object, $requested_language);
         return $new_url;
@@ -584,7 +588,8 @@ class ACF_Multilingual {
         $new_url = $this->acfml_post_types->get_post_type_archive_link($queried_object->name, $requested_language);
         return $new_url;
       }
-    }    
+    }
+    
 
     // if nothing special was found, only inject the language code
     return $this->simple_convert_url($url, $requested_language);
@@ -837,7 +842,7 @@ class ACF_Multilingual {
    * @param string|null $language
    * @return mixed one of null, \WP_Post, \WP_Post_Type, \WP_Term
    */
-  public function get_query_from_url(?string $url = null): ?\WP_Query {
+  public function url_to_wp_query(?string $url = null): ?\WP_Query {
     global $wp, $wp_the_query;
     $_wp_the_query = $wp_the_query;
     // parse defaults
@@ -855,16 +860,21 @@ class ACF_Multilingual {
     // clone the global WP object
     $wp_clone = clone $wp;
 
-    $req_uri = $_SERVER['REQUEST_URI'];
+    // cache $_SERVER
+    $__SERVER = $_SERVER;
+    // allow $wp->parse_request to do it's magic.
     $_SERVER['REQUEST_URI'] = $path;
+    // bypasses checks for /wp-admin in $wp around line 274
+    $_SERVER['PHP_SELF'] = 'index.php';
+    
     $wp_clone->parse_request();
     $wp_clone->build_query_string();
-    // if( !count($wp_clone->query_vars) ) return null;
-    $_SERVER['REQUEST_URI'] = $req_uri;
+    
+    // Reset $_SERVER
+    $_SERVER = $__SERVER;
     
     $query = new \WP_Query();
     $wp_the_query = $query;
-    
     $query->query( $wp_clone->query_vars );
     
     $wp_the_query = $_wp_the_query;
