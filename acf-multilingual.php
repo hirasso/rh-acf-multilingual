@@ -128,7 +128,8 @@ class ACF_Multilingual {
     add_action('wp_head', [$this, 'wp_head']);
 
     $this->add_link_filters();
-    add_action('init', [$this, 'detect_preferred_language'], 1);
+    add_action('template_redirect', [$this, 'redirect_front_page'], 1);
+    add_action('init', [$this, 'save_language_in_cookie']);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
   }
@@ -849,32 +850,43 @@ class ACF_Multilingual {
     return $query;
   }
 
-  public function detect_preferred_language() {
-    if( is_admin() || is_robots() ) return;
+  /**
+   * Redirects the front-page to the preferred language
+   *
+   * @return void
+   */
+  public function redirect_front_page() {
+    // allow deactivation
+    if( !apply_filters('acfml/redirect_front_page', true) ) return;
     
-    $languages = $this->get_languages('slug');
-    $user_lang = strtolower(substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2));
-    $cookie_lang = $_COOKIE['language'] ?? null;
-    
-    $lang = $cookie_lang ?? $user_lang;
-    if( !in_array($lang, $languages) ) $lang = $this->get_default_language();
+    if( $_COOKIE['acfml-language'] ?? null ) return;
 
+    $current_language = $this->get_current_language();
+    $user_language = strtolower(substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2));
     
-    if( !$this->is_internal_referrer() && $cookie_lang && !$this->is_current_language($cookie_lang) ) {
-      $redirect_url = $this->convert_current_url($user_lang);
-      wp_redirect( $redirect_url );
+    if( !$this->is_language_enabled($user_language) ) $user_language = $this->get_default_language();
+    
+    if( $current_language === $user_language ) return;
+
+    if( is_front_page() && !is_robots() ) {
+      wp_redirect( $this->home_url('', $user_language) );
       exit;
-    } else {
-      setcookie("language", $this->get_current_language(), (DAY_IN_SECONDS * 365), '/');
     }
+    
+  }
 
-    // if( $lang !== $this->get_current_language($languages) ) {
-    //   $redirect_url = $this->convert_current_url($user_lang);
-    //   wp_redirect( $redirect_url );
-    //   exit;
-    // }
-    // setcookie("language", null, 0, '/'); // 86400 = 1 day
-    // setcookie("language", 'de', 0, '/'); // 86400 = 1 day
+  /**
+   * Save the language in a cookie
+   *
+   * @return void
+   */
+  public function save_language_in_cookie() {
+    if( is_admin() ) return;
+
+    // allow deactivation
+    if( !apply_filters('acfml/save_language_in_cookie', true) ) return;
+    
+    setcookie("acfml-language", $this->get_current_language(), time()+YEAR_IN_SECONDS, '/');
   }
 
   /**
