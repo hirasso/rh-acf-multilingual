@@ -30,21 +30,20 @@ class ACFML_Post_Types {
     $this->title_field_key    = "field_{$this->title_field_name}";
     $this->slug_field_key     = "field_{$this->slug_field_name}";
     $this->public_field_key   = "field_{$this->public_field_name}";
-
     
     add_action('registered_post_type', [$this, 'registered_post_type'], 10, 2);
-
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array']);
-    // add_action('init', [$this, 'flush_rewrite_rules'], 11);
 
     // query filters
     add_filter('pre_get_posts', [$this, 'pre_get_posts'], 999);
-    add_action('template_redirect', [$this, 'prepare_old_slug_redirect'], 8 );
+    
     add_filter('query', [$this, 'query__get_page_by_path']);
 
     // old slugs
     add_action('post_updated', [$this, 'check_for_changed_slugs'], 12, 3 );
     add_filter('query', [$this, 'query__find_post_by_old_slug']);
+    add_action('template_redirect', [$this, 'prepare_old_slug_redirect'], 9 );
+    
     
     // hooks
     add_filter('the_title', [$this, 'single_post_title'], 10, 2);
@@ -96,15 +95,6 @@ class ACFML_Post_Types {
       if( in_array($type, $builtin) ) unset($post_types[$key]);
     }
     return $post_types;
-  }
-
-  /**
-   * Make custom post types rewrite rules multilingual
-   *
-   * @return void
-   */
-  public function flush_rewrite_rules() {
-    flush_rewrite_rules();
   }
 
   /**
@@ -564,8 +554,9 @@ class ACFML_Post_Types {
    * @return void
    */
   public function pre_get_posts( $query ) {
+    
     if( !$query->is_main_query() ) return;
-
+    
     $language = acfml()->get_current_language();
     if( acfml()->is_default_language($language) ) return;
 
@@ -587,6 +578,7 @@ class ACFML_Post_Types {
       // for custom post types
       if( $post_type_object ) unset($query->query_vars[$post_type_object->query_var]);
     }
+    
     
     // Allow posts to be set to non-public
     $meta_query['acfml_lang_public'] = [
@@ -655,66 +647,6 @@ class ACFML_Post_Types {
     $query = implode(" UNION ", $queries);
 
     return $query;
-  }
-
-  /**
-   * Multilingual find_post_by_old_slug
-   *
-   * @param string $query
-   * @return string
-   */
-  public function query__find_post_by_old_slug($query) {
-    $language = acfml()->get_current_language();
-    if( acfml()->is_default_language($language) ) return $query;
-    if( strpos($query, '_wp_old_slug') === false ) return $query;
-    $query = str_replace('_wp_old_slug', "_wp_old_slug_$language", $query);
-    return $query;
-  }
-
-
-  public function check_for_changed_slugs( int $post_id, \WP_Post $post, \WP_Post $post_before ): void {
-    
-    // bail early if the post type is not multilingual
-    if( !$this->is_multilingual_post_type($post->post_type) ) return;
-
-    // We're only concerned with published, non-hierarchical objects.
-    if ( ! ( 'publish' === $post->post_status || ( 'attachment' === get_post_type( $post ) && 'inherit' === $post->post_status ) ) || is_post_type_hierarchical( $post->post_type ) ) {
-      return;
-    }
-
-    foreach( acfml()->get_languages('slug') as $lang ) {
-      // get old slugs
-      $old_slug_meta_key = "_wp_old_slug_$lang";
-      $old_slugs = (array) get_post_meta( $post_id, $old_slug_meta_key );
-
-      // overwrite post slugs
-      $post->post_name = get_field("acfml_slug_$lang", $post_id);
-      $post_before->post_name = get_field("acfml_slug_$lang", $post_before->ID);
-
-      // If we haven't added this old slug before, add it now.
-      if ( ! empty( $post_before->post_name ) && ! in_array( $post_before->post_name, $old_slugs, true ) ) {
-        add_post_meta( $post_id, $old_slug_meta_key, $post_before->post_name );
-      }
-
-      // If the new slug was used previously, delete it from the list.
-      if ( in_array( $post->post_name, $old_slugs, true ) ) {
-        delete_post_meta( $post_id, $old_slug_meta_key, $post->post_name );
-      }
-
-    }
-
-  }
-
-  /**
-   * Re-injects the query var 'name', if a 404 was detected. 
-   *
-   * @return void
-   */
-  public function prepare_old_slug_redirect() {
-    global $wp_query;
-    if( is_404() ) {
-      $wp_query->query_vars['name'] = $wp_query->query['name'] ?? '';
-    }
   }
 
   /**
@@ -877,6 +809,66 @@ class ACFML_Post_Types {
     $link = acfml()->home_url("/$path", $language);
     $link = apply_filters('acfml/post_type_archive_link', $link, $post_type, $language);
     return $link;
+  }
+
+  /**
+   * Multilingual find_post_by_old_slug
+   *
+   * @param string $query
+   * @return string
+   */
+  public function query__find_post_by_old_slug($query) {
+    $language = acfml()->get_current_language();
+    if( acfml()->is_default_language($language) ) return $query;
+    if( strpos($query, '_wp_old_slug') === false ) return $query;
+    $query = str_replace('_wp_old_slug', "_wp_old_slug_$language", $query);
+    return $query;
+  }
+
+
+  public function check_for_changed_slugs( int $post_id, \WP_Post $post, \WP_Post $post_before ): void {
+
+    // bail early if the post type is not multilingual
+    if( !$this->is_multilingual_post_type($post->post_type) ) return;
+
+    // We're only concerned with published, non-hierarchical objects.
+    if ( ! ( 'publish' === $post->post_status || ( 'attachment' === get_post_type( $post ) && 'inherit' === $post->post_status ) ) || is_post_type_hierarchical( $post->post_type ) ) {
+      return;
+    }
+
+    foreach( acfml()->get_languages('slug') as $lang ) {
+      // get old slugs
+      $old_slug_meta_key = "_wp_old_slug_$lang";
+      $old_slugs = (array) get_post_meta( $post_id, $old_slug_meta_key );
+
+      // overwrite post slugs
+      $post->post_name = get_field("acfml_slug_$lang", $post_id);
+      $post_before->post_name = get_field("acfml_slug_$lang", $post_before->ID);
+
+      // If we haven't added this old slug before, add it now.
+      if ( ! empty( $post_before->post_name ) && ! in_array( $post_before->post_name, $old_slugs, true ) ) {
+        add_post_meta( $post_id, $old_slug_meta_key, $post_before->post_name );
+      }
+
+      // If the new slug was used previously, delete it from the list.
+      if ( in_array( $post->post_name, $old_slugs, true ) ) {
+        delete_post_meta( $post_id, $old_slug_meta_key, $post->post_name );
+      }
+
+    }
+
+  }
+
+  /**
+   * Re-injects the query var 'name', if a 404 was detected. 
+   *
+   * @return void
+   */
+  public function prepare_old_slug_redirect() {
+    global $wp_query;
+    if( acfml()->current_language_is_default() ) return;
+    if( !is_404() ) return;
+    $wp_query->query_vars['name'] = $wp_query->query['name'] ?? '';
   }
 
 }

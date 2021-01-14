@@ -8,7 +8,7 @@
   ✔ Unique Post Slugs
   ✔ get_post_by_path
   ✔ Filter Post-/Page-/CPT-/Term-/Tag-Links for custom slugs
-  ❍ Filter wp_old_slug_redirect
+  ✔ Filter wp_old_slug_redirect
   ✔ Convert URLs in text fields
   ✔ Query for custom slugs in path
   ✔ No taxonomy support

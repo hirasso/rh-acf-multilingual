@@ -127,7 +127,7 @@ class ACF_Multilingual {
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('wp_head', [$this, 'wp_head']);
 
-    add_action('init', [$this, 'add_link_filters']);
+    $this->add_link_filters();
     add_action('init', [$this, 'detect_preferred_language'], 1);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
@@ -549,8 +549,8 @@ class ACF_Multilingual {
     if( strpos($url, content_url()) === 0 ) return $url;
 
     if( $url_query = $this->get_query_from_url($url) ) {
+      
       $queried_object = $url_query->get_queried_object();
-      pre_dump( $url_query );
 
       if( $queried_object instanceof \WP_Post ) {
         $new_url = $this->acfml_post_types->get_post_link($queried_object, $requested_language);
@@ -573,7 +573,7 @@ class ACF_Multilingual {
    * @return string
    */
   public function simple_convert_url( string $url, string $requested_language = null ): string {
-    $current_language = $this->get_language_in_url($url) ?: $this->get_default_language();
+    $current_language = $this->get_language_in_url($url);
     $current_home_url = $this->home_url('', $current_language);
     $new_home_url = $this->home_url('', $requested_language);
     $url = str_replace($current_home_url, $new_home_url, $url);
@@ -588,29 +588,29 @@ class ACF_Multilingual {
   private function get_link_filters():array {
     $filters = [
       "simple" => [
-        // "author_feed_link" => 10,
-        // "author_link" => 10,
-        // "get_comment_author_url_link" => 10,
-        // "post_comments_feed_link" => 10,
-        // "day_link" => 10,
-        // "month_link" => 10,
-        // "year_link" => 10,
-        // "category_link" => 10,
-        // "category_feed_link" => 10,
-        // "tag_link" => 10,
-        // "term_link" => 10,
-        // "feed_link" => 10,
-        // "tag_feed_link" => 10,
-        // "get_shortlink" => 10,
-        // "rest_url" => 10,
+        "author_feed_link" => 10,
+        "author_link" => 10,
+        "get_comment_author_url_link" => 10,
+        "post_comments_feed_link" => 10,
+        "day_link" => 10,
+        "month_link" => 10,
+        "year_link" => 10,
+        "category_link" => 10,
+        "category_feed_link" => 10,
+        "tag_link" => 10,
+        "term_link" => 10,
+        "feed_link" => 10,
+        "tag_feed_link" => 10,
+        "get_shortlink" => 10,
+        "rest_url" => 10,
       ],
       "complex" => [
         "post_link" => 10,
-        // "page_link" => 10,
-        // "post_type_link" => 10,
-        // "attachment_link" => 10,
-        // "post_type_archive_link" => 10,
-        // "redirect_canonical" => 10,
+        "page_link" => 10,
+        "post_type_link" => 10,
+        "attachment_link" => 10,
+        "post_type_archive_link" => 10,
+        "redirect_canonical" => 10,
       ],
     ];
 
@@ -671,7 +671,7 @@ class ACF_Multilingual {
     $path = str_replace(home_url(), '', $url);
     $regex_languages = implode('|', $this->get_languages('slug'));
     preg_match("%/($regex_languages)(/|$|\?|#)%", $path, $matches);
-    $language = $matches[1] ?? null;
+    $language = $matches[1] ?? $this->get_default_language();
     return $language;
   }
 
@@ -824,7 +824,8 @@ class ACF_Multilingual {
     if( !$path ) return null;
 
     // overwrite the language for the time of the request
-    $this->switch_to_language($this->get_language_in_url($url));
+    $language = $this->get_language_in_url($url);
+    $this->switch_to_language($language);
 
     // clone the global WP object
     $wp_clone = clone $wp;
@@ -838,6 +839,7 @@ class ACF_Multilingual {
     
     $query = new \WP_Query();
     $wp_the_query = $query;
+    
     $query->query( $wp_clone->query_vars );
     
     $wp_the_query = $_wp_the_query;
