@@ -81,6 +81,8 @@ class ACFML_Fields {
     if( $post_type === 'acf-field-group' ) return $field;
     // bail early if the field is not multilingual
     if( empty($field['acfml_multilingual']) ) return $field;
+    
+    $active_language_tab = $this->get_active_language_tab($field);
 
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
@@ -89,7 +91,7 @@ class ACFML_Fields {
       // prepare wrapper
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfml-field';
-      if( $id === 0 ) $wrapper['class'] .= ' is-visible';
+      if( $lang === $active_language_tab ) $wrapper['class'] .= ' is-visible';
       if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang}";
       $wrapper['width'] = '';
       // prepare subfield
@@ -190,7 +192,7 @@ class ACFML_Fields {
    */
   public function render_multilingual_field( $field ) {
     if( !$this->is_acfml_group($field) ) return;
-    $default_language = acfml()->get_default_language();
+    $default_field_language = $this->get_active_language_tab($field);
     $languages = acfml()->get_languages();
     $show_ui = $field['acfml_ui'] ?? true;
     if( !$show_ui ) return;
@@ -199,13 +201,24 @@ class ACFML_Fields {
     <div class="acfml-tabs-wrap">
       <div class="acfml-tabs acf-js-tooltip" title="<?= __('Double-click to switch globally', $this->prefix) ?>">
       <?php foreach( $languages as $id => $language ) : ?>
-      <a href="##" class="acfml-tab <?= $id === 0 ? 'is-active' : '' ?>" data-language="<?= $language['slug'] ?>">
+      <a href="##" class="acfml-tab <?= $language['slug'] === $default_field_language ? 'is-active' : '' ?>" data-language="<?= $language['slug'] ?>">
         <?= $language['name'] ?>
       </a>
       <?php endforeach; ?>
       </div>
     </div>
     <?php echo ob_get_clean();
+  }
+
+  /**
+   * Get the default language for an ACF field in the admin
+   *
+   * @param Array $field
+   * @return string
+   */
+  private function get_active_language_tab($field): string {
+    $cookie = (array) acfml()->get_admin_cookie('acfml_language_tabs');
+    return $cookie[$field['key']] ?? acfml()->get_default_language();
   }
 
   /**

@@ -11,7 +11,8 @@ export default class ACFML {
     this.initMultilingualPostTitle();
     this.initMultilingualTermName();
     this.initLanguageTabs();
-    // Cookie.set('rh-acfml-admin-language', 'en');
+    $('form#post').one( 'submit', (e) => this.beforeSubmitPostForm(e) );
+    this.removeFromStore('acfml_language_tabs')
   }
 
   /**
@@ -53,6 +54,7 @@ export default class ACFML {
       $tabs.filter(`[data-language=${language}]`).addClass('is-active');
       $childFields.removeClass('is-visible');
       $childFields.filter(`[data-name=${language}]`).addClass('is-visible');
+      $el.attr('data-acfml-language', language);
       acf.doAction('acfml/switch_language', $el, language);
     })
   }
@@ -74,12 +76,12 @@ export default class ACFML {
    * Multilingual Post Titles
    */
   initMultilingualPostTitle() {
-    acf.addAction(`ready_field/name=acfml_post_title`, $field => {
+    acf.addAction(`ready_field/name=acfml_post_title`, field => {
       $('#titlediv').remove();
       $('[data-setting="title"]').remove();
     });
-    acf.addAction(`ready_field/key=field_acfml_post_title_${acfml.defaultLanguage}`, $field => {
-      if( !acfml.isMobile && !$field.val() ) $field.$input().focus();
+    acf.addAction(`ready_field/key=field_acfml_post_title_${acfml.defaultLanguage}`, field => {
+      if( !acfml.isMobile && !field.val() ) field.$input().focus();
     });
     acf.addAction(`ready_field/key=field_acfml_slug`, $field => {
       // $('.postbox#slugdiv').remove();
@@ -95,6 +97,16 @@ export default class ACFML {
     })
   }
 
+  beforeSubmitPostForm(e) {
+    let acfml_language_tabs = {};
+    $('.acfml-multilingual-field').each((i, el) => {
+      const key = $(el).attr('data-key');
+      const language = $(el).find('.acfml-field.is-visible').attr('data-name');
+      acfml_language_tabs[key] = language;
+    })
+    this.addToStore('acfml_language_tabs', acfml_language_tabs);
+  }
+
   /**
    * Stores something in session storage
    * 
@@ -102,6 +114,7 @@ export default class ACFML {
    * @param {mixed} value 
    */
   addToStore(key, value) {
+    Cookie.set(this.getStorageKey(key), JSON.stringify(value), 1);
     sessionStorage.setItem(this.getStorageKey(key), JSON.stringify(value));
   }
 
@@ -110,6 +123,7 @@ export default class ACFML {
    * @param {string} key 
    */
   removeFromStore(key) {
+    Cookie.delete(this.getStorageKey(key));
     sessionStorage.removeItem(this.getStorageKey(key));
   }
 
@@ -118,7 +132,8 @@ export default class ACFML {
    * @param {string} key 
    */
   getFromStore(key) {
-    let value = sessionStorage.getItem(this.getStorageKey(key));
+    // let value = sessionStorage.getItem(this.getStorageKey(key));
+    let value = Cookie.get(this.getStorageKey(key));
     return value ? JSON.parse(value) : value;
   }
 
@@ -126,8 +141,7 @@ export default class ACFML {
    * Get storage key for scrollTop
    */
   getStorageKey(key) {
-    var path = window.location.pathname;
-    return key + ":" + path.replace(/^\/+/g, '').split('/').join('-');
+    return `${key}_${acfml.cookiePathHash}`;
   }
 
 }

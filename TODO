@@ -20,5 +20,5 @@
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
   ✔ Check url_to_postid
   ✔ use native permalink with $leavename for get_post_link
-  ❍ Remember field language choices in admin on update
+  ✔ Remember field language choices in admin on update
   ✔ Redirect frontend to user agent language

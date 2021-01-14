@@ -181,11 +181,35 @@ class ACF_Multilingual {
     $settings = [
       'defaultLanguage' => $this->get_default_language(),
       'languages' => $this->get_languages(),
-      'isMobile' => wp_is_mobile()
+      'isMobile' => wp_is_mobile(),
+      'cookiePathHash' => $this->get_cookie_path_hash()
     ];
     ?><script id="acfml-settings"><?php ob_start() ?>
     var acfml = <?= json_encode($settings) ?>;
     <?php $script = ob_get_clean(); ?></script><?php return $script;
+  }
+
+  /**
+   * Get the hashed path for a cookie
+   *
+   * @return string
+   */
+  public function get_cookie_path_hash() {
+    $req_uri = $_SERVER['REQUEST_URI'];
+    $req_uri = remove_query_arg('message', $req_uri);
+    return md5($req_uri);
+  }
+
+  /**
+   * Get an admin cookie
+   *
+   * @param string $key
+   * @return string|null
+   */
+  public function get_admin_cookie( string $key ) {
+    $cookie_name = $key . "_" . $this->get_cookie_path_hash();
+    $cookie = $_COOKIE[$cookie_name] ?? null;
+    return json_decode( stripslashes($cookie) );
   }
 
   /**
@@ -855,7 +879,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function redirect_front_page() {
+  public function redirect_front_page(): void {
     // allow deactivation
     if( !apply_filters('acfml/redirect_front_page', true) ) return;
     
@@ -880,13 +904,13 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function save_language_in_cookie() {
+  public function save_language_in_cookie(): void {
     if( is_admin() ) return;
 
     // allow deactivation
     if( !apply_filters('acfml/save_language_in_cookie', true) ) return;
     
-    setcookie("acfml-language", $this->get_current_language(), time()+YEAR_IN_SECONDS, '/');
+    setcookie("acfml-language", $this->get_current_language(), time() + YEAR_IN_SECONDS, '/');
   }
 
   /**
