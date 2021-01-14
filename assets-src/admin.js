@@ -12,7 +12,7 @@ export default class ACFML {
     this.initMultilingualTermName();
     this.initLanguageTabs();
     $('form#post').one( 'submit', (e) => this.beforeSubmitPostForm(e) );
-    this.removeFromStore('acfml_language_tabs')
+    this.removeFromStore('acfml_language_tabs');
   }
 
   /**
@@ -97,6 +97,10 @@ export default class ACFML {
     })
   }
 
+  /**
+   * Stores active language tabs for acf fields before submitting a form
+   * @param {object} e 
+   */
   beforeSubmitPostForm(e) {
     let acfml_language_tabs = {};
     $('.acfml-multilingual-field').each((i, el) => {
