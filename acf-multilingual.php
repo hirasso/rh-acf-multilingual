@@ -182,7 +182,7 @@ class ACF_Multilingual {
       'defaultLanguage' => $this->get_default_language(),
       'languages' => $this->get_languages(),
       'isMobile' => wp_is_mobile(),
-      'cookiePathHash' => $this->get_cookie_path_hash()
+      'cookieHash' => $this->get_cookie_path_hash()
     ];
     ?><script id="acfml-settings"><?php ob_start() ?>
     var acfml = <?= json_encode($settings) ?>;

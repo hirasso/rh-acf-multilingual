@@ -119,7 +119,7 @@ export default class ACFML {
    */
   addToStore(key, value) {
     Cookie.set(this.getStorageKey(key), JSON.stringify(value), 1);
-    sessionStorage.setItem(this.getStorageKey(key), JSON.stringify(value));
+    // sessionStorage.setItem(this.getStorageKey(key), JSON.stringify(value));
   }
 
   /**
@@ -128,7 +128,7 @@ export default class ACFML {
    */
   removeFromStore(key) {
     Cookie.delete(this.getStorageKey(key));
-    sessionStorage.removeItem(this.getStorageKey(key));
+    // sessionStorage.removeItem(this.getStorageKey(key));
   }
 
   /**
@@ -145,7 +145,7 @@ export default class ACFML {
    * Get storage key for scrollTop
    */
   getStorageKey(key) {
-    return `${key}_${acfml.cookiePathHash}`;
+    return `${key}_${acfml.cookieHash}`;
   }
 
 }
