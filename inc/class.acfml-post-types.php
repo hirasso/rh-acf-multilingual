@@ -44,7 +44,6 @@ class ACFML_Post_Types {
     add_filter('query', [$this, 'query__find_post_by_old_slug']);
     add_action('template_redirect', [$this, 'prepare_old_slug_redirect'], 9 );
     
-    
     // hooks
     add_filter('the_title', [$this, 'single_post_title'], 10, 2);
     add_filter('single_post_title', [$this, 'single_post_title'], 10, 2);

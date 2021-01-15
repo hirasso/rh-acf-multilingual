@@ -79,7 +79,7 @@ class ACF_Multilingual {
     $this->register_language('en', 'en_US', 'English');
     $this->register_language('de', 'de_DE', 'Deutsch');
     $this->register_language('fr', 'fr', 'Francais');
-    $this->register_language('es', 'es', 'Español');
+    // $this->register_language('es', 'es', 'Español');
 
     // Include and instanciate other classes
     $this->include('inc/class.acfml-fields.php');
@@ -155,6 +155,9 @@ class ACF_Multilingual {
     add_action('init', [$this, 'save_language_in_cookie']);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
+
+    add_action('admin_init', [$this, 'check_for_new_languages']);
+    add_action('admin_init', [$this, 'maybe_flush_rewrite_rules']);
   }
 
   /**
@@ -953,16 +956,41 @@ class ACF_Multilingual {
   }
 
   /**
-   * Checks if the current referrer comes from our frontend
+   * Check for new languages
    *
-   * @return boolean
+   * @return void
    */
-  private function is_internal_referrer(): bool {
-    $referrer = $_SERVER['HTTP_REFERER'] ?? null;
-    if( !$referrer ) return false;
-    $home_url_parsed = parse_url(get_option('home'));
-    $referrer_parsed = parse_url($referrer);
-    return $home_url_parsed['host'] === $referrer_parsed['host'];
+  public function check_for_new_languages(): void {
+    $hashed_languages = md5( json_encode($this->get_languages('slug')) );
+    $saved_hashed_languages = get_option('acfml_hashed_languages');
+    
+    if( $hashed_languages !== $saved_hashed_languages ) {
+      $this->acfml_utils->add_admin_notice(
+        'acfml_flush_rewrite_rules',
+        acfml()->get_template('notice-languages-changed', null, false),
+        'warning',
+        false,
+        true
+      );
+    } 
+  }
+
+  /**
+   * Flushes Rewrite Rules
+   *
+   * @return void
+   */
+  public function maybe_flush_rewrite_rules() {
+    if( empty($_POST['acfml_flush_rewrite_rules']) ) return;
+    $hashed_languages = md5( json_encode($this->get_languages('slug')) );
+    update_option('acfml_hashed_languages', $hashed_languages);
+    flush_rewrite_rules();
+    $this->acfml_utils->add_admin_notice(
+      'acfml_flush_rewrite_rules',
+      __('Rewrite Rules successfully flushed', 'acfml'),
+      'success',
+      true,
+    );
   }
   
 }
