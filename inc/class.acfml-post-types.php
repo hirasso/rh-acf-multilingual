@@ -190,13 +190,13 @@ class ACFML_Post_Types {
         'operator' => '==',
         'value' => $pt
       ];
-      if( $pt === 'attachment' ) {
-        $location = [
-          'param' => 'attachment',
-          'operator' => '==',
-          'value' => 'all'
-        ];
-      }
+      // if( $pt === 'attachment' ) {
+      //   $location = [
+      //     'param' => 'attachment',
+      //     'operator' => '==',
+      //     'value' => 'all'
+      //   ];
+      // }
       $locations[] = [$location];
     }
     
@@ -251,7 +251,7 @@ class ACFML_Post_Types {
         // add the 'View' to the $field's 'append' option
         $post_link = $this->get_post_link($post, $lang);
 
-        if( $this->is_language_public($lang, $post->ID) && in_array($post->post_status, ['publish'] ) ) {
+        if( $field['value'] && $this->is_language_public($lang, $post->ID) && in_array($post->post_status, ['publish'] ) ) {
           $field['append'] .= sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
         }
         return $field;
@@ -405,15 +405,16 @@ class ACFML_Post_Types {
     $post_slugs = [];
     // generate slugs for every language
     foreach( $languages as $lang ) {
+      // get the slug from the field
+      $raw_slug = acfml()->get_field_or("{$this->slug_field_name}_{$lang}", $post_titles[$lang], $post_id);
       
       // set locale to current $lang, so that sanitize_title can run on full power
       $locale = acfml()->get_language_info($lang)['locale'];
-      $sanitized_title = sanitize_title($post_titles[$lang]);
+      pre_dump($locale);
+      $slug = sanitize_title($raw_slug);
       // reset locale
       $locale = $cached_locale;
 
-      // get the slug from the field
-      $slug = acfml()->get_field_or("{$this->slug_field_name}_{$lang}", $sanitized_title, $post_id);
       // make the slug unique
       $slug = $this->get_unique_post_slug( $slug, get_post($post_id), $lang );
       // save the unique slug to the database
@@ -541,7 +542,7 @@ class ACFML_Post_Types {
 
     $post_type = $query->queried_object->post_type ?? $query->get('post_type') ?: false;
     $post_type_object = get_post_type_object($post_type);
-    
+
     // bootstrap meta query
     $meta_query = $query->get('meta_query') ?: [];
     // prepare for single query of type 'post'

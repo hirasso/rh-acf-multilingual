@@ -79,6 +79,7 @@ class ACF_Multilingual {
     $this->register_language('en', 'en_US', 'English');
     $this->register_language('de', 'de_DE', 'Deutsch');
     $this->register_language('fr', 'fr', 'Francais');
+    $this->register_language('es', 'es', 'Español');
 
     // Include and instanciate other classes
     $this->include('inc/class.acfml-fields.php');
@@ -465,14 +466,11 @@ class ACF_Multilingual {
   /**
    * Get information for a language iso key
    *
-   * @param string $lang_iso    e.g. 'en' or 'de'
+   * @param string $key    e.g. 'en' or 'de'
    * @return array|null
    */
-  public function get_language_info(string $lang_iso):? array {
-    foreach( $this->get_languages() as $language ) {
-      if( $language['slug'] === $lang_iso ) return $language;
-    }
-    return null;
+  public function get_language_info(string $key):? array {
+    return $this->get_languages()[$key] ?? null;
   }
 
   /**
