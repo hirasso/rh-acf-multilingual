@@ -86,8 +86,9 @@ class ACFML_Fields {
 
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
-    $languages = acfml()->get_languages('slug');
-    foreach( $languages as $id => $lang ) {
+    $languages = acfml()->get_languages();
+    foreach( $languages as $lang => $language_info ) {
+      
       // prepare wrapper
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfml-field';
@@ -97,7 +98,7 @@ class ACFML_Fields {
       // prepare subfield
       $sub_field = array_merge($field, [
         'key' => "{$field['key']}_{$lang}",
-        'label' => "{$field['label']} ({$lang})",
+        'label' => "{$field['label']} ({$language_info['name']})",
         'name' => "{$field['name']}_{$lang}",
         '_name' => "$lang",
         // Only the default language of a sub-field should be required
@@ -190,11 +191,11 @@ class ACFML_Fields {
    * @param Array $field
    * @return void
    */
-  public function render_multilingual_field( $field ) {
+  public function render_multilingual_field( $field ): void {
     if( !$this->is_acfml_group($field) ) return;
     $default_field_language = $this->get_active_language_tab($field);
     $languages = acfml()->get_languages();
-    if( count($languages) < 2 ) return $field;
+    if( count($languages) < 2 ) return;
     $show_ui = $field['acfml_ui'] ?? true;
     if( !$show_ui ) return;
     // maybe remove default language

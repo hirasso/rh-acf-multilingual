@@ -265,7 +265,7 @@ class ACFML_Post_Types {
         if( $lang === $this->default_language ) {
           $field['instructions'] = __('The default language is always active.');
         } else {
-          $field['instructions'] = __('Have you translated all fields?');
+          $field['instructions'] = __('Show language in frontend?');
         }
         
         return $field;
@@ -278,7 +278,7 @@ class ACFML_Post_Types {
       'name' => $this->slug_field_name,
       'label' => __('Permalink'),
       'type' => 'text',
-      'instructions' => __('Leave blank to generate from the link from title'),
+      'instructions' => __('Leave empty to generate the link from title'),
       'acfml_multilingual' => true,
       'acfml_ui_listen_to' => $this->title_field_name,
       'acfml_ui' => false,
