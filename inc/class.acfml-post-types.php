@@ -66,7 +66,10 @@ class ACFML_Post_Types {
   public function get_multilingual_post_types() {
     $post_types = array_unique( apply_filters("acfml/multilingual_post_types", []) );
     // attachments are not supported. They are horrible edge cases :P
-    unset($post_types['attachment']);
+    $unsupported_post_types = ["attachment"];
+    $post_types = array_filter($post_types, function($pt) use($unsupported_post_types) {
+      return !in_array($pt, $unsupported_post_types);
+    });
     return $post_types;
   }
 
@@ -241,7 +244,7 @@ class ACFML_Post_Types {
           $prepend = acfml()->home_url('/', $lang);
         }
         
-        if( !$field['value'] ) $field['placeholder'] = $post->post_name;
+        if( !$field['value'] && $lang === $this->default_language ) $field['placeholder'] = $post->post_name;
         $field['prepend'] = $prepend;
         
         // add the 'View' to the $field's 'append' option
@@ -764,8 +767,15 @@ class ACFML_Post_Types {
 
     // add slug for requested post to segments
     $segments[] = $this->get_post_slug($post, $language);
+    
+    // remove empty segments
+    $segments = array_filter($segments, function($segment) {
+      return !empty($segment);
+    });
 
     $postname = implode('/', $segments);
+    
+    if( !$postname ) return $fallback_url;
 
     $link = str_replace($postname_rewrite_tag, $postname, $link_template);
 
@@ -777,11 +787,13 @@ class ACFML_Post_Types {
    *
    * @param \WP_Post $post
    * @param string $language
-   * @return string
+   * @return string|null
    */
-  private function get_post_slug( \WP_Post $post, string $language ): string { 
+  private function get_post_slug( \WP_Post $post, string $language ): ?string { 
     if( !$this->is_multilingual_post_type($post->post_type) ) return $post->post_name;
-    return acfml()->get_field_or("{$this->slug_field_name}_{$language}", $post->post_name, $post->ID);
+    $slug = get_field("{$this->slug_field_name}_{$language}", $post->ID);
+    if( !$slug && acfml()->is_default_language($language) ) return $post->post_name;
+    return $slug;
   }
 
   /**
