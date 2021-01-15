@@ -16,6 +16,7 @@ class ACF_Multilingual {
   private $prefix = 'acfml';
   private $debug = false;
   private $language = null;
+  private $languages = [];
 
   /**
    * ACFML_Utils instance
@@ -74,6 +75,10 @@ class ACF_Multilingual {
       );
       return;
     }
+
+    $this->register_language('en', 'en_US', 'English');
+    $this->register_language('de', 'de_DE', 'Deutsch');
+    $this->register_language('fr', 'fr', 'Francais');
 
     // Include and instanciate other classes
     $this->include('inc/class.acfml-fields.php');
@@ -282,12 +287,13 @@ class ACF_Multilingual {
    *
    * @param string $template_name
    * @param mixed $value
+   * @param boolean $allow_filter
    * @return string
    */
-  public function get_template($template_name, $value = null) {
+  public function get_template($template_name, $value = null, $allow_filter = true) {
     $value = $this->to_object($value);
     $path = $this->get_file_path("templates/$template_name.php");
-    $path = apply_filters("$this->prefix/template/$template_name", $path);
+    if( $allow_filter ) $path = apply_filters("acfml/template/$template_name", $path);
     if( !file_exists($path) ) return "<p>$template_name: Template doesn't exist</p>";
     ob_start();
     if( $this->is_dev() ) echo "<!-- Template Path: $path -->\n";
@@ -302,21 +308,37 @@ class ACF_Multilingual {
    * @return Array
    */
   public function get_languages( $format = 'full' ) {
-    $languages = [
-      [
-        'slug' => 'en',
-        'locale' => 'en_US',
-        'name' => 'English'
-      ],
-      [
-        'slug' => 'de',
-        'locale' => 'de_DE',
-        'name' => 'Deutsch'
-      ],
-    ];
-    $languages = apply_filters("$this->prefix/languages", $languages);
+    $languages = $this->languages;
     if( $format === 'slug' ) return array_column($languages, 'slug');
     return $languages;
+  }
+
+  /**
+   * Register a language
+   *
+   * @param string $slug          e.g. 'en' or 'de'
+   * @param string|null $locale   e.g. 'en_US' or 'de_DE'
+   * @param string|null $name     e.g. 'English' or 'Deutsch'
+   * @return array
+   */
+  public function register_language(string $slug, ?string $locale = null, ?string $name = null): array {
+    $language = [
+      'slug' => $slug,
+      'locale' => $locale ?? $slug,
+      'name' => $name ?? $slug
+    ];
+    $this->languages[$slug] = $language;
+    return $language;
+  }
+
+  /**
+   * DeRegister a language
+   *
+   * @param string $slug          e.g. 'en' or 'de'
+   * @return void
+   */
+  public function deregister_language(string $slug) {
+    unset($this->languages[$slug]);
   }
 
   /**
@@ -387,10 +409,6 @@ class ACF_Multilingual {
       unset($language);
     }
     
-    // $languages = array_filter($languages, function($language) {
-    //   return !empty($language['url']);
-    // });
-    
     if( count($languages) < 2 ) return false;
 
     // return for special $format 'key:value'
@@ -407,6 +425,7 @@ class ACF_Multilingual {
         $dropdown_count ++;
         return $this->get_template('language-switcher-dropdown', [
           'languages' => $languages, 
+          'languages_slugs_urls' => array_combine(array_column($languages, 'slug'), array_column($languages, 'url')),
           'element_class' => $args->element_class,
           'element_id' => "acfml-language-dropdown-$dropdown_count",
           'args' => $args,

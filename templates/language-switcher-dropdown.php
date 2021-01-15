@@ -5,7 +5,7 @@
 </select>
 <script type="text/javascript" id="acfml-language-switcher-script">
   document.querySelector("#<?= $value->element_id ?>").addEventListener('change', function(e) {
-    var languages = <?= json_encode( array_combine( array_column($value->languages, 'slug'), array_column($value->languages, 'url') ) ) ?>;
+    var languages = <?= json_encode( $value->languages_slugs_urls ) ?>;
     location.href = languages[e.target.value];
   });
 </script>

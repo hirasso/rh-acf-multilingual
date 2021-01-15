@@ -194,6 +194,7 @@ class ACFML_Fields {
     if( !$this->is_acfml_group($field) ) return;
     $default_field_language = $this->get_active_language_tab($field);
     $languages = acfml()->get_languages();
+    if( count($languages) < 2 ) return $field;
     $show_ui = $field['acfml_ui'] ?? true;
     if( !$show_ui ) return;
     // maybe remove default language

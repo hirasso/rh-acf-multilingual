@@ -44,11 +44,13 @@ class ACFML_Utils {
    * @param string $key
    * @param string $message
    * @param string $type
+   * @param boolean $is_complex
    * @return void
    */
-  public function add_admin_notice( $key, $message, $type = 'warning', $is_dismissible = false ) {
+  public function add_admin_notice( $key, $message, $type = 'warning', $is_dismissible = false, $is_complex = false ) {
     $notices = get_transient("$this->prefix-admin-notices");
     if( !$notices ) $notices = [];
+    if( !$is_complex ) $message = "<p>$message</p>";
     $notices[$key] = [
       'message' => $message,
       'type' => $type,
@@ -69,7 +71,7 @@ class ACFML_Utils {
     foreach( $notices as $notice ) {
       ob_start() ?>
       <div class="notice notice-<?= $notice['type'] ?> <?= $notice['is_dismissible'] ? 'is-dismissible' : '' ?>">
-        <p><?= $notice['message'] ?></p>
+        <?= $notice['message'] ?>
       </div>
       <?php echo ob_get_clean();
     }
