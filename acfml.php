@@ -81,7 +81,7 @@ class ACF_Multilingual {
     $this->register_language('en', 'en_US', 'English');
     $this->register_language('de', 'de_DE', 'Deutsch');
     $this->register_language('fr', 'fr', 'Francais');
-    // $this->register_language('es', 'es', 'Español');
+    $this->register_language('es', 'es', 'Español');
 
     // Include and instanciate other classes
     $this->include('inc/class.acfml-fields.php');

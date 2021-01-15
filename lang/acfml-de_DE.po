@@ -1,0 +1,78 @@
+# Copyright (C) 2021 ACF Multilingual
+# This file is distributed under the same license as the ACF Multilingual package.
+msgid ""
+msgstr ""
+"Project-Id-Version: ACF Multilingual\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: __;_e;_ex:1,2c;_n:1,2;_n_noop:1,2;_nx:1,2,4c;"
+"_nx_noop:1,2,3c;_x:1,2c;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;"
+"esc_html_e;esc_html_x:1,2c\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"X-Generator: Poedit 2.4.2\n"
+"Last-Translator: \n"
+"Language: de_DE\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: ../acfml.php:1026
+msgid "Rewrite Rules successfully flushed"
+msgstr "Die Rewrite-Rules wurden erfolgreich erneuert"
+
+#: ../inc/class.acfml-fields.php:54
+msgid "Multilingual?"
+msgstr "Mehrsprachig?"
+
+#: ../inc/class.acfml-post-types.php:268
+msgid "Show language in frontend?"
+msgstr "Sprache im Frontend anzeigen?"
+
+#: ../inc/class.acfml-post-types.php:266
+msgid "The default language is always active"
+msgstr "Die Standard-Sprache ist immer aktiv"
+
+#: ../inc/class.acfml-post-types.php:281
+msgid "Leave empty to generate the link from title"
+msgstr "Leer lassen, um den link aus dem Titel generieren zu lassen"
+
+#: ../inc/class.acfml-post-types.php:934
+msgid "ACF Multilingual successfully processed %d posts."
+msgstr "ACF Multilingual hat erfolgreich %d Einträge konvertiert."
+
+#: ../inc/class.acfml-utils.php:33
+msgid "ACF Multilingual Settings"
+msgstr "ACF Multilingual Einstellungen"
+
+#: ../inc/class.acfml-utils.php:34
+msgid "ACF Multilingual"
+msgstr "ACF Multilingual"
+
+#: ../templates/notice-empty-slugs-detected.php:1
+msgid ""
+"ACF Multilingual needs to process some of your existing posts to make them "
+"available in all languages."
+msgstr ""
+"ACF Multilingual muss einige der vorhandenen Einträge konvertieren, um die "
+"in allen Sprachen verfügbar zu machen."
+
+#: ../templates/notice-empty-slugs-detected.php:3
+msgid "Process now"
+msgstr "Jetzt konvertieren"
+
+#: ../templates/notice-languages-changed.php:1
+msgid ""
+"ACF Multilingual detected a change in your language settings and needs to "
+"flush your rewrite rules."
+msgstr ""
+"ACF Multilingual hat eine Änderungen in den Spracheinstellungen entdeckt "
+"und muss die Rewrite-Rules neu generieren."
+
+#: ../templates/notice-languages-changed.php:3
+msgid "Flush Rewrite Rules Now"
+msgstr "Rewrite-Rules jetzt erneut generieren"
