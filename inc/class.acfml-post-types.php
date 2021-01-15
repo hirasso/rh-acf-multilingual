@@ -54,6 +54,7 @@ class ACFML_Post_Types {
     add_action('acf/save_post', [$this, 'save_post'], 20);
 
     add_action('admin_init', [$this, 'maybe_generate_slugs']);
+    add_action('admin_init', [$this, 'check_for_posts_with_empty_slugs']);
 
     add_action('acf/init', [$this, 'setup_acf_fields']);
     
@@ -896,11 +897,12 @@ class ACFML_Post_Types {
    * @return void
    */
   public function check_for_posts_with_empty_slugs() {
+    if( !empty($_POST['acfml_generate_slugs']) ) return;
     foreach( acfml()->get_languages('slug') as $lang ) {
       $posts = $this->find_posts_with_empty_slug($lang, -1);
       if( count($posts) ) {
         acfml()->acfml_utils->add_admin_notice(
-          'empty_slugs_detected',
+          'acfml_empty_slugs_notice',
           acfml()->get_template('notice-empty-slugs-detected', null, false),
           'warning',
           false,
@@ -918,10 +920,7 @@ class ACFML_Post_Types {
    * @return void
    */
   public function maybe_generate_slugs() {
-    if( empty($_POST['acfml_generate_slugs']) ) {
-      $this->check_for_posts_with_empty_slugs();
-      return;
-    };
+    if( empty($_POST['acfml_generate_slugs']) )  return;
     $post_ids = [];
     foreach( acfml()->get_languages('slug') as $lang ) {
       $posts = $this->find_posts_with_empty_slug($lang, -1);
@@ -932,7 +931,7 @@ class ACFML_Post_Types {
       $this->save_post($post_id);
     }
     acfml()->acfml_utils->add_admin_notice(
-      'slugs_generated',
+      'acfml_empty_slugs_notice',
       wp_sprintf( __('ACF Multilingual successfully processed %d posts.', 'acfml'), count($post_ids) ),
       'success',
       true,
