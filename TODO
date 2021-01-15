@@ -17,9 +17,12 @@
   ✔ Set appropriate locale while sanitizing titles for slugs, reset afterwards
   ✔ Use WP Cache get_post_by_path calls
   ✔ Filter for translation in document title
-  ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
   ✔ Check url_to_postid
   ✔ use native permalink with $leavename for get_post_link
   ✔ Remember field language choices in admin on update
   ✔ Redirect frontend to user agent language
   ✔ Re-generation of slugs
+  ✔ Flush Rewrite Rules if languages have been changed
+
+Optional:
+  ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
