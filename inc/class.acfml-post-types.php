@@ -407,10 +407,10 @@ class ACFML_Post_Types {
     foreach( $languages as $lang ) {
       // get the slug from the field
       $raw_slug = acfml()->get_field_or("{$this->slug_field_name}_{$lang}", $post_titles[$lang], $post_id);
-      
+
       // set locale to current $lang, so that sanitize_title can run on full power
       $locale = acfml()->get_language_info($lang)['locale'];
-      pre_dump($locale);
+      // sanitize the slug
       $slug = sanitize_title($raw_slug);
       // reset locale
       $locale = $cached_locale;
@@ -420,7 +420,6 @@ class ACFML_Post_Types {
       // save the unique slug to the database
       update_field("{$this->slug_field_name}_{$lang}", $slug, $post_id);
       $post_slugs[$lang] = $slug;
-      
     }
     
     // save slug of the default language to the post_name
