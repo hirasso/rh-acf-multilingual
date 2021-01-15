@@ -5,6 +5,8 @@
  * Author: Rasso Hilber
  * Description: A lightweight solution to support multiple languages with WordPress and Advanced Custom Fields
  * Author URI: https://rassohilber.com
+ * Text Domain: acfml
+ * Domain Path: /lang
 **/
 
 if( !defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
@@ -144,6 +146,7 @@ class ACF_Multilingual {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
     add_action('plugins_loaded', [$this, 'detect_language']);
+    add_action('plugins_loaded', [$this, 'load_textdomain']);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX-1);
     
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
@@ -158,6 +161,39 @@ class ACF_Multilingual {
 
     add_action('admin_init', [$this, 'check_for_new_languages']);
     add_action('admin_init', [$this, 'maybe_flush_rewrite_rules']);
+  }
+  
+
+  /**
+   * load_textdomain
+   *
+   * Loads the plugin's translated strings similar to load_plugin_textdomain().
+   *
+   * @param	string $locale The plugin's current locale.
+   * @return	void
+   */
+  public function load_textdomain() {
+    
+    $domain = 'acfml';
+    /**
+     * Filters a plugin's locale.
+     *
+     * @date	8/1/19
+     * @since	5.7.10
+     *
+     * @param 	string $locale The plugin's current locale.
+     * @param 	string $domain Text domain. Unique identifier for retrieving translated strings.
+     */
+    $locale = apply_filters( 'plugin_locale', determine_locale(), $domain );
+    $mofile = "$domain-$locale.mo";
+
+    // Try to load from the languages directory first.
+    if( load_textdomain( $domain, WP_LANG_DIR . '/plugins/' . $mofile ) ) {
+      return true;
+    }
+
+    // Load from plugin lang folder.
+    return load_textdomain( $domain, $this->get_file_path( 'lang/' . $mofile ) );
   }
 
   /**
