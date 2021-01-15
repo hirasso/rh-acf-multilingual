@@ -203,7 +203,7 @@ class ACFML_Post_Types {
     // create the title field group
     acf_add_local_field_group([
       'key' => $this->field_group_key,
-      'title' => __("Title") . ', ' . __("Settings"),
+      'title' => __('Title') . ', ' . __('Settings'),
       'menu_order' => -1000,
       'style' => 'seamless',
       'position' => 'acf_after_title',
@@ -214,7 +214,7 @@ class ACFML_Post_Types {
     acf_add_local_field(array(
       'key' => $this->title_field_key,
       'label' => 'Title',
-      'placeholder' => __( 'Add title' ),
+      'placeholder' => __('Add title'),
       'name' => $this->title_field_name,
       'type' => 'text',
       'acfml_multilingual' => true,
@@ -263,9 +263,9 @@ class ACFML_Post_Types {
         if( !$field || empty($post) ) return $field;
 
         if( $lang === $this->default_language ) {
-          $field['instructions'] = __('The default language is always active.');
+          $field['instructions'] = __('The default language is always active', 'acfml');
         } else {
-          $field['instructions'] = __('Show language in frontend?');
+          $field['instructions'] = __('Show language in frontend?', 'acfml');
         }
         
         return $field;
@@ -278,7 +278,7 @@ class ACFML_Post_Types {
       'name' => $this->slug_field_name,
       'label' => __('Permalink'),
       'type' => 'text',
-      'instructions' => __('Leave empty to generate the link from title'),
+      'instructions' => __('Leave empty to generate the link from title', 'acfml'),
       'acfml_multilingual' => true,
       'acfml_ui_listen_to' => $this->title_field_name,
       'acfml_ui' => false,

@@ -51,7 +51,7 @@ class ACFML_Fields {
   public function render_field_settings( $field ) {
 
     acf_render_field_setting( $field, array(
-      'label'         => __('Multilingual?'),
+      'label'         => __('Multilingual?', 'acfml'),
       'instructions'	=> '',
       'name'          => 'acfml_multilingual',
       'type'          => 'true_false',

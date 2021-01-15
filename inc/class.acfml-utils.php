@@ -30,8 +30,8 @@ class ACFML_Utils {
    */
   private function add_options_page() {
     acf_add_options_page([
-      'page_title' => __('ACF Multilingual Settings'),
-      'menu_title' => __('ACF Multilingual'),
+      'page_title' => __('ACF Multilingual Settings', 'acfml'),
+      'menu_title' => __('ACF Multilingual', 'acfml'),
       'menu_slug' => "$this->prefix-options",
       'capability' => 'manage_options',
       'parent_slug' => 'options-general.php'
