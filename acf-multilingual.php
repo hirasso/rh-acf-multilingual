@@ -18,11 +18,11 @@ class ACF_Multilingual {
   private $language = null;
 
   /**
-   * ACFML_Admin instance
+   * ACFML_Utils instance
    *
-   * @var ACFML\ACFML_Admin
+   * @var ACFML\ACFML_Utils
    */
-  public $acfml_admin; 
+  public $acfml_utils; 
 
   /**
    * ACFML_Fields instance
@@ -45,32 +45,45 @@ class ACF_Multilingual {
    */
   public $acfml_taxonomies; 
 
-  
-
+  /**
+   * Empty constructor
+   */
   public function  __construct() {}
 
+  /**
+   * Intialize function. Instead of the constructor
+   *
+   * @return void
+   */
   public function initialize() {
-    
+
     $this->define( 'ACFML', true );
     $this->define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
     $this->define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 
-    // Include classes.
-    $this->include('inc/class.acfml-admin.php');
+    // Include and instanciate utilities class
+    $this->include('inc/class.acfml-utils.php');
+    $this->acfml_utils = new ACFML\ACFML_Utils();
+
+    if( !defined('ACF') ) {
+      $this->acfml_utils->add_admin_notice(
+        'acf_missing',
+        wp_sprintf('ACF Multilingual is an extension for %s. Without it, it won\'t do anything.',
+          '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>'
+        ),
+      );
+      return;
+    }
+
+    // Include and instanciate other classes
     $this->include('inc/class.acfml-fields.php');
     $this->include('inc/class.acfml-post-types.php');
     $this->include('inc/class.acfml-taxonomies.php');
-    // Instanciate classes
-    $this->acfml_admin = new ACFML\ACFML_Admin();
     $this->acfml_fields = new ACFML\ACFML_Fields();
     $this->acfml_post_types = new ACFML\ACFML_Post_Types();
     $this->acfml_taxonomies = new ACFML\ACFML_Taxonomies();
 
     $this->add_hooks();
-
-    // add_action('init', function() {
-    //   pre_dump(get_permalink(272), true);
-    // }, 20);
 
   }
 
@@ -124,7 +137,7 @@ class ACF_Multilingual {
   private function add_hooks() {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('admin_init', [$this, 'admin_init'], 11);
-    //add_action('plugins_loaded', [$this, 'detect_language']);
+    add_action('plugins_loaded', [$this, 'detect_language']);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX-1);
     
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
@@ -186,7 +199,7 @@ class ACF_Multilingual {
       'defaultLanguage' => $this->get_default_language(),
       'languages' => $this->get_languages(),
       'isMobile' => wp_is_mobile(),
-      'cookieHash' => $this->get_cookie_path_hash()
+      'cookieHashForCurrentUri' => $this->get_cookie_hash()
     ];
     ?><script id="acfml-settings"><?php ob_start() ?>
     var acfml = <?= json_encode($settings) ?>;
@@ -198,10 +211,10 @@ class ACF_Multilingual {
    *
    * @return string
    */
-  public function get_cookie_path_hash() {
-    $req_uri = $_SERVER['REQUEST_URI'];
-    $req_uri = remove_query_arg('message', $req_uri);
-    return md5($req_uri);
+  public function get_cookie_hash($uri = null) {
+    $uri = $uri ?? $_SERVER['REQUEST_URI'];
+    $uri = remove_query_arg('message', $uri);
+    return md5($uri);
   }
 
   /**
@@ -211,7 +224,7 @@ class ACF_Multilingual {
    * @return string|null
    */
   public function get_admin_cookie( string $key ) {
-    $cookie_name = $key . "_" . $this->get_cookie_path_hash();
+    $cookie_name = $key . "_" . $this->get_cookie_hash();
     $cookie = $_COOKIE[$cookie_name] ?? null;
     return json_decode( stripslashes($cookie) );
   }
@@ -491,21 +504,35 @@ class ACF_Multilingual {
    *
    */
   public function detect_language() {
-    global $locale;
+    if( $this->language ) return $this->language;
     $referrer = $_SERVER['HTTP_REFERER'] ?? '';
     // ajax requests: check referrer to detect if called from frontend.
     if( wp_doing_ajax() && $referrer && strpos($referrer, admin_url()) !== 0 ) {
       $language = $this->get_language_in_url($referrer);
-    } elseif( !is_admin() ) {
-      $language = $this->get_language_in_url($this->get_current_url());
+    } elseif( is_admin() ) {
+      $locale = get_user_locale();
+      $language = explode('_', $locale)[0];
     } else {
-      $locale_front = explode('_', $locale)[0];
-      if( $this->is_language_enabled($locale_front) ) $language = $locale_front;
+      $language = $this->get_language_in_url($this->get_current_url());
     }
-    if( !$language ) $language = $this->get_default_language();
+    if( !$this->is_language_enabled($language) ) $language = $this->get_default_language();
     $this->language = $language;
     $this->define('ACFML_CURRENT_LANGUAGE', $language);
     return $language;
+  }
+
+  /**
+   * Get admin language. First checks for a Cookie, falls back to user language
+   * 
+   * @return string
+   */
+  public function get_admin_language(): string {
+    global $locale;
+    // if( !$language ) {
+    //   $user_locale = get_user_locale();
+    //   $language = explode('_', $locale)[0];
+    // }
+    // return $language;
   }
 
   /**
@@ -526,22 +553,8 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function switch_to_current_language() {
+  public function reset_language() {
     $this->language = defined('ACFML_CURRENT_LANGUAGE') ? ACFML_CURRENT_LANGUAGE : $this->get_default_language();
-  }
-
-  /**
-   * Get admin language. First checks for a Cookie, falls back to user langguae
-   * 
-   * @return void
-   */
-  public function get_admin_language() {
-    $language = $_COOKIE["$this->prefix-admin-language"] ?? null;
-    if( !$language ) {
-      $locale = get_user_locale();
-      $language = explode('_', $locale)[0];
-    }
-    return $language;
   }
 
   /**
@@ -550,7 +563,7 @@ class ACF_Multilingual {
    * @return string
    */
   public function get_current_language(): string {
-    $language = $this->language ?? $this->detect_language();
+    $language = $this->language ?? $this->get_default_language();
     return $language;
   }
 
@@ -590,7 +603,6 @@ class ACF_Multilingual {
       }
     }
     
-
     // if nothing special was found, only inject the language code
     return $this->simple_convert_url($url, $requested_language);
   }
@@ -879,7 +891,7 @@ class ACF_Multilingual {
     
     $wp_the_query = $_wp_the_query;
     // reset the language
-    $this->switch_to_current_language();
+    $this->reset_language();
     
     return $query;
   }
@@ -963,21 +975,3 @@ function acfml():ACF_Multilingual {
 acfml(); // Instantiate
 
 endif; // class_exists check
-
-/**
- * If ACF is defined, initialize the plugin.
- * Otherwise, show a notice.
- */
-function acfml_initialize_plugin() {
-  if( defined('ACF') ) {
-    init();
-  } elseif( current_user_can('manage_plugins') ) {
-    admin()->add_admin_notice(
-      'acf_missing',
-      wp_sprintf('ACF Multilingual is an extension for %s. Without it, it won\'t do anything.',
-        '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>'
-      )
-    );
-  }
-}
-// add_action('plugins_loded', __NAMESPACE__ . '\\initialize_plugin');

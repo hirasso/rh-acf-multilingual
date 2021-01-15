@@ -17,8 +17,8 @@ class ACFML_Post_Types {
   private $slug_field_name = "acfml_slug";
   private $slug_field_key;
 
-  private $public_field_name = "acfml_lang_public";
-  private $public_field_key;
+  private $lang_active_field_name = "acfml_lang_active";
+  private $lang_active_field_key;
 
   public function __construct() {
 
@@ -29,7 +29,7 @@ class ACFML_Post_Types {
     $this->field_group_key    = "group_{$this->title_field_name}";
     $this->title_field_key    = "field_{$this->title_field_name}";
     $this->slug_field_key     = "field_{$this->slug_field_name}";
-    $this->public_field_key   = "field_{$this->public_field_name}";
+    $this->lang_active_field_key   = "field_{$this->lang_active_field_name}";
     
     add_action('registered_post_type', [$this, 'registered_post_type'], 10, 2);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array']);
@@ -228,22 +228,42 @@ class ACFML_Post_Types {
         global $post;
         
         if( !$field || empty($post) ) return $field;
+
         // add the post link base to the $field's 'prepend' option
-        $_post_status = $post->post_status;
-        $post->post_status = 'publish';
-        $post_link = $this->get_post_link($post, $lang, [
-          'check_lang_public' => false,
-        ]);
-        $post->post_status = $_post_status;
-        $slug = $field['value'] ?: $post->post_name;
-        $prepend = trailingslashit(preg_replace("#$slug/?$#", '', $post_link));
+        if( $post->post_parent ) {
+          $parent_post = get_post( $post->post_parent );
+          
+          $prepend = $this->get_post_link($parent_post, $lang, [
+            'check_lang_active' => false,
+            'is_sample' => true
+          ]);
+        } else {
+          $prepend = acfml()->home_url('/', $lang);
+        }
+        
         if( !$field['value'] ) $field['placeholder'] = $post->post_name;
         $field['prepend'] = $prepend;
         
         // add the 'View' to the $field's 'append' option
+        $post_link = $this->get_post_link($post, $lang);
+
         if( $this->is_language_public($lang, $post->ID) && in_array($post->post_status, ['publish'] ) ) {
           $field['append'] .= sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
         }
+        return $field;
+      });
+
+      add_filter("acf/prepare_field/key=field_acfml_lang_active_$lang", function($field) use ($lang) {
+        global $post;
+
+        if( !$field || empty($post) ) return $field;
+
+        if( $lang === $this->default_language ) {
+          $field['instructions'] = __('The default language is always active.');
+        } else {
+          $field['instructions'] = __('Have you translated all fields?');
+        }
+        
         return $field;
       });
     }
@@ -254,6 +274,7 @@ class ACFML_Post_Types {
       'name' => $this->slug_field_name,
       'label' => __('Permalink'),
       'type' => 'text',
+      'instructions' => __('Leave blank to generate from the link from title'),
       'acfml_multilingual' => true,
       'acfml_ui_listen_to' => $this->title_field_name,
       'acfml_ui' => false,
@@ -268,13 +289,11 @@ class ACFML_Post_Types {
 
     // create the field for making translations public
     acf_add_local_field(array(
-      'key' => $this->public_field_key,
-      'name' => $this->public_field_name,
-      'label' => __('Status'),
+      'key' => $this->lang_active_field_key,
+      'name' => $this->lang_active_field_name,
+      'label' => __('Active'),
       'type' => 'true_false',
       'ui' => true,
-      'ui_on_text' => __('Public'),
-      'ui_off_text' => __('Hidden'),
       'acfml_multilingual' => true,
       'default_value' => 1,
       'acfml_ui_listen_to' => $this->title_field_name,
@@ -282,7 +301,7 @@ class ACFML_Post_Types {
       'parent' => $this->field_group_key,
       'wrapper' => [
         'width' => '30',
-        'class' => str_replace('_', '-', $this->public_field_name),
+        'class' => str_replace('_', '-', $this->lang_active_field_name),
       ]
     ));
 
@@ -297,7 +316,7 @@ class ACFML_Post_Types {
    */
   public function is_language_public(string $lang, int $post_id):bool {
     if( acfml()->is_default_language($lang) ) return true;
-    return (bool) get_field("acfml_lang_public_$lang", $post_id);
+    return (bool) get_field("acfml_lang_active_$lang", $post_id);
   }
 
   /**
@@ -581,15 +600,15 @@ class ACFML_Post_Types {
     
     
     // Allow posts to be set to non-public
-    $meta_query['acfml_lang_public'] = [
+    $meta_query['acfml_lang_active'] = [
       'relation' => 'OR',
       [
-        'key' => "acfml_lang_public_$language",
+        'key' => "acfml_lang_active_$language",
         'value' => 1,
         'type' => 'NUMERIC'
       ],
       [
-        'key' => "acfml_lang_public_$language",
+        'key' => "acfml_lang_active_$language",
         'compare' => 'NOT EXISTS',
       ]
     ];
@@ -670,8 +689,11 @@ class ACFML_Post_Types {
   public function get_post_link( \WP_Post $post, String $language, array $args = [] ): string {
     
     $args = acfml()->to_object(wp_parse_args($args, [
-      'check_lang_public' => true
+      'check_lang_active' => true,
+      'is_sample' => false
     ]));
+
+    if( $args->is_sample ) $post->post_status = 'publish';
 
     $fallback_url = apply_filters('acfml/post_link_fallback', acfml()->home_url('/', $language));
 
@@ -703,12 +725,13 @@ class ACFML_Post_Types {
     if( $this->post_is_front_page($post->ID) ) return acfml()->home_url('/', $language);
 
     // check if the language for the requested post is public
-    $acfml_lang_public = get_field("acfml_lang_public_$language", $post->ID);
+    $acfml_lang_active = get_field("acfml_lang_active_$language", $post->ID);
+    
     if( 
       !acfml()->is_default_language($language) 
-      && $args->check_lang_public 
-      && !is_null($acfml_lang_public)
-      && intval($acfml_lang_public) === 0 ) {
+      && $args->check_lang_active 
+      && !is_null($acfml_lang_active)
+      && intval($acfml_lang_active) === 0 ) {
         return $fallback_url;
       }
 

@@ -11,8 +11,7 @@ export default class ACFML {
     this.initMultilingualPostTitle();
     this.initMultilingualTermName();
     this.initLanguageTabs();
-    $('form#post').one( 'submit', (e) => this.beforeSubmitPostForm(e) );
-    this.removeFromStore('acfml_language_tabs');
+    this.initValidationHandling();
   }
 
   /**
@@ -37,7 +36,10 @@ export default class ACFML {
       const $el = $(e.target);
       const language = $el.attr('data-language');
       this.switchLanguage($('.acfml-multilingual-field:not([data-acfml-ui-listen-to])'), language);
-    })
+    });
+    // store active language tabs before submitting a form
+    $('form#post').one( 'submit', (e) => this.beforeSubmitPostForm(e) );
+    this.removeFromStore('acfml_language_tabs');
   }
 
   /**
@@ -112,6 +114,17 @@ export default class ACFML {
   }
 
   /**
+   * Switches to the default language for required fields on validation error
+   */
+  initValidationHandling() {
+    acf.addAction('invalid_field', field => {
+      if( field.data.required && field.$el.hasClass('acfml-field') && !field.val() ) {
+        this.switchLanguage(field.$el.parents('.acfml-multilingual-field'), field.data.name);
+      }
+    }); 
+  }
+
+  /**
    * Stores something in session storage
    * 
    * @param {string} key 
@@ -145,7 +158,7 @@ export default class ACFML {
    * Get storage key for scrollTop
    */
   getStorageKey(key) {
-    return `${key}_${acfml.cookieHash}`;
+    return `${key}_${acfml.cookieHashForCurrentUri}`;
   }
 
 }

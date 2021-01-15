@@ -19,17 +19,17 @@
 }
 .acfml-field > .acf-label,
 .acf-field-acfml-slug > .acf-label,
-.acf-field-acfml-lang-public > .acf-label {
+.acf-field-acfml-lang-active > .acf-label {
   display: none;
 }
-.acfml-lang-public.acfml-is-default-language {
+.acfml-lang-active.acfml-is-default-language {
   .acf-true-false {
     opacity: 0.6;
   }
   pointer-events: none;
   user-select: none;
 }
-.acf-field-acfml-lang-public .acfml-field > .acf-label,
+.acf-field-acfml-lang-active .acfml-field > .acf-label,
 .acf-field-acfml-slug .acfml-field > .acf-label {
   display: block;
   margin-top: -5px;

@@ -22,3 +22,4 @@
   ✔ use native permalink with $leavename for get_post_link
   ✔ Remember field language choices in admin on update
   ✔ Redirect frontend to user agent language
+  ❍ Re-generation of slugs

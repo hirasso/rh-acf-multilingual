@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class ACFML_Admin {
+class ACFML_Utils {
   
   private $prefix;
 
