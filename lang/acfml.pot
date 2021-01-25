@@ -13,7 +13,19 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../acfml.php:1026
+#: ../acfml.php:103
+msgid "ACF Multilingual requires the plugin %s to be installed and activated."
+msgstr ""
+
+#: ../inc/class.acfml-admin.php:35
+msgid "ACF Multilingual Settings"
+msgstr ""
+
+#: ../inc/class.acfml-admin.php:36
+msgid "ACF Multilingual"
+msgstr ""
+
+#: ../inc/class.acfml-admin.php:153
 msgid "Rewrite Rules successfully flushed"
 msgstr ""
 
@@ -21,42 +33,40 @@ msgstr ""
 msgid "Multilingual?"
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:268
+#: ../inc/class.acfml-post-types.php:262
 msgid "Show language in frontend?"
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:266
+#: ../inc/class.acfml-post-types.php:260
 msgid "The default language is always active"
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:281
+#: ../inc/class.acfml-post-types.php:275
 msgid "Leave empty to generate the link from title"
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:934
-msgid "ACF Multilingual successfully processed %d posts."
+#: ../inc/class.acfml-post-types.php:925
+msgid "ACF Multilingual successfully processed %d %s."
 msgstr ""
 
-#: ../inc/class.acfml-utils.php:33
-msgid "ACF Multilingual Settings"
-msgstr ""
-
-#: ../inc/class.acfml-utils.php:34
-msgid "ACF Multilingual"
-msgstr ""
+#: ../inc/class.acfml-post-types.php:927
+msgid "%s post"
+msgid_plural "%s posts"
+msgstr[0] ""
+msgstr[1] ""
 
 #: ../templates/notice-empty-slugs-detected.php:1
 msgid "ACF Multilingual needs to process some of your existing posts to make them available in all languages."
 msgstr ""
 
-#: ../templates/notice-empty-slugs-detected.php:3
+#: ../templates/notice-empty-slugs-detected.php:4
 msgid "Process now"
 msgstr ""
 
-#: ../templates/notice-languages-changed.php:1
+#: ../templates/notice-flush-rewrite-rules.php:1
 msgid "ACF Multilingual detected a change in your language settings and needs to flush your rewrite rules."
 msgstr ""
 
-#: ../templates/notice-languages-changed.php:3
+#: ../templates/notice-flush-rewrite-rules.php:4
 msgid "Flush Rewrite Rules Now"
 msgstr ""

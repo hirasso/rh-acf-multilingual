@@ -52,8 +52,9 @@ class ACFML_Post_Types {
 
     add_action('acf/save_post', [$this, 'save_post'], 20);
 
-    add_action('admin_init', [$this, 'maybe_generate_slugs']);
     add_action('admin_init', [$this, 'check_for_posts_with_empty_slugs']);
+    add_action('admin_init', [$this, 'maybe_generate_slugs']);
+    
 
     add_action('acf/init', [$this, 'setup_acf_fields']);
     
@@ -190,13 +191,6 @@ class ACFML_Post_Types {
         'operator' => '==',
         'value' => $pt
       ];
-      // if( $pt === 'attachment' ) {
-      //   $location = [
-      //     'param' => 'attachment',
-      //     'operator' => '==',
-      //     'value' => 'all'
-      //   ];
-      // }
       $locations[] = [$location];
     }
     
@@ -896,21 +890,16 @@ class ACFML_Post_Types {
    * @return void
    */
   public function check_for_posts_with_empty_slugs() {
-    if( !empty($_POST['acfml_generate_slugs']) ) return;
     foreach( acfml()->get_languages('slug') as $lang ) {
-      $posts = $this->find_posts_with_empty_slug($lang, -1);
+      $posts = $this->find_posts_with_empty_slug($lang, 1);
       if( count($posts) ) {
-        acfml()->acfml_utils->add_admin_notice(
-          'acfml_empty_slugs_notice',
+        acfml()->admin->add_notice(
+          'empty_slugs_notice',
           acfml()->get_template('notice-empty-slugs-detected', null, false),
-          'warning',
-          false,
-          true
         );
         break;
       }
     }
-    
   }
 
   /**
@@ -919,21 +908,33 @@ class ACFML_Post_Types {
    * @return void
    */
   public function maybe_generate_slugs() {
-    if( empty($_POST['acfml_generate_slugs']) )  return;
+    // check nonce
+    if( !acfml()->admin->verify_nonce('acfml_generate_slugs') ) return;
+    // find posts with empty slugs for each language
     $post_ids = [];
     foreach( acfml()->get_languages('slug') as $lang ) {
       $posts = $this->find_posts_with_empty_slug($lang, -1);
       $post_ids = array_unique(array_merge($post_ids, $posts));
     }
-    if( !count($post_ids) ) return;
+    $count = count($post_ids);
+    // bail early if no posts were found
+    if( !$count ) return;
+    // trigger save_post for each post with empty slugs
     foreach( $post_ids as $post_id ) {
       $this->save_post($post_id);
     }
-    acfml()->acfml_utils->add_admin_notice(
-      'acfml_empty_slugs_notice',
-      wp_sprintf( __('ACF Multilingual successfully processed %d posts.', 'acfml'), count($post_ids) ),
-      'success',
-      true,
+    // add success message
+    acfml()->admin->add_notice(
+      'empty_slugs_notice',
+      wp_sprintf( 
+        __('ACF Multilingual successfully processed %d %s.', 'acfml'), 
+        number_format_i18n($count),
+        _n( '%s post', '%s posts', $count, 'acfml' )
+      ),
+      [
+        'type' => 'success',
+        'is_dismissible' => true
+      ]
     );
   }
 

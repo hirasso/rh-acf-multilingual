@@ -10,10 +10,8 @@ class ACFML_Admin {
 
   public function __construct() {
     $this->prefix = acfml()->get_prefix();
-    add_action('admin_notices', [$this, 'show_admin_notices']);
+    add_action('admin_notices', [$this, 'show_added_notices']);
     add_action('acf/init', [$this, 'acf_init']);
-    
-    
   }
 
   /**
@@ -51,7 +49,7 @@ class ACFML_Admin {
    * @param boolean $is_complex
    * @return void
    */
-  public function defer_admin_notice( $key, $message, $args = [] ) {
+  public function add_notice( $key, $message, $args = [] ) {
     // create the $notice object
     $notice = wp_parse_args($args, [
       'key' => $key,
@@ -70,10 +68,11 @@ class ACFML_Admin {
    *
    * @return void
    */
-  public function show_admin_notices() {
+  public function show_added_notices() {
+    if( !defined('ACF') ) return;
     $notices = get_transient("$this->prefix-admin-notices") ?: [];
     foreach( $notices as $notice ) {
-      $this->show_admin_notice($notice['message'], $notice);
+      $this->show_notice($notice['message'], $notice);
     }
     delete_transient("$this->prefix-admin-notices");
   }
@@ -84,17 +83,18 @@ class ACFML_Admin {
    * @param object $notice
    * @return void
    */
-  public function show_admin_notice(string $message, array $args = []) {
+  public function show_notice(string $message, array $args = []) {
     // if the messsage is naked, wrap it inside a <p>-tag
     if( strpos($message, '<p>') === false ) $message = "<p>$message</p>";
     // parse the args
     $args = acfml()->to_object(wp_parse_args($args, [
       'type' => 'warning', 
       'is_dismissible' => false,
-      'key' => false
+      'key' => ''
     ]));
+    $id = str_replace('_', '-', $args->key);
     ob_start() ?>
-    <div id="acfml-notice--<?= $args->key ?>" class="notice notice-<?= $args->type ?> <?= $args->is_dismissible ? 'is-dismissible' : '' ?>">
+    <div id="acfml-notice--<?= $id ?>" class="notice acfml-admin-notice notice-<?= $args->type ?> <?= $args->is_dismissible ? 'is-dismissible' : '' ?>">
       <?= $message ?>
     </div>
     <?php echo ob_get_clean();
@@ -115,7 +115,7 @@ class ACFML_Admin {
    * @param string $action
    * @return bool
    */
-  private function verify_nonce($action): bool {
+  public function verify_nonce($action): bool {
     $nonce = $_POST['_acfml_nonce'] ?? null;
     if( !$nonce ) return false;
     return wp_verify_nonce($nonce, $action);
@@ -133,7 +133,7 @@ class ACFML_Admin {
     $saved_hashed_languages = (string) get_option('acfml_hashed_languages');
     if( hash_equals($hashed_languages, $saved_hashed_languages) ) return;
     // add nag to flush the rewrite rules
-    $this->defer_admin_notice(
+    $this->add_notice(
       'acfml_flush_rewrite_rules',
       acfml()->get_template('notice-flush-rewrite-rules', null, false)
     ); 
@@ -141,14 +141,14 @@ class ACFML_Admin {
 
 
   /**
-   * Flushes Rewrite Rules
+   * Flushes Rewrite Rules if asked for it
    *
    * @return void
    */
   public function maybe_flush_rewrite_rules() {
     if( !$this->verify_nonce('acfml_flush_rewrite_rules') ) return;
     // add success notice
-    $this->defer_admin_notice(
+    $this->add_notice(
       'acfml_flush_rewrite_rules',
       __('Rewrite Rules successfully flushed', 'acfml'),
       [

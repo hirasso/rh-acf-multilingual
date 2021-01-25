@@ -25,7 +25,7 @@ class ACF_Multilingual {
    *
    * @var ACFML\ACFML_Admin
    */
-  public $acfml_admin; 
+  public $admin; 
 
   /**
    * ACFML_Fields instance
@@ -66,7 +66,7 @@ class ACF_Multilingual {
 
     // Include and instanciate admin class
     $this->include('inc/class.acfml-admin.php');
-    $this->acfml_admin = new ACFML\ACFML_Admin();
+    $this->admin = new ACFML\ACFML_Admin();
 
     
     add_action('admin_init', [$this, 'maybe_show_acf_missing_notice']);
@@ -98,11 +98,14 @@ class ACF_Multilingual {
    */
   public function  maybe_show_acf_missing_notice() {
     if( defined('ACF') ) return;
+    $locale = determine_locale();
     $message = wp_sprintf(
-      __("ACF Multilingual is an extension for %s. Without it, it won't do anything.", 'acfml'),
-      '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>'
+      __("ACF Multilingual requires the plugin %s to be installed and activated.", 'acfml'),
+      '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>',
     );
-    $this->acfml_admin->show_admin_notice($message);
+    $this->admin->show_notice($message, [
+      'type' => 'error'
+    ]);
   }
 
   /**
@@ -153,7 +156,8 @@ class ACF_Multilingual {
    * @return void
    */
   private function add_hooks() {
-    add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+    add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_style']);
+    add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
     add_action('admin_init', [$this, 'admin_init'], 11);
     add_action('plugins_loaded', [$this, 'detect_language']);
     add_action('plugins_loaded', [$this, 'load_textdomain']);
@@ -233,14 +237,22 @@ class ACF_Multilingual {
   }
 
   /**
-   * Enqueues Admin Assets
+   * Enqueues Admin Scripts
    *
    * @return void
    */
-  public function enqueue_admin_assets() {
-    wp_enqueue_style("$this->prefix-admin", $this->asset_uri("assets/admin.css"), [], null);
+  public function enqueue_admin_scripts() {
     wp_enqueue_script("$this->prefix-admin", $this->asset_uri("assets/admin.js"), ['jquery'], null, true);
     wp_add_inline_script("$this->prefix-admin", $this->get_admin_inline_script(), "before");
+  }
+
+  /**
+   * Enqueue Admin Style
+   *
+   * @return void
+   */
+  public function enqueue_admin_style() {
+    wp_enqueue_style("$this->prefix-admin", $this->asset_uri("assets/admin.css"), [], null);
   }
 
   /**

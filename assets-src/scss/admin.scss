@@ -14,9 +14,7 @@
     @include visually-hidden;
   }
 }
-.acfml-field > .acf-input > .acf-input-wrap {
-  
-}
+
 .acfml-field > .acf-label,
 .acf-field-acfml-slug > .acf-label,
 .acf-field-acfml-lang-active > .acf-label {
@@ -153,4 +151,11 @@
 #addtag > #acf-term-fields,
 #edittag > #acf-form-data + .form-table {
   order: 1;
+}
+
+/*
+* General styles
+*/
+.acfml-admin-notice > *:last-child {
+  margin-bottom: 0.8em;
 }
