@@ -21,11 +21,11 @@ class ACF_Multilingual {
   private $languages = [];
 
   /**
-   * ACFML_Utils instance
+   * ACFML_Admin instance
    *
-   * @var ACFML\ACFML_Utils
+   * @var ACFML\ACFML_Admin
    */
-  public $acfml_utils; 
+  public $acfml_admin; 
 
   /**
    * ACFML_Fields instance
@@ -64,19 +64,15 @@ class ACF_Multilingual {
     $this->define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
     $this->define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 
-    // Include and instanciate utilities class
-    $this->include('inc/class.acfml-utils.php');
-    $this->acfml_utils = new ACFML\ACFML_Utils();
+    // Include and instanciate admin class
+    $this->include('inc/class.acfml-admin.php');
+    $this->acfml_admin = new ACFML\ACFML_Admin();
 
-    if( !defined('ACF') ) {
-      $this->acfml_utils->add_admin_notice(
-        'acf_missing',
-        wp_sprintf('ACF Multilingual is an extension for %s. Without it, it won\'t do anything.',
-          '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>'
-        ),
-      );
-      return;
-    }
+    
+    add_action('admin_init', [$this, 'maybe_show_acf_missing_notice']);
+
+    // bail early if ACF is not defined
+    if( !defined('ACF') ) return;
 
     $this->register_language('en', 'en_US', 'English');
     $this->register_language('de', 'de_DE', 'Deutsch');
@@ -93,6 +89,20 @@ class ACF_Multilingual {
 
     $this->add_hooks();
 
+  }
+
+  /**
+   * Renders a notice of ACF is not installed
+   *
+   * @return void
+   */
+  public function  maybe_show_acf_missing_notice() {
+    if( defined('ACF') ) return;
+    $message = wp_sprintf(
+      __("ACF Multilingual is an extension for %s. Without it, it won't do anything.", 'acfml'),
+      '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>'
+    );
+    $this->acfml_admin->show_admin_notice($message);
   }
 
   /**
@@ -159,8 +169,7 @@ class ACF_Multilingual {
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
 
-    add_action('admin_init', [$this, 'check_for_new_languages']);
-    add_action('admin_init', [$this, 'maybe_flush_rewrite_rules']);
+    #
   }
   
 
@@ -566,7 +575,7 @@ class ACF_Multilingual {
     if( wp_doing_ajax() && $referrer && strpos($referrer, admin_url()) !== 0 ) {
       $language = $this->get_language_in_url($referrer);
     } elseif( is_admin() ) {
-      $locale = get_user_locale();
+      $locale = determine_locale();
       $language = explode('_', $locale)[0];
     } else {
       $language = $this->get_language_in_url($this->get_current_url());
@@ -989,44 +998,6 @@ class ACF_Multilingual {
     if( !apply_filters('acfml/save_language_in_cookie', true) ) return;
     
     setcookie("acfml-language", $this->get_current_language(), time() + YEAR_IN_SECONDS, '/');
-  }
-
-  /**
-   * Check for new languages
-   *
-   * @return void
-   */
-  public function check_for_new_languages(): void {
-    $hashed_languages = md5( json_encode($this->get_languages('slug')) );
-    $saved_hashed_languages = get_option('acfml_hashed_languages');
-    
-    if( $hashed_languages !== $saved_hashed_languages ) {
-      $this->acfml_utils->add_admin_notice(
-        'acfml_flush_rewrite_rules',
-        acfml()->get_template('notice-languages-changed', null, false),
-        'warning',
-        false,
-        true
-      );
-    } 
-  }
-
-  /**
-   * Flushes Rewrite Rules
-   *
-   * @return void
-   */
-  public function maybe_flush_rewrite_rules() {
-    if( empty($_POST['acfml_flush_rewrite_rules']) ) return;
-    $hashed_languages = md5( json_encode($this->get_languages('slug')) );
-    update_option('acfml_hashed_languages', $hashed_languages);
-    flush_rewrite_rules();
-    $this->acfml_utils->add_admin_notice(
-      'acfml_flush_rewrite_rules',
-      __('Rewrite Rules successfully flushed', 'acfml'),
-      'success',
-      true,
-    );
   }
   
 }
