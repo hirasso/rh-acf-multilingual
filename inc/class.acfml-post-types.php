@@ -56,7 +56,7 @@ class ACFML_Post_Types {
     add_action('admin_init', [$this, 'maybe_generate_slugs']);
     
 
-    add_action('acf/init', [$this, 'setup_acf_fields']);
+    add_action('init', [$this, 'setup_acf_fields'], 11);
     
   }
 
@@ -66,13 +66,13 @@ class ACFML_Post_Types {
    * @return Array
    */
   public function get_multilingual_post_types() {
-    $post_types = array_unique( apply_filters("acfml/multilingual_post_types", []) );
+    
+    $post_types = get_post_types_by_support(['acfml']);
     // attachments are not supported. They are horrible edge cases :P
     $unsupported_post_types = ["attachment"];
     $post_types = array_filter($post_types, function($pt) use($unsupported_post_types) {
-      return post_type_exists( $pt ) && !in_array($pt, $unsupported_post_types);
+      return !in_array($pt, $unsupported_post_types);
     });
-    
     return $post_types;
   }
 
@@ -117,10 +117,14 @@ class ACFML_Post_Types {
     if( !$has_archive ) return $rules;
 
     $default_slug = is_string($has_archive) ? $has_archive : $post_type;
-    $translated_slugs = array_column($pt_object->acfml, 'archive_slug') ?? null;
-    if( !$translated_slugs ) return $rules;
+    
+    $pt_supports = get_all_post_type_supports($post_type);
+    $acfml = $pt_supports['acfml'][0] ?? null;
+    if( !is_array($acfml) ) return $rules;
+    $acfml_archive_slugs = array_column($acfml, 'archive_slug') ?? null;
+    if( !$acfml_archive_slugs ) return $rules;
 
-    $slugs = array_values(array_unique(array_merge([$default_slug], $translated_slugs)));
+    $slugs = array_values(array_unique(array_merge([$default_slug], $acfml_archive_slugs)));
 
     $new_rules = [];
     foreach( $rules as $regex => $rule ) {
@@ -145,10 +149,13 @@ class ACFML_Post_Types {
   */
   private function multilingual_rewrite_slugs(Array $rules, String $post_type): array {
     $pt_object = get_post_type_object( $post_type );
+    $pt_supports = get_all_post_type_supports($post_type);
+
+    $acfml_rewrite_slugs = array_column($pt_supports['acfml'][0], 'rewrite_slug') ?? null;
+    if( !$acfml_rewrite_slugs ) return $rules;
     $default_slug = $pt_object->rewrite['slug'] ?? $post_type;
-    $translated_rewrite_slugs = array_column($pt_object->acfml, 'rewrite_slug') ?? null;
-    if( !$translated_rewrite_slugs ) return $rules;
-    $rewrite_slugs = array_values(array_unique(array_merge([$default_slug], $translated_rewrite_slugs)));
+    $rewrite_slugs = array_values(array_unique(array_merge([$default_slug], $acfml_rewrite_slugs)));
+    
     $new_rules = [];
     foreach( $rules as $regex => $rule ) {
       if( strpos($regex, $default_slug ) === 0 ) {
@@ -706,7 +713,9 @@ class ACFML_Post_Types {
 
     // add possible custom post type's rewrite slug and front to segments
     $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
-    $acfml_rewrite_slug = ($post_type_object->acfml[$language]['rewrite_slug']) ?? null;
+    $pt_supports = get_all_post_type_supports($post->post_type);
+    
+    $acfml_rewrite_slug = ($pt_supports['acfml'][0][$language]['rewrite_slug']) ?? null;
     if( $rewrite_slug = $acfml_rewrite_slug ?: $default_rewrite_slug ) {
       $link_template = str_replace("/$default_rewrite_slug/", "/$rewrite_slug/", $link_template);
     }
@@ -769,7 +778,8 @@ class ACFML_Post_Types {
     $post_type_object = get_post_type_object($post_type);
     if( !$post_type_object || !$post_type_object->has_archive ) return null;
     $default_archive_slug = is_string($post_type_object->has_archive) ? $post_type_object->has_archive : $post_type;
-    return $post_type_object->acfml[$language]['archive_slug'] ?? $default_archive_slug;
+    $pt_supports = get_all_post_type_supports($post_type);
+    return $pt_supports['acfml'][0][$language]['archive_slug'] ?? $default_archive_slug;
   }
 
   /**
