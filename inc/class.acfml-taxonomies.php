@@ -92,7 +92,11 @@ class ACFML_Taxonomies {
    * @return Array
    */
   private function get_multilingual_taxonomies() {
-    return  array_unique( apply_filters("acfml/multilingual_taxonomies", []) );
+    $taxonomies = array_unique( apply_filters("acfml/multilingual_taxonomies", []) );
+    $taxonomies = array_filter($taxonomies, function($tax) {
+      return taxonomy_exists($tax);
+    });
+    return $taxonomies;
   }
 
   /**
