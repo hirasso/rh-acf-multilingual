@@ -70,8 +70,9 @@ class ACFML_Post_Types {
     // attachments are not supported. They are horrible edge cases :P
     $unsupported_post_types = ["attachment"];
     $post_types = array_filter($post_types, function($pt) use($unsupported_post_types) {
-      return !in_array($pt, $unsupported_post_types);
+      return post_type_exists( $pt ) && !in_array($pt, $unsupported_post_types);
     });
+    
     return $post_types;
   }
 
