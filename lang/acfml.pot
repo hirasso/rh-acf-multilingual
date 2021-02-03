@@ -13,7 +13,7 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../acfml.php:103
+#: ../acfml.php:102
 msgid "ACF Multilingual requires the plugin %s to be installed and activated."
 msgstr ""
 
@@ -45,13 +45,13 @@ msgstr ""
 msgid "Leave empty to generate the link from title"
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:925
-msgid "ACF Multilingual successfully processed %d %s."
+#: ../inc/class.acfml-post-types.php:930, ../inc/class.acfml-post-types.php:946
+msgid "ACF Multilingual successfully processed %s %s."
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:927
-msgid "%s post"
-msgid_plural "%s posts"
+#: ../inc/class.acfml-post-types.php:932, ../inc/class.acfml-post-types.php:948
+msgid "post"
+msgid_plural "posts"
 msgstr[0] ""
 msgstr[1] ""
 

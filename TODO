@@ -24,6 +24,7 @@
   ✔ Re-generation of slugs
   ✔ Flush Rewrite Rules if languages have been changed
   ✔ Translate links in wp-sitemap.xml
+  ❍ Do nothing if no languages are registered
 
 Optional:
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies

@@ -172,7 +172,8 @@ class ACF_Multilingual {
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
     // convert links in sitemaps entries
-    add_filter('wp_sitemaps_index_entry', [$this, 'sitemaps_index_entry'], 10);
+    // add_filter('wp_sitemaps_index_entry', [$this, 'sitemaps_index_entry'], 10);
+    add_filter('wp_sitemaps_posts_entry', [$this, 'wp_sitemaps_posts_entry']);
   }
   
 
@@ -539,9 +540,9 @@ class ACF_Multilingual {
    */
   public function get_default_language(): string {
     $lang = apply_filters("$this->prefix/default_language", 'en');
-    if( !$this->language_exists($lang) ) {
-      throw new Exception(sprintf("ACFML Error: Default Language '%s' doesn't exist", $lang));
-    }
+    // if( !$this->language_exists($lang) ) {
+    //   throw new Exception(sprintf("ACFML Error: Default Language '%s' doesn't exist", $lang));
+    // }
     return $lang;
   }
 
@@ -1016,6 +1017,11 @@ class ACF_Multilingual {
     return $entry;
   }
   
+  public function wp_sitemaps_posts_entry( $entry ) {
+    return $entry;
+  }
+
+
 }
 
 /**

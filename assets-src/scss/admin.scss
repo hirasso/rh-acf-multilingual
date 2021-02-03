@@ -91,7 +91,7 @@
 }
 
 .post-php, .post-new-php {
-  .acf-field-acfml-post-title input {
+  .acfml-post-title input[type="text"] {
     padding: 3px 8px;
     font-size: 1.7em;
     line-height: 100%;

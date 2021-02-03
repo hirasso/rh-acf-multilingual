@@ -927,9 +927,9 @@ class ACFML_Post_Types {
     acfml()->admin->add_notice(
       'empty_slugs_notice',
       wp_sprintf( 
-        __('ACF Multilingual successfully processed %d %s.', 'acfml'), 
+        __('ACF Multilingual successfully processed %s %s.', 'acfml'), 
         number_format_i18n($count),
-        _n( '%s post', '%s posts', $count, 'acfml' )
+        _n( 'post', 'posts', $count, 'acfml' )
       ),
       [
         'type' => 'success',

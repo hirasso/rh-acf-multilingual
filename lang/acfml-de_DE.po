@@ -21,7 +21,7 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
-#: ../acfml.php:103
+#: ../acfml.php:102
 msgid "ACF Multilingual requires the plugin %s to be installed and activated."
 msgstr "ACF Multilingual benötigt das Plugin %s."
 
@@ -53,13 +53,13 @@ msgstr "Die Standard-Sprache ist immer aktiv"
 msgid "Leave empty to generate the link from title"
 msgstr "Leer lassen, um den link aus dem Titel generieren zu lassen"
 
-#: ../inc/class.acfml-post-types.php:925
-msgid "ACF Multilingual successfully processed %d %s."
-msgstr "ACF Multilingual hat erfolgreich %d %s konvertiert."
+#: ../inc/class.acfml-post-types.php:930, ../inc/class.acfml-post-types.php:946
+msgid "ACF Multilingual successfully processed %s %s."
+msgstr "ACF Multilingual hat erfolgreich %s %s konvertiert."
 
-#: ../inc/class.acfml-post-types.php:927
-msgid "%s post"
-msgid_plural "%s posts"
+#: ../inc/class.acfml-post-types.php:932, ../inc/class.acfml-post-types.php:948
+msgid "post"
+msgid_plural "posts"
 msgstr[0] "Eintrag"
 msgstr[1] "Einträge"
 
