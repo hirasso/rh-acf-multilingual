@@ -11,7 +11,6 @@ class ACFML_Admin {
   public function __construct() {
     $this->prefix = acfml()->get_prefix();
     add_action('admin_notices', [$this, 'show_added_notices']);
-    add_action('acf/init', [$this, 'acf_init']);
   }
 
   /**
@@ -21,8 +20,6 @@ class ACFML_Admin {
    */
   function acf_init() {
     //$this->add_options_page();
-    add_action('admin_init', [$this, 'maybe_show_notice_flush_rewrite_rules']);
-    add_action('admin_init', [$this, 'maybe_flush_rewrite_rules']);
   }
 
   /**
@@ -128,6 +125,8 @@ class ACFML_Admin {
    * @return void
    */
   public function maybe_show_notice_flush_rewrite_rules(): void {
+    $languages = acfml()->get_languages();
+    if( !count($languages) ) return;
     $hashed_languages = $this->get_hashed_languages();
     // delete_option('acfml_hashed_languages');
     $saved_hashed_languages = (string) get_option('acfml_hashed_languages');

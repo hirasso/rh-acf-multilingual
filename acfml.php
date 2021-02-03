@@ -72,13 +72,22 @@ class ACF_Multilingual {
 
     // bail early if ACF is not defined
     if( !defined('ACF') ) return;
+    
+    // hook into after_setup_theme to initialize
+    add_action('after_setup_theme', [$this, 'maybe_fully_initialize'], 11);
 
-    $this->register_language('en', 'en_US', 'English');
-    $this->register_language('de', 'de_DE', 'Deutsch');
-    $this->register_language('fr', 'fr', 'Francais');
-    $this->register_language('es', 'es', 'Español');
+  }
 
-    // Include and instanciate other classes
+  /**
+   * Fully initializes if there where languages registered before
+   *
+   * @return void
+   */
+  public function maybe_fully_initialize() {
+    $languages = $this->get_languages();
+    if( !count($languages) ) return;
+    
+    // Include and instanciate classes
     $this->include('inc/class.acfml-fields.php');
     $this->include('inc/class.acfml-post-types.php');
     $this->include('inc/class.acfml-taxonomies.php');
@@ -86,8 +95,38 @@ class ACF_Multilingual {
     $this->acfml_post_types = new ACFML\ACFML_Post_Types();
     $this->acfml_taxonomies = new ACFML\ACFML_Taxonomies();
 
+    // run other functions
+    $this->detect_language();
+    $this->load_textdomain();
     $this->add_hooks();
+  }
 
+  /**
+   * Add filter and action hooks
+   *
+   * @return void
+   */
+  private function add_hooks() {
+    add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_style']);
+    add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
+    add_action('admin_init', [$this, 'admin_init'], 11);
+    add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX-1);
+
+    // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
+    add_filter('locale', [$this, 'filter_frontend_locale']);
+    add_action('wp_head', [$this, 'wp_head']);
+
+    $this->add_link_filters();
+    add_action('template_redirect', [$this, 'redirect_front_page'], 1);
+    add_action('init', [$this, 'save_language_in_cookie']);
+    // links in the_content
+    add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
+
+    add_action('admin_init', [$this->admin, 'maybe_show_notice_flush_rewrite_rules']);
+    add_action('admin_init', [$this->admin, 'maybe_flush_rewrite_rules']);
+
+    // convert links in sitemaps entries
+    add_filter('wp_sitemaps_index_entry', [$this, 'sitemaps_index_entry'], 10);
   }
 
   /**
@@ -147,33 +186,6 @@ class ACF_Multilingual {
    */
   public function get_file_path( $filename = '' ) {
     return ACFML_PATH . ltrim($filename, '/');
-  }
-
-  /**
-   * Add filter and action hooks
-   *
-   * @return void
-   */
-  private function add_hooks() {
-    add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_style']);
-    add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
-    add_action('admin_init', [$this, 'admin_init'], 11);
-    add_action('plugins_loaded', [$this, 'detect_language']);
-    add_action('plugins_loaded', [$this, 'load_textdomain']);
-    add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX-1);
-    
-    // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
-    add_filter('locale', [$this, 'filter_frontend_locale']);
-    add_action('wp_head', [$this, 'wp_head']);
-
-    $this->add_link_filters();
-    add_action('template_redirect', [$this, 'redirect_front_page'], 1);
-    add_action('init', [$this, 'save_language_in_cookie']);
-    // links in the_content
-    add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
-    // convert links in sitemaps entries
-    // add_filter('wp_sitemaps_index_entry', [$this, 'sitemaps_index_entry'], 10);
-    add_filter('wp_sitemaps_posts_entry', [$this, 'wp_sitemaps_posts_entry']);
   }
   
 
@@ -390,16 +402,6 @@ class ACF_Multilingual {
     ];
     $this->languages[$slug] = $language;
     return $language;
-  }
-
-  /**
-   * DeRegister a language
-   *
-   * @param string $slug          e.g. 'en' or 'de'
-   * @return void
-   */
-  public function deregister_language(string $slug) {
-    unset($this->languages[$slug]);
   }
 
   /**
@@ -1012,12 +1014,14 @@ class ACF_Multilingual {
     setcookie("acfml-language", $this->get_current_language(), time() + YEAR_IN_SECONDS, '/');
   }
 
-  public function sitemaps_index_entry( $entry ) {
+  /**
+   * Convert sitemap entries urls
+   *
+   * @param array $entry
+   * @return array
+   */
+  public function sitemaps_index_entry( $entry ): array {
     $entry['loc'] = $this->simple_convert_url($entry['loc']);
-    return $entry;
-  }
-  
-  public function wp_sitemaps_posts_entry( $entry ) {
     return $entry;
   }
 

@@ -24,9 +24,10 @@
   ✔ Re-generation of slugs
   ✔ Flush Rewrite Rules if languages have been changed
   ✔ Translate links in wp-sitemap.xml
-  ❍ Do nothing if no languages are registered
+  ✔ Do nothing if no languages are registered
   ✔ Move `acfml` setting for post types to `supports`
   ❍ Add canonical redirect for `de/event/weihnachten/` to `de/veranstaltung/weihnachten`
+  ❍ Add Sitemap Provider for non-defaut languages
 
 Optional:
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
