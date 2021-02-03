@@ -23,6 +23,7 @@
   ✔ Redirect frontend to user agent language
   ✔ Re-generation of slugs
   ✔ Flush Rewrite Rules if languages have been changed
+  ✔ Translate links in wp-sitemap.xml
 
 Optional:
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies

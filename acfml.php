@@ -68,7 +68,6 @@ class ACF_Multilingual {
     $this->include('inc/class.acfml-admin.php');
     $this->admin = new ACFML\ACFML_Admin();
 
-    
     add_action('admin_init', [$this, 'maybe_show_acf_missing_notice']);
 
     // bail early if ACF is not defined
@@ -172,8 +171,8 @@ class ACF_Multilingual {
     add_action('init', [$this, 'save_language_in_cookie']);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
-
-    #
+    // convert links in sitemaps entries
+    add_filter('wp_sitemaps_index_entry', [$this, 'sitemaps_index_entry'], 10);
   }
   
 
@@ -1010,6 +1009,11 @@ class ACF_Multilingual {
     if( !apply_filters('acfml/save_language_in_cookie', true) ) return;
     
     setcookie("acfml-language", $this->get_current_language(), time() + YEAR_IN_SECONDS, '/');
+  }
+
+  public function sitemaps_index_entry( $entry ) {
+    $entry['loc'] = $this->simple_convert_url($entry['loc']);
+    return $entry;
   }
   
 }
