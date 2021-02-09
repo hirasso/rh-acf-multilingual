@@ -949,37 +949,33 @@ class ACF_Multilingual {
     $language = $this->get_language_in_url($url);
     $this->switch_to_language($language);
 
-    // clone the global WP object
-    // @TODO: find out why I did this instead of creating a new $wp object
-    $wp_clone = clone $wp;
-
     // cache $_SERVER
     $__SERVER = $_SERVER;
     // allow $wp->parse_request to do it's magic.
     $_SERVER['REQUEST_URI'] = $path;
     // bypasses checks for /wp-admin in $wp around line 274
     $_SERVER['PHP_SELF'] = 'index.php';
-    
-    $wp_clone->parse_request();
-    $wp_clone->build_query_string();
 
-    // $my_wp = new WP();
-    // $my_wp->parse_request();
-    // $my_wp->build_query_string();
-    
+    // create a new \WP instance
+    $new_wp = new WP();
+    // copy the (previously filtered) public query vars over from the main $wp object
+    $new_wp->public_query_vars = $wp->public_query_vars;
+    // parse the request, using the overwritten $_SERVER vars
+    $new_wp->parse_request();
+
     // Reset $_SERVER
     $_SERVER = $__SERVER;
     
     $query = new \WP_Query();
     $wp_the_query = $query;
-    $query->query( $wp_clone->query_vars );
+    $query->query($new_wp->query_vars);
     
     $wp_the_query = $_wp_the_query;
     // reset the language
     $this->reset_language();
     
     $queried_object = $query->get_queried_object();
-    // if( is_null($queried_object) ) pre_dump($url);
+    
     return $queried_object;
   }
 
