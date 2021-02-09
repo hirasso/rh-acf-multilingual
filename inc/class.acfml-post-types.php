@@ -9,6 +9,8 @@ class ACFML_Post_Types {
   private $prefix;
   private $default_language;
 
+  private $multilingual_post_types = [];
+
   private $field_group_key;
 
   private $title_field_name = "acfml_post_title";
@@ -31,7 +33,6 @@ class ACFML_Post_Types {
     $this->slug_field_key     = "field_{$this->slug_field_name}";
     $this->lang_active_field_key   = "field_{$this->lang_active_field_name}";
     
-    add_action('registered_post_type', [$this, 'registered_post_type'], 10, 2);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array']);
 
     // query filters
@@ -55,25 +56,42 @@ class ACFML_Post_Types {
     add_action('admin_init', [$this, 'check_for_posts_with_empty_slugs']);
     add_action('admin_init', [$this, 'maybe_generate_slugs']);
     
-
     add_action('init', [$this, 'setup_acf_fields'], 11);
     
   }
 
   /**
-   * Get multilingual post types
+   * Add a post type for translating the title and slugs
    *
-   * @return Array
+   * @param string $post_type
+   * @param array|null $args
+   * @return void
    */
-  public function get_multilingual_post_types() {
-    
-    $post_types = get_post_types_by_support(['acfml']);
+  public function add_post_type(string $post_type, ?array $args = []) {
+    global $wp_post_types;
     // attachments are not supported. They are horrible edge cases :P
     $unsupported_post_types = ["attachment"];
-    $post_types = array_filter($post_types, function($pt) use($unsupported_post_types) {
-      return !in_array($pt, $unsupported_post_types);
-    });
-    return $post_types;
+    if( in_array($post_type, $unsupported_post_types) ) return;
+    // add the post type and it's arguments to the array
+    $this->multilingual_post_types[$post_type] = $args;
+    // parse translated post type labels
+    $language = acfml()->get_current_language();
+    $pt_object = get_post_type_object($post_type);
+    if( $labels = $args[$language]['labels'] ?? null ) {
+      $pt_object->labels = $labels;
+      $wp_post_types[$post_type]->labels = get_post_type_labels($pt_object);
+    }
+  }
+
+  /**
+   * Get multilingual post types
+   *
+   * @param $format 
+   * @return array
+   */
+  public function get_multilingual_post_types( ?string $format = 'names' ): array {
+    $post_types = $this->multilingual_post_types;
+    return $format === 'names' ? array_keys($post_types) : $post_types;
   }
 
   /**
@@ -118,19 +136,18 @@ class ACFML_Post_Types {
 
     $default_slug = is_string($has_archive) ? $has_archive : $post_type;
     
-    $pt_supports = get_all_post_type_supports($post_type);
-    $acfml = $pt_supports['acfml'][0] ?? null;
-    if( !is_array($acfml) ) return $rules;
-    $acfml_archive_slugs = array_column($acfml, 'archive_slug') ?? null;
-    if( !$acfml_archive_slugs ) return $rules;
+    $settings = $this->multilingual_post_types[$post_type];
+    $acfml_archive_slugs = array_column($settings, 'archive_slug') ?? null;
+    if( empty($acfml_archive_slugs) ) return $rules;
 
     $slugs = array_values(array_unique(array_merge([$default_slug], $acfml_archive_slugs)));
+    $joined_slugs = implode('|', $slugs);
 
     $new_rules = [];
     foreach( $rules as $regex => $rule ) {
       if( strpos($regex, $default_slug ) === 0 ) {
-        $translated_regex = str_replace("$default_slug/?", "(?:".implode('|', $slugs).")/?", $regex);
-        $new_rules[$translated_regex] = $rule;
+        $multilingual_regex = str_replace("$default_slug/?", "(?:$joined_slugs)/?", $regex);
+        $new_rules[$multilingual_regex] = $rule;
       } else {
         $new_rules[$regex] = $rule;
       }
@@ -149,18 +166,20 @@ class ACFML_Post_Types {
   */
   private function multilingual_rewrite_slugs(Array $rules, String $post_type): array {
     $pt_object = get_post_type_object( $post_type );
-    $pt_supports = get_all_post_type_supports($post_type);
-
-    $acfml_rewrite_slugs = array_column($pt_supports['acfml'][0], 'rewrite_slug') ?? null;
-    if( !$acfml_rewrite_slugs ) return $rules;
     $default_slug = $pt_object->rewrite['slug'] ?? $post_type;
+
+    $settings = $this->multilingual_post_types[$post_type];
+    $acfml_rewrite_slugs = array_column($settings, 'rewrite_slug') ?? null;
+    if( empty($acfml_rewrite_slugs) ) return $rules;
+
     $rewrite_slugs = array_values(array_unique(array_merge([$default_slug], $acfml_rewrite_slugs)));
-    
+    $joined_rewrite_slugs = implode('|', $rewrite_slugs);
+
     $new_rules = [];
     foreach( $rules as $regex => $rule ) {
       if( strpos($regex, $default_slug ) === 0 ) {
-        $translated_regex = str_replace("$default_slug/", "(?:".implode('|', $rewrite_slugs).")/", $regex);
-        $new_rules[$translated_regex] = $rule;
+        $multilingual_regex = str_replace("$default_slug/", "(?:$joined_rewrite_slugs)/", $regex);
+        $new_rules[$multilingual_regex] = $rule;
       } else {
         $new_rules[$regex] = $rule;
       }
@@ -169,18 +188,7 @@ class ACFML_Post_Types {
   }
 
   /**
-   * Check if a post type is multilingual
-   *
-   * @param string $post_type
-   * @return Bool
-   */
-  public function acfml_multilingual_post_type(String $post_type):Bool {
-    return in_array($post_type, $this->get_multilingual_post_types());
-  }
-
-  /**
-   * Adds a custom field group for the  title
-   * for each post_type that supports `acfml-title`
+   * Adds custom fields for the title, slug, active languages
    *
    * @return void
    */
@@ -365,7 +373,7 @@ class ACFML_Post_Types {
   public function admin_body_class($class) {
     global $pagenow, $typenow;
     if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return $class;
-    if( in_array($typenow, $this->get_multilingual_post_types()) ) $class .= " $this->prefix-supports-post-title";
+    if( in_array($typenow, $this->get_multilingual_post_types()) ) $class .= " acfml-multilingual-post-type";
     return $class;
   }
 
@@ -386,7 +394,7 @@ class ACFML_Post_Types {
     $post = get_post($post_id);
 
     // bail early if the post type is not multilingual
-    if( !$this->acfml_multilingual_post_type($post->post_type) ) return;
+    if( !$this->is_multilingual_post_type($post->post_type) ) return;
 
     // bail early based on the post's status
     if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;
@@ -506,24 +514,6 @@ class ACFML_Post_Types {
 
     }
     return $rules;
-  }
-
-  /**
-   * Runs after a post type was registered
-   *
-   * @param string $pt
-   * @param \WP_Post_Type $pt_object
-   * @return void
-   */
-  public function registered_post_type( string $pt, \WP_Post_Type $pt_object ) {
-    global $wp_post_types;
-    $language = acfml()->get_current_language();
-    $acfml = $pt_object->acfml[$language] ?? null;
-    if( !$acfml ) return;
-    if( $labels = $acfml['labels'] ?? null ) {
-      $pt_object->labels = $labels;
-      $wp_post_types[$pt]->labels = get_post_type_labels($pt_object);
-    }
   }
 
   /**
@@ -713,9 +703,8 @@ class ACFML_Post_Types {
 
     // add possible custom post type's rewrite slug and front to segments
     $default_rewrite_slug = $post_type_object->rewrite['slug'] ?? null;
-    $pt_supports = get_all_post_type_supports($post->post_type);
     
-    $acfml_rewrite_slug = ($pt_supports['acfml'][0][$language]['rewrite_slug']) ?? null;
+    $acfml_rewrite_slug = $this->multilingual_post_types[$post->post_type][$language]['rewrite_slug'] ?? null;
     if( $rewrite_slug = $acfml_rewrite_slug ?: $default_rewrite_slug ) {
       $link_template = str_replace("/$default_rewrite_slug/", "/$rewrite_slug/", $link_template);
     }
@@ -778,8 +767,7 @@ class ACFML_Post_Types {
     $post_type_object = get_post_type_object($post_type);
     if( !$post_type_object || !$post_type_object->has_archive ) return null;
     $default_archive_slug = is_string($post_type_object->has_archive) ? $post_type_object->has_archive : $post_type;
-    $pt_supports = get_all_post_type_supports($post_type);
-    return $pt_supports['acfml'][0][$language]['archive_slug'] ?? $default_archive_slug;
+    return $this->multilingual_post_types[$post_type][$language]['archive_slug'] ?? $default_archive_slug;
   }
 
   /**

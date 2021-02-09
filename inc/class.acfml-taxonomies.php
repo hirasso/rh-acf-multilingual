@@ -38,8 +38,7 @@ class ACFML_Taxonomies {
   }
 
   /**
-   * Adds a custom field group for the  title
-   * for each post_type that supports `acfml-title`
+   * Adds a custom field group for the title
    *
    * @return void
    */
@@ -108,7 +107,7 @@ class ACFML_Taxonomies {
   public function admin_body_class($class) {
     global $pagenow, $taxonomy;
     if( !in_array($pagenow, ['term.php', 'edit-tags.php'] ) ) return $class;
-    if( in_array($taxonomy, $this->get_multilingual_taxonomies()) ) $class .= " supports-$this->prefix-title";
+    if( in_array($taxonomy, $this->get_multilingual_taxonomies()) ) $class .= " acfml-multilingual-taxonomy";
     return $class;
   }
 

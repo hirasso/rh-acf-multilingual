@@ -64,6 +64,9 @@ class ACF_Multilingual {
     $this->define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
     $this->define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 
+    // include API
+    $this->include('inc/acfml-api.php');
+
     // Include and instanciate admin class
     $this->include('inc/class.acfml-admin.php');
     $this->admin = new ACFML\ACFML_Admin();
@@ -394,7 +397,7 @@ class ACF_Multilingual {
    * @param string|null $name     e.g. 'English' or 'Deutsch'
    * @return array
    */
-  public function register_language(string $slug, ?string $locale = null, ?string $name = null): array {
+  public function add_language(string $slug, ?string $locale = null, ?string $name = null): array {
     $language = [
       'slug' => $slug,
       'locale' => $locale ?? $slug,
@@ -439,7 +442,7 @@ class ACF_Multilingual {
    * 
    * @return mixed                    Either a html string or an array
    */
-  public function get_language_switcher(?array $args = [], bool $echo = false) {
+  public function get_language_switcher(?array $args = []) {
     static $dropdown_count = 0;
     static $list_count = 0;
     $args = $this->to_object(wp_parse_args($args, [
