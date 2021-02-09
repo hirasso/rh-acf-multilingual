@@ -672,15 +672,13 @@ class ACF_Multilingual {
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
     
-    if( $url_query = $this->url_to_wp_query($url) ) {
+    if( $wp_object = $this->resolve_url($url) ) {
       
-      $queried_object = $url_query->get_queried_object();
-      
-      if( $queried_object instanceof \WP_Post ) {
-        $new_url = $this->acfml_post_types->get_post_link($queried_object, $requested_language);
+      if( $wp_object instanceof \WP_Post ) {
+        $new_url = $this->acfml_post_types->get_post_link($wp_object, $requested_language);
         return $new_url;
-      } elseif( $queried_object instanceof \WP_Post_Type ) {
-        $new_url = $this->acfml_post_types->get_post_type_archive_link($queried_object->name, $requested_language);
+      } elseif( $wp_object instanceof \WP_Post_Type ) {
+        $new_url = $this->acfml_post_types->get_post_type_archive_link($wp_object->name, $requested_language);
         return $new_url;
       }
     }
@@ -936,7 +934,7 @@ class ACF_Multilingual {
    * @param string|null $language
    * @return mixed one of null, \WP_Post, \WP_Post_Type, \WP_Term
    */
-  public function url_to_wp_query(?string $url = null): ?\WP_Query {
+  public function resolve_url(?string $url = null) {
     global $wp, $wp_the_query;
     $_wp_the_query = $wp_the_query;
     // parse defaults
@@ -952,6 +950,7 @@ class ACF_Multilingual {
     $this->switch_to_language($language);
 
     // clone the global WP object
+    // @TODO: find out why I did this instead of creating a new $wp object
     $wp_clone = clone $wp;
 
     // cache $_SERVER
@@ -963,6 +962,10 @@ class ACF_Multilingual {
     
     $wp_clone->parse_request();
     $wp_clone->build_query_string();
+
+    // $my_wp = new WP();
+    // $my_wp->parse_request();
+    // $my_wp->build_query_string();
     
     // Reset $_SERVER
     $_SERVER = $__SERVER;
@@ -975,7 +978,9 @@ class ACF_Multilingual {
     // reset the language
     $this->reset_language();
     
-    return $query;
+    $queried_object = $query->get_queried_object();
+    // if( is_null($queried_object) ) pre_dump($url);
+    return $queried_object;
   }
 
   /**
