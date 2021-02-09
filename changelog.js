@@ -10,7 +10,8 @@ const blacklist = [
   '#ignore', 
   'update TODO',
   'cleanup',
-  'cleanupp'
+  'cleanupp',
+  'add documentation'
 ];
 
 /**

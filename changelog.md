@@ -39,7 +39,6 @@
 - add edit tags support (#4caef61)
 - wp_insert_post_data inject acfml_title (#62d9693)
 - rename from 'acfl' to 'acfml' (#2f0823b)
-- add documentation (#5be7a68)
 - add post_type_support `acfl-title` (#13b6768)
 - minor fixes (#29534e7)
 - Add support for translated titles (#330040d)

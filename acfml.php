@@ -936,13 +936,14 @@ class ACF_Multilingual {
    */
   public function resolve_url(?string $url = null) {
     global $wp, $wp_the_query;
-    $_wp_the_query = $wp_the_query;
+    
     // parse defaults
     $url = $url ?? $this->get_current_url();
 
     // get the path from the url, return early if none
     $path = $this->get_url_path($url);
     
+    // bail early if no path found.
     if( !$path ) return null;
 
     // overwrite the language for the time of the request
@@ -966,17 +967,21 @@ class ACF_Multilingual {
     // Reset $_SERVER
     $_SERVER = $__SERVER;
     
+    // cache the query
+    $_wp_the_query = $wp_the_query;
+    // make a custom query
     $query = new \WP_Query();
+    // set the new query to the global, so that it passes `is_main_query()`
     $wp_the_query = $query;
+    // execute the custom query
     $query->query($new_wp->query_vars);
-    
+    // reset the global $wp_query
     $wp_the_query = $_wp_the_query;
+
     // reset the language
     $this->reset_language();
     
-    $queried_object = $query->get_queried_object();
-    
-    return $queried_object;
+    return $query->get_queried_object();
   }
 
   /**
