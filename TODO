@@ -28,6 +28,10 @@
   ✔ Move `acfml` setting for post types to `supports`
   ❍ Add canonical redirect for `de/event/weihnachten/` to `de/veranstaltung/weihnachten`
   ❍ Add Sitemap Provider for non-defaut languages
+  ❍ Add api template for
+    ❍ acfml_register_language
+    ❍ acfml_register_post_type
+    ❍ acfml_get_language_switcher
 
 Optional:
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
