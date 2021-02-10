@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: ACF Multilingual
- * Version: 0.0.1
+ * Version: 0.0.2
  * Author: Rasso Hilber
  * Description: A lightweight solution to support multiple languages with WordPress and Advanced Custom Fields
  * Author URI: https://rassohilber.com
@@ -544,10 +544,7 @@ class ACF_Multilingual {
    * @param string
    */
   public function get_default_language(): string {
-    $lang = apply_filters("$this->prefix/default_language", 'en');
-    // if( !$this->language_exists($lang) ) {
-    //   throw new Exception(sprintf("ACFML Error: Default Language '%s' doesn't exist", $lang));
-    // }
+    $lang = $this->get_languages('slug')[0];
     return $lang;
   }
 

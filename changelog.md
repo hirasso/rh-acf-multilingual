@@ -1,3 +1,7 @@
+#### 0.0.2 (2021-02-10)
+
+- Make the first language always the default (#3354a24)
+
 #### 0.0.1 (2021-02-09)
 
 - optimize `resolve_url` (#4358329)
