@@ -84,6 +84,7 @@ class ACF_Multilingual {
    * @return void
    */
   public function maybe_fully_initialize() {
+    
     // bail early if ACF is not defined
     if( !defined('ACF') ) return;
 

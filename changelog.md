@@ -1,6 +1,7 @@
 #### 0.0.2 (2021-02-11)
 
-- optimize plugin initialization (#4a25b11)
+- flush rewrite rules also on change of enabled post types (#2212766)
+- optimize plugin initialization (#5c85eaf)
 - prevent rest api issues (#d2a6026)
 - Make the first language always the default (#2d83671)
 

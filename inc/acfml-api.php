@@ -25,5 +25,11 @@ function acfml_get_current_language() {
  * This function is documented in class.acfml-post-types.php > add_post_type
  */
 function acfml_add_post_type($post_type, ?array $args = []) {
-  return acfml()->acfml_post_types->add_post_type($post_type, $args);
+  if( did_action('init') ) {
+    acfml()->acfml_post_types->add_post_type($post_type, $args);
+  } else {
+    add_action('init', function () use ($post_type, $args) {
+      acfml()->acfml_post_types->add_post_type($post_type, $args);
+    }, 11); // after default 'init' hook
+  }
 }

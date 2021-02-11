@@ -21,19 +21,19 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
-#: ../acfml.php:102
+#: ../acfml.php:146
 msgid "ACF Multilingual requires the plugin %s to be installed and activated."
 msgstr "ACF Multilingual benötigt das Plugin %s."
 
-#: ../inc/class.acfml-admin.php:35
+#: ../inc/class.acfml-admin.php:32
 msgid "ACF Multilingual Settings"
 msgstr "ACF Multilingual Einstellungen"
 
-#: ../inc/class.acfml-admin.php:36
+#: ../inc/class.acfml-admin.php:33
 msgid "ACF Multilingual"
 msgstr "ACF Multilingual"
 
-#: ../inc/class.acfml-admin.php:153
+#: ../inc/class.acfml-admin.php:178
 msgid "Rewrite Rules successfully flushed"
 msgstr "Die Rewrite-Rules wurden erfolgreich erneuert"
 
@@ -41,23 +41,23 @@ msgstr "Die Rewrite-Rules wurden erfolgreich erneuert"
 msgid "Multilingual?"
 msgstr "Mehrsprachig?"
 
-#: ../inc/class.acfml-post-types.php:262
+#: ../inc/class.acfml-post-types.php:278
 msgid "Show language in frontend?"
 msgstr "Sprache im Frontend anzeigen?"
 
-#: ../inc/class.acfml-post-types.php:260
+#: ../inc/class.acfml-post-types.php:276
 msgid "The default language is always active"
 msgstr "Die Standard-Sprache ist immer aktiv"
 
-#: ../inc/class.acfml-post-types.php:275
+#: ../inc/class.acfml-post-types.php:291
 msgid "Leave empty to generate the link from title"
 msgstr "Leer lassen, um den link aus dem Titel generieren zu lassen"
 
-#: ../inc/class.acfml-post-types.php:930, ../inc/class.acfml-post-types.php:946
+#: ../inc/class.acfml-post-types.php:929
 msgid "ACF Multilingual successfully processed %s %s."
 msgstr "ACF Multilingual hat erfolgreich %s %s konvertiert."
 
-#: ../inc/class.acfml-post-types.php:932, ../inc/class.acfml-post-types.php:948
+#: ../inc/class.acfml-post-types.php:931
 msgid "post"
 msgid_plural "posts"
 msgstr[0] "Eintrag"
@@ -77,11 +77,11 @@ msgstr "Jetzt konvertieren"
 
 #: ../templates/notice-flush-rewrite-rules.php:1
 msgid ""
-"ACF Multilingual detected a change in your language settings and needs to "
-"flush your rewrite rules."
+"ACF Multilingual detected a change in your settings and needs to flush your "
+"rewrite rules."
 msgstr ""
-"ACF Multilingual hat eine Änderungen in den Spracheinstellungen entdeckt und "
-"muss die Rewrite-Rules neu generieren."
+"ACF Multilingual hat eine Änderungen in den Einstellungen entdeckt und muss "
+"die Rewrite-Rules neu generieren."
 
 #: ../templates/notice-flush-rewrite-rules.php:4
 msgid "Flush Rewrite Rules Now"

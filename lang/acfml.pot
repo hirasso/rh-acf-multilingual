@@ -13,19 +13,19 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../acfml.php:102
+#: ../acfml.php:146
 msgid "ACF Multilingual requires the plugin %s to be installed and activated."
 msgstr ""
 
-#: ../inc/class.acfml-admin.php:35
+#: ../inc/class.acfml-admin.php:32
 msgid "ACF Multilingual Settings"
 msgstr ""
 
-#: ../inc/class.acfml-admin.php:36
+#: ../inc/class.acfml-admin.php:33
 msgid "ACF Multilingual"
 msgstr ""
 
-#: ../inc/class.acfml-admin.php:153
+#: ../inc/class.acfml-admin.php:178
 msgid "Rewrite Rules successfully flushed"
 msgstr ""
 
@@ -33,23 +33,23 @@ msgstr ""
 msgid "Multilingual?"
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:262
+#: ../inc/class.acfml-post-types.php:278
 msgid "Show language in frontend?"
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:260
+#: ../inc/class.acfml-post-types.php:276
 msgid "The default language is always active"
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:275
+#: ../inc/class.acfml-post-types.php:291
 msgid "Leave empty to generate the link from title"
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:930, ../inc/class.acfml-post-types.php:946
+#: ../inc/class.acfml-post-types.php:929
 msgid "ACF Multilingual successfully processed %s %s."
 msgstr ""
 
-#: ../inc/class.acfml-post-types.php:932, ../inc/class.acfml-post-types.php:948
+#: ../inc/class.acfml-post-types.php:931
 msgid "post"
 msgid_plural "posts"
 msgstr[0] ""
@@ -64,7 +64,7 @@ msgid "Process now"
 msgstr ""
 
 #: ../templates/notice-flush-rewrite-rules.php:1
-msgid "ACF Multilingual detected a change in your language settings and needs to flush your rewrite rules."
+msgid "ACF Multilingual detected a change in your settings and needs to flush your rewrite rules."
 msgstr ""
 
 #: ../templates/notice-flush-rewrite-rules.php:4

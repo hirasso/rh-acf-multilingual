@@ -107,6 +107,29 @@ class ACFML_Admin {
   }
 
   /**
+   * Get hashed post types
+   *
+   * @return string
+   */
+  private function get_hashed_post_types(): string {
+    return md5( json_encode(acfml()->acfml_post_types->get_multilingual_post_types()) );
+  }
+
+  /**
+   * Hash something
+   *
+   * @param mixed $value
+   * @return string
+   */
+  private function get_hashed_settings(): string {
+    $settings = [
+      'languages' => acfml()->get_languages('slug'),
+      'post_types' => acfml()->acfml_post_types->get_multilingual_post_types()
+    ];
+    return md5( json_encode($settings) );
+  }
+
+  /**
    * Verifies a nonce for a certain action
    *
    * @param string $action
@@ -127,10 +150,13 @@ class ACFML_Admin {
   public function maybe_show_notice_flush_rewrite_rules(): void {
     $languages = acfml()->get_languages();
     if( !count($languages) ) return;
-    $hashed_languages = $this->get_hashed_languages();
-    // delete_option('acfml_hashed_languages');
-    $saved_hashed_languages = (string) get_option('acfml_hashed_languages');
-    if( hash_equals($hashed_languages, $saved_hashed_languages) ) return;
+
+    $hashed_settings = $this->get_hashed_settings();
+    delete_option('acfml_hashed_settings');
+    
+    $settings_changed = !hash_equals($hashed_settings, (string) get_option('acfml_hashed_settings'));
+    
+    if( !$settings_changed ) return;
     // add nag to flush the rewrite rules
     $this->add_notice(
       'acfml_flush_rewrite_rules',
@@ -155,8 +181,8 @@ class ACFML_Admin {
         'is_dismissible' => true
       ]
     );
-    // update the option
-    update_option('acfml_hashed_languages', $this->get_hashed_languages());
+    // update settings hash
+    update_option('acfml_hashed_settings', $this->get_hashed_settings());
     // flush the rules
     flush_rewrite_rules();
   }
