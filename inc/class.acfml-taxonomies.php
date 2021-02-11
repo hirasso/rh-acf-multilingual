@@ -11,6 +11,7 @@ class ACFML_Taxonomies {
   private $field_postfix = "term_name";
   private $field_name;
   private $field_key;
+  private $taxonomies = [];
 
   public function __construct() {
     add_action('acf/init', [$this, 'init']);
@@ -34,7 +35,7 @@ class ACFML_Taxonomies {
     add_action("acf/load_value/key={$this->field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
 
     // methods
-    $this->add_title_field_group();
+    add_action('init', [$this, 'add_title_field_group'], 12);
   }
 
   /**
@@ -42,7 +43,7 @@ class ACFML_Taxonomies {
    *
    * @return void
    */
-  private function add_title_field_group() {
+  public function add_title_field_group() {
     
     $taxonomies = $this->get_multilingual_taxonomies();
     
@@ -91,10 +92,21 @@ class ACFML_Taxonomies {
    * @return Array
    */
   private function get_multilingual_taxonomies() {
-    $taxonomies = array_unique( apply_filters("acfml/multilingual_taxonomies", []) );
+    return $this->taxonomies;
+  }
+
+  /**
+   * Add a taxonomy
+   *
+   * @param string $taxonomy
+   * @return array
+   */
+  public function add_taxonomy( $taxonomy ): array {
+    $taxonomies = array_unique(array_merge($this->taxonomies, [$taxonomy]));
     $taxonomies = array_filter($taxonomies, function($tax) {
       return taxonomy_exists($tax);
     });
+    $this->taxonomies = $taxonomies;
     return $taxonomies;
   }
 

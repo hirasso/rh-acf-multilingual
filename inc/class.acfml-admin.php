@@ -152,7 +152,7 @@ class ACFML_Admin {
     if( !count($languages) ) return;
 
     $hashed_settings = $this->get_hashed_settings();
-    delete_option('acfml_hashed_settings');
+    // delete_option('acfml_hashed_settings');
     
     $settings_changed = !hash_equals($hashed_settings, (string) get_option('acfml_hashed_settings'));
     

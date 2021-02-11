@@ -33,3 +33,16 @@ function acfml_add_post_type($post_type, ?array $args = []) {
     }, 11); // after default 'init' hook
   }
 }
+
+/**
+* This function is documented in class.acfml-taxonomies.php > add_taxonomy
+*/
+function acfml_add_taxonomy( $taxonomy ) {
+  if( did_action('init') ) {
+    acfml()->acfml_taxonomies->add_taxonomy($taxonomy);
+  } else {
+    add_action('init', function () use ($taxonomy) {
+      acfml()->acfml_taxonomies->add_taxonomy($taxonomy);
+    }, 11); // after default 'init' hook
+  }
+}
