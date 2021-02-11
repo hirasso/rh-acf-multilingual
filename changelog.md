@@ -1,6 +1,7 @@
 #### 0.0.2 (2021-02-11)
 
-- prevent rest api issues (#9390a7f)
+- optimize plugin initialization (#4a25b11)
+- prevent rest api issues (#d2a6026)
 - Make the first language always the default (#2d83671)
 
 #### 0.0.1 (2021-02-09)

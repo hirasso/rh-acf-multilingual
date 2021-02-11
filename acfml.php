@@ -72,9 +72,6 @@ class ACF_Multilingual {
     $this->admin = new ACFML\ACFML_Admin();
 
     add_action('admin_init', [$this, 'maybe_show_acf_missing_notice']);
-
-    // bail early if ACF is not defined
-    if( !defined('ACF') ) return;
     
     // hook into after_setup_theme to initialize
     add_action('after_setup_theme', [$this, 'maybe_fully_initialize'], 11);
@@ -87,7 +84,11 @@ class ACF_Multilingual {
    * @return void
    */
   public function maybe_fully_initialize() {
+    // bail early if ACF is not defined
+    if( !defined('ACF') ) return;
+
     $languages = $this->get_languages();
+    // bail early if there are no languages
     if( !count($languages) ) return;
     
     // Include and instanciate classes
