@@ -954,6 +954,8 @@ class ACF_Multilingual {
     // bypasses checks for /wp-admin in $wp around line 274
     $_SERVER['PHP_SELF'] = 'index.php';
 
+    // prevent rest api issues
+    remove_action( 'parse_request', 'rest_api_loaded' );
     // create a new \WP instance
     $new_wp = new WP();
     // copy the (previously filtered) public query vars over from the main $wp object
