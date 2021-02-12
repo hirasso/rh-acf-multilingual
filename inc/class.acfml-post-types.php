@@ -223,7 +223,7 @@ class ACFML_Post_Types {
     // create the title field
     acf_add_local_field(array(
       'key' => $this->title_field_key,
-      'label' => 'Title',
+      'label' => __('Title'),
       'placeholder' => __('Add title'),
       'name' => $this->title_field_name,
       'type' => 'text',
@@ -405,19 +405,25 @@ class ACFML_Post_Types {
     $default_post_title = acfml()->get_field_or("{$this->title_field_name}_{$this->default_language}", $post->post_title, $post_id);
     $post_titles[$this->default_language] = $default_post_title;
 
+    // get the last default post title
+    $last_default_post_title = get_post_meta($post_id, "_acfml_last_default_post_title", true);
+
     // prepare post titles so there is one for every language
     foreach( $languages as $lang ) {
       // do nothing for the default language
       if( $lang === $this->default_language ) continue;
       $post_title = get_field("{$this->title_field_name}_{$lang}", $post_id);
       // if there is no title for the language yet, use the default
-      if( !$post_title ) {
+      if( !$post_title || $post_title === $last_default_post_title ) {
         $post_title = $default_post_title;
         // save the unique slug to the database
         update_field("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
       }
       $post_titles[$lang] = $post_title;
     }
+
+    // save the current default post title, so that we ca sync post titles of other languages
+    update_post_meta($post_id, "_acfml_last_default_post_title", $default_post_title);
 
     $post_slugs = [];
     // generate slugs for every language
