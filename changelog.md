@@ -1,6 +1,7 @@
 #### 0.0.2 (2021-02-12)
 
-- `trim()` default post title before validating (#f58f6eb)
+- trim the post title before saving (#8d8613f)
+- `trim()` default post title before validating (#3a6fb5c)
 - sync post titles in other languages as long as they are not translated manually (#dd3f0ea)
 - Always save post titles for all languages to support `'orderby' => 'title'`in non-default languages (#c2c048a)
 - Support for `'orderby' => 'title'` (#c9e5176)

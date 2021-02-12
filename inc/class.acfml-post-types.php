@@ -45,18 +45,19 @@ class ACFML_Post_Types {
     add_filter('query', [$this, 'query__find_post_by_old_slug']);
     add_action('template_redirect', [$this, 'prepare_old_slug_redirect'], 9 );
     
-    // hooks
     add_filter('the_title', [$this, 'single_post_title'], 10, 2);
     add_filter('single_post_title', [$this, 'single_post_title'], 10, 2);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
-    add_action("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_value_default_post_title"], 10, 3);
+    
+    add_filter("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_value_default_post_title"], 10, 3);
+    add_filter("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
     add_action("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
+    add_filter("acf/update_value/key={$this->title_field_key}_{$this->default_language}", [$this, "update_value_default_post_title"], 10, 4 );
 
     add_action('acf/save_post', [$this, 'save_post'], 20);
 
     add_action('admin_init', [$this, 'check_for_posts_with_empty_slugs']);
     add_action('admin_init', [$this, 'maybe_generate_slugs']);
-    
     add_action('init', [$this, 'setup_acf_fields'], 11);
     
   }
@@ -380,12 +381,26 @@ class ACFML_Post_Types {
   }
 
   /**
+   * Trim the default post title
+   *
+   * @param mixed $value
+   * @param int $post_id
+   * @param array $field
+   * @param mixed $original
+   * @return mixed
+   */
+  public function update_value_default_post_title( $value, $post_id, $field, $original ) {
+    $value = trim($value);
+    return $value;
+  }
+
+  /**
    * Filter Admin Body Class
    *
    * @param string $class
    * @param string
    */
-  public function admin_body_class($class) {
+  public function admin_body_class($class): string {
     global $pagenow, $typenow;
     if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return $class;
     if( in_array($typenow, $this->get_multilingual_post_types()) ) $class .= " acfml-multilingual-post-type";
@@ -395,10 +410,11 @@ class ACFML_Post_Types {
   /**
    * Update a post's slugs
    *
-   * @param Int $post_id
-   * @return Void
+   * @param int $post_id
+   * @global string $locale
+   * @return void
    */
-  function save_post($post_id):Void {
+  function save_post($post_id): void {
     global $locale;
     
     // cache WP locale, so that we can temporarily overwrite it
@@ -414,6 +430,9 @@ class ACFML_Post_Types {
     // bail early based on the post's status
     if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;
     
+    // get the \WP_Post object
+    $post = get_post($post_id);
+
     // This array will contain all post titles for the slugs to be generated from
     $post_titles = [];
     // get the post title of the default language (should always have some)
@@ -444,22 +463,22 @@ class ACFML_Post_Types {
     // generate slugs for every language
     foreach( $languages as $lang ) {
       // get the slug from the field
-      $raw_slug = acfml()->get_field_or("{$this->slug_field_name}_{$lang}", $post_titles[$lang], $post_id);
+      $raw_slug = get_field("{$this->slug_field_name}_{$lang}", $post_id);
+      if( !$raw_slug ) $raw_slug = $post_titles[$lang];
 
-      // set locale to current $lang, so that sanitize_title can run on full power
+      // set global locale to current $lang, so that sanitize_title can run on full power
       $locale = acfml()->get_language_info($lang)['locale'];
       // sanitize the slug
       $slug = sanitize_title($raw_slug);
-      // reset locale
+      // reset global locale
       $locale = $cached_locale;
-
       // make the slug unique
-      $slug = $this->get_unique_post_slug( $slug, get_post($post_id), $lang );
+      $slug = $this->get_unique_post_slug( $slug, $post, $lang );
       // save the unique slug to the database
       update_field("{$this->slug_field_name}_{$lang}", $slug, $post_id);
       $post_slugs[$lang] = $slug;
     }
-    
+
     // save slug of the default language to the post_name
     remove_action('acf/save_post', [$this, 'save_post']);
     wp_update_post([
