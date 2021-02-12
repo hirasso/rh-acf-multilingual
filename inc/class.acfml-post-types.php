@@ -49,7 +49,8 @@ class ACFML_Post_Types {
     add_filter('the_title', [$this, 'single_post_title'], 10, 2);
     add_filter('single_post_title', [$this, 'single_post_title'], 10, 2);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
-    add_action("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
+    add_action("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_value_default_post_title"], 10, 3);
+    add_action("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
 
     add_action('acf/save_post', [$this, 'save_post'], 20);
 
@@ -355,13 +356,27 @@ class ACFML_Post_Types {
    * @param Array $field
    * @return Mixed
    */
-  public function load_default_value( $value, $post_id, $field ) {
+  public function load_value_default_post_title( $value, $post_id, $field ) {
     if($value) return $value;
     $post_status = get_post_status($post_id);
     if( !in_array($post_status, ['auto-draft']) ) {
       $value = get_the_title($post_id);
     }
     return $value;
+  }
+
+  /**
+   * Validate the default post title
+   *
+   * @param bool $valid
+   * @param string $value
+   * @param array $field
+   * @param [type] $input_name
+   * @return mixed
+   */
+  public function validate_value_default_post_title( $valid, $value, $field, $input_name ) {
+    if( !trim($value) ) $valid = false;
+    return $valid;
   }
 
   /**
@@ -402,7 +417,7 @@ class ACFML_Post_Types {
     // This array will contain all post titles for the slugs to be generated from
     $post_titles = [];
     // get the post title of the default language (should always have some)
-    $default_post_title = acfml()->get_field_or("{$this->title_field_name}_{$this->default_language}", $post->post_title, $post_id);
+    $default_post_title = trim(acfml()->get_field_or("{$this->title_field_name}_{$this->default_language}", $post->post_title, $post_id));
     $post_titles[$this->default_language] = $default_post_title;
 
     // get the last default post title
@@ -412,7 +427,7 @@ class ACFML_Post_Types {
     foreach( $languages as $lang ) {
       // do nothing for the default language
       if( $lang === $this->default_language ) continue;
-      $post_title = get_field("{$this->title_field_name}_{$lang}", $post_id);
+      $post_title = trim(get_field("{$this->title_field_name}_{$lang}", $post_id));
       // if there is no title for the language yet, use the default
       if( !$post_title || $post_title === $last_default_post_title ) {
         $post_title = $default_post_title;
