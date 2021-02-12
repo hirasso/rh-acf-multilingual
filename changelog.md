@@ -1,6 +1,7 @@
-#### 0.0.2 (2021-02-11)
+#### 0.0.2 (2021-02-12)
 
-- new API function `acfml_add_taxonomy` (#b5d3384)
+- Support for `'orderby' => 'title'` (#4ff07a5)
+- new API function `acfml_add_taxonomy` (#b1b9171)
 - flush rewrite rules also on change of enabled post types (#80fd54a)
 - optimize plugin initialization (#5c85eaf)
 - prevent rest api issues (#d2a6026)

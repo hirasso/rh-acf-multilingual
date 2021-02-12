@@ -565,7 +565,39 @@ class ACFML_Post_Types {
       ]
     ];
     
+    // add acfml_post_title so that we can adjust the order accordingliy
+    $meta_query['acfml_post_title'] = [
+      'key' => "acfml_post_title_$language"
+    ];
+
+    
+
+    // adjust orderby
+    $orderby = $query->get('orderby');
+    $order = $query->get('order');
+    
+    if( $orderby === 'title' ) {
+      // accounts for simple 'title'
+      $orderby = ['acfml_post_title' => $order];
+    } elseif( is_array($orderby) && array_key_exists('title', $orderby) ) {
+      // accounts for something like ['menu_order' => 'asc', 'title' => 'DESC' ]
+      $orderby['acfml_post_title'] = $orderby['title'];
+      unset( $orderby['title'] );
+    } elseif( in_array('title', explode(' ', $orderby) ) ) {
+      // accounts for crazy strings like 'menu_order title'
+      $orderby_fields = explode(' ', $orderby);
+      $orderby = [];
+      foreach( $orderby_fields as $field ) {
+        if( $field === 'title' ) {
+          $orderby['acfml_post_title'] = $order;
+        } else {
+          $orderby[$field] = $order;
+        }
+      }
+    }
+
     $query->set('meta_query', $meta_query);
+    $query->set('orderby', $orderby);
 
   }
 
