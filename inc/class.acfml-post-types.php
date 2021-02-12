@@ -409,7 +409,14 @@ class ACFML_Post_Types {
     foreach( $languages as $lang ) {
       // do nothing for the default language
       if( $lang === $this->default_language ) continue;
-      $post_titles[$lang] = acfml()->get_field_or("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
+      $post_title = get_field("{$this->title_field_name}_{$lang}", $post_id);
+      // if there is no title for the language yet, use the default
+      if( !$post_title ) {
+        $post_title = $default_post_title;
+        // save the unique slug to the database
+        update_field("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
+      }
+      $post_titles[$lang] = $post_title;
     }
 
     $post_slugs = [];
@@ -529,6 +536,7 @@ class ACFML_Post_Types {
     if( !$query->is_main_query() ) return;
     
     $language = acfml()->get_current_language();
+    $default_language = acfml()->get_default_language();
     if( acfml()->is_default_language($language) ) return;
 
     $post_type = $query->queried_object->post_type ?? $query->get('post_type') ?: false;
@@ -567,10 +575,9 @@ class ACFML_Post_Types {
     
     // add acfml_post_title so that we can adjust the order accordingliy
     $meta_query['acfml_post_title'] = [
-      'key' => "acfml_post_title_$language"
+      'key' => "acfml_post_title_$language",
+      'compare' => 'EXISTS'
     ];
-
-    
 
     // adjust orderby
     $orderby = $query->get('orderby');

@@ -1,6 +1,7 @@
 #### 0.0.2 (2021-02-12)
 
-- Support for `'orderby' => 'title'` (#4ff07a5)
+- Always save post titles for all languages to support `'orderby' => 'title'`in non-default languages (#6453282)
+- Support for `'orderby' => 'title'` (#c9e5176)
 - new API function `acfml_add_taxonomy` (#b1b9171)
 - flush rewrite rules also on change of enabled post types (#80fd54a)
 - optimize plugin initialization (#5c85eaf)
