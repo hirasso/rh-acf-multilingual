@@ -1,5 +1,6 @@
 #### 0.0.2 (2021-02-16)
 
+- add `ACFML_Sitemaps_Provider` (#983134d)
 - only do pre_get_posts for supported post types (#e729a60)
 - deeper check for changed settings (#ebbb0d8)
 - check for 'title' support in most cases, canonical redirect for archives (#2b0020e)

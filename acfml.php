@@ -96,6 +96,7 @@ class ACF_Multilingual {
     $this->include('inc/class.acfml-fields.php');
     $this->include('inc/class.acfml-post-types.php');
     $this->include('inc/class.acfml-taxonomies.php');
+    $this->include('inc/class.acfml-sitemaps-provider.php');
     $this->acfml_fields = new ACFML\ACFML_Fields();
     $this->acfml_post_types = new ACFML\ACFML_Post_Types();
     $this->acfml_taxonomies = new ACFML\ACFML_Taxonomies();
@@ -133,6 +134,7 @@ class ACF_Multilingual {
 
     // convert links in sitemaps entries
     add_filter('wp_sitemaps_index_entry', [$this, 'sitemaps_index_entry'], 10);
+    add_action('init', [$this, 'add_sitemaps_provider']);
   }
 
   /**
@@ -1039,6 +1041,18 @@ class ACF_Multilingual {
   public function sitemaps_index_entry( $entry ): array {
     $entry['loc'] = $this->simple_convert_url($entry['loc']);
     return $entry;
+  }
+
+  /**
+   * Add a custom sitemaps provider
+   *
+   * @return void
+   */
+  public function add_sitemaps_provider() {
+    if( !$this->current_language_is_default() ) return;
+    // registers the new provider for the sitemap
+    $provider = new ACFML\ACFML_Sitemaps_Provider();
+    wp_register_sitemap_provider( 'languages', $provider );
   }
 
   /**
