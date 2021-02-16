@@ -1,6 +1,7 @@
 #### 0.0.2 (2021-02-16)
 
-- deeper check for changed settings (#c6943ee)
+- only do pre_get_posts for supported post types (#31d72d3)
+- deeper check for changed settings (#ebbb0d8)
 - check for 'title' support in most cases, canonical redirect for archives (#2b0020e)
 - add field setting bool `acfml_all_required` (#86fb2c3)
 - Remove ACF nag on `beforeunload` (#86fb2c3)

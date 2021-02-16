@@ -566,7 +566,6 @@ class ACFML_Post_Types {
    */
   public function pre_get_posts( $query ) {
     
-    
     if( !$query->is_main_query() ) return;
     
     $language = acfml()->get_current_language();
@@ -574,6 +573,10 @@ class ACFML_Post_Types {
     if( acfml()->is_default_language($language) ) return;
 
     $post_type = $query->queried_object->post_type ?? $query->get('post_type') ?: false;
+    
+    // don't do anything if the 
+    if( !$this->post_type_supports_multilingual_title($post_type) ) return;
+
     $post_type_object = get_post_type_object($post_type);
 
     // bootstrap meta query
