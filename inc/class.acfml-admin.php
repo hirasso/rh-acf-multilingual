@@ -124,9 +124,10 @@ class ACFML_Admin {
   private function get_hashed_settings(): string {
     $settings = [
       'languages' => acfml()->get_languages('slug'),
-      'post_types' => acfml()->acfml_post_types->get_multilingual_post_types()
+      'post_types' => acfml()->acfml_post_types->get_multilingual_post_types('full', false)
     ];
-    return md5( json_encode($settings) );
+    $hash = md5( json_encode($settings) );
+    return $hash;
   }
 
   /**
