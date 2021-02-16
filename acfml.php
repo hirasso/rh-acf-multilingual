@@ -123,6 +123,7 @@ class ACF_Multilingual {
 
     $this->add_link_filters();
     add_action('template_redirect', [$this, 'redirect_front_page'], 1);
+    add_action('template_redirect', [$this, 'redirect_canonical']);
     add_action('init', [$this, 'save_language_in_cookie']);
     // links in the_content
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
@@ -1038,6 +1039,20 @@ class ACF_Multilingual {
   public function sitemaps_index_entry( $entry ): array {
     $entry['loc'] = $this->simple_convert_url($entry['loc']);
     return $entry;
+  }
+
+  /**
+   * Redirect some urls to the correct one
+   *
+   * @return void
+   */
+  public function redirect_canonical() {
+    $url = $this->get_current_url();
+    $converted_url = $this->convert_url($url);
+    if( $url !== $converted_url ) {
+      wp_redirect($converted_url);
+      exit;
+    }
   }
 
 

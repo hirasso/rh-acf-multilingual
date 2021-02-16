@@ -58,7 +58,7 @@ class ACFML_Post_Types {
 
     add_action('admin_init', [$this, 'check_for_posts_with_empty_slugs']);
     add_action('admin_init', [$this, 'maybe_resave_posts']);
-    add_action('init', [$this, 'setup_acf_fields'], 11);
+    add_action('init', [$this, 'setup_acf_fields'], 12);
     
   }
 
@@ -74,6 +74,9 @@ class ACFML_Post_Types {
     // attachments are not supported. They are horrible edge cases :P
     $unsupported_post_types = ["attachment"];
     if( in_array($post_type, $unsupported_post_types) ) return;
+    if( !post_type_exists($post_type) ) throw new \ErrorException(
+      sprintf(__('[ACFML] Error: Could not add post type "%s", it does not exist'), $post_type)
+    );
     // add the post type and it's arguments to the array
     $this->multilingual_post_types[$post_type] = $args;
     // parse translated post type labels
@@ -91,8 +94,13 @@ class ACFML_Post_Types {
    * @param $format 
    * @return array
    */
-  public function get_multilingual_post_types( ?string $format = 'names' ): array {
+  public function get_multilingual_post_types( ?string $format = 'names', $check_supports_title = true ): array {
     $post_types = $this->multilingual_post_types;
+    if( $check_supports_title ) {
+      foreach( $post_types as $pt => $value ) {
+        if( !post_type_supports($pt, 'title') ) unset($post_types[$pt]);
+      }
+    }
     return $format === 'names' ? array_keys($post_types) : $post_types;
   }
 
@@ -204,12 +212,13 @@ class ACFML_Post_Types {
     // generate location rules for multilingual titles
     $locations = [];
     foreach( $post_types as $pt ) {
-      $location = [
-        'param' => 'post_type',
-        'operator' => '==',
-        'value' => $pt
+      $locations[] = [
+        [
+          'param' => 'post_type',
+          'operator' => '==',
+          'value' => $pt
+        ]
       ];
-      $locations[] = [$location];
     }
     
     // create the title field group
@@ -554,7 +563,7 @@ class ACFML_Post_Types {
    * @return Array
    */
   public function rewrite_rules_array($rules) {
-    foreach( $this->get_multilingual_custom_post_types() as $post_type ) {
+    foreach( $this->get_multilingual_post_types('names', false) as $post_type ) {
 
       $rules = $this->multilingual_rewrite_slugs($rules, $post_type);
       $rules = $this->multilingual_archive_slugs($rules, $post_type);
