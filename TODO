@@ -27,7 +27,7 @@
   ✔ Do nothing if no languages are registered
   ✔ Move `acfml` setting for post types to `supports`
   ✔ Add canonical redirect for `de/event/weihnachten/` to `de/veranstaltung/weihnachten`
-  ❍ Add Sitemap Provider for non-default languages
+  ✔ Add Sitemap Provider for non-default languages
   ✔ Add api template for
     ✔ acfml_add_language
     ✔ acfml_register_post_type
