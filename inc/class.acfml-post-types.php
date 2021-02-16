@@ -110,7 +110,7 @@ class ACFML_Post_Types {
    * @param string $post_type
    * @return boolean
    */
-  public function is_multilingual_post_type( $post_type ):bool {
+  public function post_type_supports_multilingual_title( $post_type ):bool {
     return in_array($post_type, $this->get_multilingual_post_types());
   }
   
@@ -437,7 +437,7 @@ class ACFML_Post_Types {
     $post = get_post($post_id);
 
     // bail early if the post type is not multilingual
-    if( !$this->is_multilingual_post_type($post->post_type) ) return;
+    if( !$this->post_type_supports_multilingual_title($post->post_type) ) return;
 
     // bail early based on the post's status
     if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;
@@ -663,7 +663,7 @@ class ACFML_Post_Types {
 
     $queries = [];
     foreach( $post_types as $post_type ) {
-      if( $this->is_multilingual_post_type($post_type) ) {
+      if( $this->post_type_supports_multilingual_title($post_type) ) {
         $queries[] = "(
           SELECT ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
           LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
@@ -812,7 +812,7 @@ class ACFML_Post_Types {
    * @return string|null
    */
   private function get_post_slug( \WP_Post $post, string $language ): ?string { 
-    if( !$this->is_multilingual_post_type($post->post_type) ) return $post->post_name;
+    if( !$this->post_type_supports_multilingual_title($post->post_type) ) return $post->post_name;
     $slug = get_field("{$this->slug_field_name}_{$language}", $post->ID);
     if( !$slug && acfml()->is_default_language($language) ) return $post->post_name;
     return $slug;
@@ -886,7 +886,7 @@ class ACFML_Post_Types {
   public function check_for_changed_slugs( int $post_id, \WP_Post $post, \WP_Post $post_before ): void {
 
     // bail early if the post type is not multilingual
-    if( !$this->is_multilingual_post_type($post->post_type) ) return;
+    if( !$this->post_type_supports_multilingual_title($post->post_type) ) return;
 
     // We're only concerned with published, non-hierarchical objects.
     if ( ! ( 'publish' === $post->post_status || ( 'attachment' === get_post_type( $post ) && 'inherit' === $post->post_status ) ) || is_post_type_hierarchical( $post->post_type ) ) {
