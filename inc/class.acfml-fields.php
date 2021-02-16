@@ -36,7 +36,7 @@ class ACFML_Fields {
     }
     // add hooks for generated multilingual fields (type of those will be 'group')
     add_filter("acf/format_value/type=group", [$this, 'format_multilingual_value'], 12, 3);
-    add_filter("acf/update_value/type=group", [$this, 'update_multilingual_value'], 12, 3);
+    add_filter("acf/update_value/type=group", [$this, 'after_update_multilingual_value'], 12, 4);
     add_action("acf/render_field/type=group", [$this, 'render_multilingual_field'], 5);
     add_filter("acf/load_value/type=group", [$this, 'inject_previous_monolingual_value'], 10, 3);
     add_filter("acf/field_wrapper_attributes", [$this, "field_wrapper_attributes"], 10, 2);
@@ -83,6 +83,7 @@ class ACFML_Fields {
     if( empty($field['acfml_multilingual']) ) return $field;
     
     $active_language_tab = $this->get_active_language_tab($field);
+    $required_all = $field['acfml_all_required'] ?? false;
 
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
@@ -102,7 +103,7 @@ class ACFML_Fields {
         'name' => "{$field['name']}_{$lang}",
         '_name' => "$lang",
         // Only the default language of a sub-field should be required
-        'required' => $lang === $default_language && $field['required'],
+        'required' => $required_all || $lang === $default_language && $field['required'],
         'acfml_multilingual' => 0,
         'acfml_multilingual_subfield' => 1,
         'wrapper' => $wrapper,
@@ -178,7 +179,7 @@ class ACFML_Fields {
    * @param array $field
    * @return mixed
    */
-  public function update_multilingual_value( $value, $post_id, $field ) {
+  public function after_update_multilingual_value( $value, $post_id, $field, $value_before ) {
     if( !$this->is_acfml_group($field) ) return $value;
     $default_language = acfml()->get_default_language();
     $value = get_field("{$field['name']}_$default_language", $post_id, false);

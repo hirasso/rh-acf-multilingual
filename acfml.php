@@ -826,11 +826,16 @@ class ACF_Multilingual {
    */
   public function rewrite_rules_array($rules) {
     $new_rules = array();
-    $regex_languages = implode('|', $this->get_languages('slug'));
-    $new_rules["(?:$regex_languages)?/?$"] = 'index.php';
 
+    // match /{locale} with or without trailing slash
+    $regex_languages_home = implode('|', $this->get_languages('slug'));
+    $new_rules["(?:$regex_languages_home)?/?$"] = 'index.php';
+
+    // match /{locale}/my-object-slug or /my-object-slug
+    // preserves the locale in slugs with form '{locale}myslug' 
+    $regex_languages_pages = implode('\\W|', $this->get_languages('slug')) . '\\W';
     foreach ($rules as $key => $val) {
-        $key = "(?:$regex_languages)?/?" . ltrim($key, '^');
+        $key = "(?:$regex_languages_pages)?/?" . ltrim($key, '^');
         $new_rules[$key] = $val;
     }
     return $new_rules;

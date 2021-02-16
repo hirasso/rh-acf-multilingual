@@ -1,6 +1,7 @@
-#### 0.0.2 (2021-02-12)
+#### 0.0.2 (2021-02-16)
 
-- trim the post title before saving (#8d8613f)
+- - add field setting bool `acfml_all_required` - Remove ACF nag on `beforeunload` (#a0b9101)
+- trim the post title before saving (#e79d2e1)
 - `trim()` default post title before validating (#3a6fb5c)
 - sync post titles in other languages as long as they are not translated manually (#dd3f0ea)
 - Always save post titles for all languages to support `'orderby' => 'title'`in non-default languages (#c2c048a)

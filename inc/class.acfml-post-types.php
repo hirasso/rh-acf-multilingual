@@ -57,7 +57,7 @@ class ACFML_Post_Types {
     add_action('acf/save_post', [$this, 'save_post'], 20);
 
     add_action('admin_init', [$this, 'check_for_posts_with_empty_slugs']);
-    add_action('admin_init', [$this, 'maybe_generate_slugs']);
+    add_action('admin_init', [$this, 'maybe_resave_posts']);
     add_action('init', [$this, 'setup_acf_fields'], 11);
     
   }
@@ -230,6 +230,7 @@ class ACFML_Post_Types {
       'name' => $this->title_field_name,
       'type' => 'text',
       'acfml_multilingual' => true,
+      'acfml_all_required' => true,
       'required' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
@@ -422,6 +423,8 @@ class ACFML_Post_Types {
     $cached_locale = get_locale();
 
     $languages = acfml()->get_languages('slug');
+
+    // get the \WP_Post object
     $post = get_post($post_id);
 
     // bail early if the post type is not multilingual
@@ -429,18 +432,18 @@ class ACFML_Post_Types {
 
     // bail early based on the post's status
     if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;
-    
-    // get the \WP_Post object
-    $post = get_post($post_id);
 
     // This array will contain all post titles for the slugs to be generated from
     $post_titles = [];
     // get the post title of the default language (should always have some)
-    $default_post_title = trim(acfml()->get_field_or("{$this->title_field_name}_{$this->default_language}", $post->post_title, $post_id));
+    $default_post_title = trim(get_field("{$this->title_field_name}_{$this->default_language}", $post_id));
+    if( !$default_post_title ) $default_post_title = $post->post_title;
     $post_titles[$this->default_language] = $default_post_title;
 
     // get the last default post title
     $last_default_post_title = get_post_meta($post_id, "_acfml_last_default_post_title", true);
+    // save the current default post title, so that we ca sync post titles of other languages
+    update_post_meta($post_id, "_acfml_last_default_post_title", $default_post_title);
 
     // prepare post titles so there is one for every language
     foreach( $languages as $lang ) {
@@ -455,9 +458,6 @@ class ACFML_Post_Types {
       }
       $post_titles[$lang] = $post_title;
     }
-
-    // save the current default post title, so that we ca sync post titles of other languages
-    update_post_meta($post_id, "_acfml_last_default_post_title", $default_post_title);
 
     $post_slugs = [];
     // generate slugs for every language
@@ -573,6 +573,7 @@ class ACFML_Post_Types {
    */
   public function pre_get_posts( $query ) {
     
+    
     if( !$query->is_main_query() ) return;
     
     $language = acfml()->get_current_language();
@@ -597,7 +598,6 @@ class ACFML_Post_Types {
       // for custom post types
       if( $post_type_object ) unset($query->query_vars[$post_type_object->query_var]);
     }
-    
     
     // Allow posts to be set to non-public
     $meta_query['acfml_lang_active'] = [
@@ -942,11 +942,19 @@ class ACFML_Post_Types {
    * @param integer $posts_per_page
    * @return array
    */
-  private function find_posts_with_empty_slug(string $language, $posts_per_page = 0): array {
+  private function find_posts_with_missing_data(string $language, $posts_per_page = 0): array {
     $posts = get_posts([
       'post_type' => $this->get_multilingual_post_types(),
       'meta_query' => [
         'relation' => 'OR',
+        [
+          'key' => "{$this->title_field_name}_{$language}",
+          'value' => ''
+        ],
+        [
+          'key' => "{$this->title_field_name}_{$language}",
+          'compare' => 'NOT EXISTS'
+        ],
         [
           'key' => "{$this->slug_field_name}_{$language}",
           'value' => ''
@@ -969,7 +977,7 @@ class ACFML_Post_Types {
    */
   public function check_for_posts_with_empty_slugs() {
     foreach( acfml()->get_languages('slug') as $lang ) {
-      $posts = $this->find_posts_with_empty_slug($lang, 1);
+      $posts = $this->find_posts_with_missing_data($lang, 1);
       if( count($posts) ) {
         acfml()->admin->add_notice(
           'empty_slugs_notice',
@@ -985,13 +993,13 @@ class ACFML_Post_Types {
    *
    * @return void
    */
-  public function maybe_generate_slugs() {
+  public function maybe_resave_posts() {
     // check nonce
-    if( !acfml()->admin->verify_nonce('acfml_generate_slugs') ) return;
+    if( !acfml()->admin->verify_nonce('acfml_nonce_resave_posts') ) return;
     // find posts with empty slugs for each language
     $post_ids = [];
     foreach( acfml()->get_languages('slug') as $lang ) {
-      $posts = $this->find_posts_with_empty_slug($lang, -1);
+      $posts = $this->find_posts_with_missing_data($lang, -1);
       $post_ids = array_unique(array_merge($post_ids, $posts));
     }
     $count = count($post_ids);
