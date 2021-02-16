@@ -442,39 +442,23 @@ class ACFML_Post_Types {
     // bail early based on the post's status
     if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;
 
-    // This array will contain all post titles for the slugs to be generated from
-    $post_titles = [];
-    // get the post title of the default language (should always have some)
-    $default_post_title = trim(get_field("{$this->title_field_name}_{$this->default_language}", $post_id));
-    if( !$default_post_title ) $default_post_title = $post->post_title;
-    $post_titles[$this->default_language] = $default_post_title;
-
-    // get the last default post title
-    $last_default_post_title = get_post_meta($post_id, "_acfml_last_default_post_title", true);
-    // save the current default post title, so that we ca sync post titles of other languages
-    update_post_meta($post_id, "_acfml_last_default_post_title", $default_post_title);
-
     // prepare post titles so there is one for every language
+    $post_titles = [];
     foreach( $languages as $lang ) {
-      // do nothing for the default language
-      if( $lang === $this->default_language ) continue;
       $post_title = trim(get_field("{$this->title_field_name}_{$lang}", $post_id));
-      // if there is no title for the language yet, use the default
-      if( !$post_title || $post_title === $last_default_post_title ) {
-        $post_title = $default_post_title;
-        // save the unique slug to the database
-        update_field("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
+      if( !$post_title ) {
+        $post_title = $post->post_title;
+        update_field("{$this->title_field_name}_{$lang}", $post_title, $post_id);
       }
       $post_titles[$lang] = $post_title;
     }
 
-    $post_slugs = [];
     // generate slugs for every language
+    $post_slugs = [];
     foreach( $languages as $lang ) {
       // get the slug from the field
       $raw_slug = get_field("{$this->slug_field_name}_{$lang}", $post_id);
       if( !$raw_slug ) $raw_slug = $post_titles[$lang];
-
       // set global locale to current $lang, so that sanitize_title can run on full power
       $locale = acfml()->get_language_info($lang)['locale'];
       // sanitize the slug

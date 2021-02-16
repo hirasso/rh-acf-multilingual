@@ -1,6 +1,6 @@
 #### 0.0.2 (2021-02-16)
 
-- check for 'title' support in most cases, canonical redirect for archives (#e5dd666)
+- check for 'title' support in most cases, canonical redirect for archives (#2b0020e)
 - - add field setting bool `acfml_all_required` - Remove ACF nag on `beforeunload` (#86fb2c3)
 - trim the post title before saving (#e79d2e1)
 - `trim()` default post title before validating (#3a6fb5c)
