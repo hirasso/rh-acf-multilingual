@@ -104,6 +104,7 @@ class ACF_Multilingual {
     // run other functions
     $this->detect_language();
     $this->load_textdomain();
+    $this->admin->add_hooks();
     $this->add_hooks();
   }
 

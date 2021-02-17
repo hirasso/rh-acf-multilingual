@@ -14,6 +14,16 @@ class ACFML_Admin {
   }
 
   /**
+   * Must be called from ACFML
+   *
+   * @return void
+   */
+  public function add_hooks() {
+    add_action('admin_bar_menu', [$this, 'add_admin_bar_menu'], 100);
+    add_action('admin_init', [$this, 'maybe_set_admin_language']);
+  }
+
+  /**
    * Runs on acf_init
    *
    * @return void
@@ -54,10 +64,21 @@ class ACFML_Admin {
       'type' => 'warning', 
       'is_dismissible' => false,
     ]);
+    
     // add the notice to the transient
-    $notices = get_transient("$this->prefix-admin-notices") ?: [];
+    $notices = get_transient($this->get_transient_name()) ?: [];
     $notices[$key] = $notice;
-    set_transient("$this->prefix-admin-notices", $notices);
+    set_transient($this->get_transient_name(), $notices);
+  }
+
+  /**
+   * Get the transient name for the current user
+   *
+   * @return void
+   */
+  private function get_transient_name() {
+    $user_id = get_current_user_id();
+    return "acfml-admin-notices-$user_id";
   }
 
   /**
@@ -67,11 +88,11 @@ class ACFML_Admin {
    */
   public function show_added_notices() {
     if( !defined('ACF') ) return;
-    $notices = get_transient("$this->prefix-admin-notices") ?: [];
+    $notices = get_transient($this->get_transient_name()) ?: [];
     foreach( $notices as $notice ) {
       $this->show_notice($notice['message'], $notice);
     }
-    delete_transient("$this->prefix-admin-notices");
+    delete_transient($this->get_transient_name());
   }
 
   /**
@@ -186,6 +207,65 @@ class ACFML_Admin {
     update_option('acfml_hashed_settings', $this->get_hashed_settings());
     // flush the rules
     flush_rewrite_rules();
+  }
+
+  /**
+   * Adds the admin bar menu
+   * 
+   * @param \WP_Admin_Bar $wp_adminbar
+   * @return void
+   */
+  public function add_admin_bar_menu(\WP_Admin_Bar $wp_adminbar) {
+    
+    $languages = acfml()->get_languages();
+    $current_language = acfml()->get_current_language();
+
+    $icon = "<span class='ab-icon acfml-ab-icon dashicons dashicons-translation'></span>";
+    $title = sprintf( $languages[$current_language]['name'] );
+
+    $wp_adminbar->add_node([
+      'parent' => 'top-secondary',
+      'id' => 'acfml',
+      'title' => "$icon $title",
+      'meta'  => [ 'title' => __( 'Switch your admin language', 'acfml' ) ],
+    ]);
+    
+    unset( $languages[$current_language] );
+
+    foreach( $languages as $language ) {
+      $url = add_query_arg('lang', $language['slug']);
+      $wp_adminbar->add_node([
+        'parent' => 'acfml',
+        'id' => "acfml-switch-{$language['slug']}",
+        'title' => "{$language['name']}",
+        'meta'  => [ 'title' => sprintf( __( 'Switch to %s', 'acfml' ), $language['name']) ],
+        'href' => $url
+      ]);
+    }
+
+  }
+
+  /**
+   * Set the admin language and reload
+   *
+   * @return void
+   */
+  public function maybe_set_admin_language() {
+    // get the language from the URL
+    $lang_GET = $_GET['lang'] ?? null;
+    // bail early if no 'lang' param found in $_GET
+    if( !$lang_GET ) return;
+    $languages = acfml()->get_languages();
+    // bail early if the requested language is not installed
+    if( !array_key_exists($lang_GET, $languages) ) return;
+    $locale = $languages[$lang_GET]['locale'];
+    // bail early if the user locale is the same as the requested already
+    if( $locale === get_user_locale() ) return;
+    // update the current users locale, redirect afterwards
+    $user = wp_get_current_user();
+    update_user_meta($user->ID, 'locale', $locale);
+    wp_redirect( remove_query_arg('lang') );
+    exit;
   }
 
 }
