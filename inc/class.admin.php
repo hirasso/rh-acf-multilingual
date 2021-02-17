@@ -221,7 +221,7 @@ class Admin {
     $current_language = acfml()->get_language_info(acfml()->get_current_language());
 
     $icon = "<span class='ab-icon acfml-ab-icon dashicons dashicons-translation'></span>";
-    $title = sprintf( $current_language['name'] );
+    $title = $current_language['name'];
 
     $wp_adminbar->add_node([
       'parent' => 'top-secondary',

@@ -1,6 +1,6 @@
 #### 0.0.3 (2021-02-17)
 
-- Support for language switcher in admin bar on frontend (#781eb77)
+- Support for language switcher in admin bar on frontend (#9957010)
 
 #### 0.0.2 (2021-02-17)
 
