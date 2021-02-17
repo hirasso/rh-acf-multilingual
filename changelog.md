@@ -1,3 +1,7 @@
+#### 0.0.3 (2021-02-17)
+
+- Support for language switcher in admin bar on frontend (#781eb77)
+
 #### 0.0.2 (2021-02-17)
 
 - Add admin bar item to switch the current user's language (#c481ed5)

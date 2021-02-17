@@ -10,6 +10,7 @@ class Admin {
 
   public function __construct() {
     $this->prefix = acfml()->get_prefix();
+    add_action('admin_init', [$this, 'maybe_show_acf_missing_notice']);
     add_action('admin_notices', [$this, 'show_added_notices']);
   }
 
@@ -216,12 +217,11 @@ class Admin {
    * @return void
    */
   public function add_admin_bar_menu(\WP_Admin_Bar $wp_adminbar) {
-    
-    $languages = acfml()->get_languages();
-    $current_language = acfml()->get_current_language();
+
+    $current_language = acfml()->get_language_info(acfml()->get_current_language());
 
     $icon = "<span class='ab-icon acfml-ab-icon dashicons dashicons-translation'></span>";
-    $title = sprintf( $languages[$current_language]['name'] );
+    $title = sprintf( $current_language['name'] );
 
     $wp_adminbar->add_node([
       'parent' => 'top-secondary',
@@ -229,17 +229,19 @@ class Admin {
       'title' => "$icon $title",
       'meta'  => [ 'title' => __( 'Switch your admin language', 'acfml' ) ],
     ]);
-    
-    unset( $languages[$current_language] );
 
-    foreach( $languages as $language ) {
-      $url = add_query_arg('lang', $language['slug']);
+    $switcher = acfml()->get_language_switcher([
+      'format' => 'raw'
+    ]);
+
+    foreach( $switcher as $item ) {
+      if( $item['is_current'] ) continue;
       $wp_adminbar->add_node([
         'parent' => 'acfml',
-        'id' => "acfml-switch-{$language['slug']}",
-        'title' => "{$language['name']}",
-        'meta'  => [ 'title' => sprintf( __( 'Switch to %s', 'acfml' ), $language['name']) ],
-        'href' => $url
+        'id' => "acfml-switch-{$item['slug']}",
+        'title' => "{$item['display_name']}",
+        'meta'  => [ 'title' => sprintf( __( 'Switch to %s', 'acfml' ), $item['display_name']) ],
+        'href' => $item['url']
       ]);
     }
 
@@ -266,6 +268,23 @@ class Admin {
     update_user_meta($user->ID, 'locale', $locale);
     wp_redirect( remove_query_arg('lang') );
     exit;
+  }
+
+  /**
+   * Renders a notice of ACF is not installed
+   *
+   * @return void
+   */
+  public function  maybe_show_acf_missing_notice() {
+    if( defined('ACF') ) return;
+    $locale = determine_locale();
+    $message = wp_sprintf(
+      __("ACF Multilingual requires the plugin %s to be installed and activated.", 'acfml'),
+      '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>',
+    );
+    $this->show_notice($message, [
+      'type' => 'error'
+    ]);
   }
 
 }

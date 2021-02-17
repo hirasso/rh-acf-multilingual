@@ -70,8 +70,6 @@ class ACF_Multilingual {
     // Include and instanciate admin class
     $this->include('inc/class.admin.php');
     $this->admin = new ACFML\Admin();
-
-    add_action('admin_init', [$this, 'maybe_show_acf_missing_notice']);
     
     // hook into after_setup_theme to initialize
     add_action('after_setup_theme', [$this, 'maybe_fully_initialize'], 11);
@@ -136,23 +134,6 @@ class ACF_Multilingual {
     // convert links in sitemaps entries
     add_filter('wp_sitemaps_index_entry', [$this, 'sitemaps_index_entry'], 10);
     add_action('init', [$this, 'add_sitemaps_provider']);
-  }
-
-  /**
-   * Renders a notice of ACF is not installed
-   *
-   * @return void
-   */
-  public function  maybe_show_acf_missing_notice() {
-    if( defined('ACF') ) return;
-    $locale = determine_locale();
-    $message = wp_sprintf(
-      __("ACF Multilingual requires the plugin %s to be installed and activated.", 'acfml'),
-      '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>',
-    );
-    $this->admin->show_notice($message, [
-      'type' => 'error'
-    ]);
   }
 
   /**
@@ -674,6 +655,11 @@ class ACF_Multilingual {
     if( !$requested_language ) $requested_language = $this->get_current_language();
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
+
+    // Return a simple query arg language for admin context
+    if( is_admin() ) {
+      return add_query_arg('lang', $requested_language, $this->get_current_url());
+    }
     
     if( $wp_object = $this->resolve_url($url) ) {
       
