@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class ACFML_Fields {
+class Fields_Controller {
 
   // for which field types should 'acfml_multilingual' be available?
   private $multilingual_field_types = [

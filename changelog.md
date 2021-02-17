@@ -1,6 +1,6 @@
 #### 0.0.2 (2021-02-17)
 
-- Add admin bar item to switch the current user's language (#d4b11ea)
+- Add admin bar item to switch the current user's language (#c481ed5)
 - add `ACFML_Sitemaps_Provider` (#50d2eae)
 - only do pre_get_posts for supported post types (#e729a60)
 - deeper check for changed settings (#ebbb0d8)

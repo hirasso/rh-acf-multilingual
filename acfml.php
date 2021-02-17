@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: ACF Multilingual
- * Version: 0.0.2
+ * Version: 0.0.3
  * Author: Rasso Hilber
  * Description: A lightweight solution to support multiple languages with WordPress and Advanced Custom Fields
  * Author URI: https://rassohilber.com
@@ -21,32 +21,32 @@ class ACF_Multilingual {
   private $languages = [];
 
   /**
-   * ACFML_Admin instance
+   * Admin instance
    *
-   * @var ACFML\ACFML_Admin
+   * @var ACFML\Admin
    */
   public $admin; 
 
   /**
-   * ACFML_Fields instance
+   * Fields_Controller instance
    *
-   * @var ACFML\ACFML_Fields
+   * @var ACFML\Fields_Controller
    */
-  public $acfml_fields; 
+  public $fields_controller; 
 
   /**
-   * ACFML_Post_Types instance
+   * Post_Types_Controller instance
    *
-   * @var ACFML\ACFML_Post_Types
+   * @var ACFML\Post_Types_Controller
    */
-  public $acfml_post_types;
+  public $post_types_controller;
 
   /**
-   * ACFML_Taxonomies instance
+   * Taxonomies_Controller instance
    *
-   * @var ACFML\ACFML_Taxonomies
+   * @var ACFML\Taxonomies_Controller
    */
-  public $acfml_taxonomies; 
+  public $taxonomies_controller; 
 
   /**
    * Empty constructor
@@ -65,11 +65,11 @@ class ACF_Multilingual {
     $this->define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 
     // include API
-    $this->include('inc/acfml-api.php');
+    $this->include('inc/api.php');
 
     // Include and instanciate admin class
-    $this->include('inc/class.acfml-admin.php');
-    $this->admin = new ACFML\ACFML_Admin();
+    $this->include('inc/class.admin.php');
+    $this->admin = new ACFML\Admin();
 
     add_action('admin_init', [$this, 'maybe_show_acf_missing_notice']);
     
@@ -93,13 +93,13 @@ class ACF_Multilingual {
     if( !count($languages) ) return;
     
     // Include and instanciate classes
-    $this->include('inc/class.acfml-fields.php');
-    $this->include('inc/class.acfml-post-types.php');
-    $this->include('inc/class.acfml-taxonomies.php');
-    $this->include('inc/class.acfml-sitemaps-provider.php');
-    $this->acfml_fields = new ACFML\ACFML_Fields();
-    $this->acfml_post_types = new ACFML\ACFML_Post_Types();
-    $this->acfml_taxonomies = new ACFML\ACFML_Taxonomies();
+    $this->include('inc/class.fields-controller.php');
+    $this->include('inc/class.post-types-controller.php');
+    $this->include('inc/class.taxonomies-controller.php');
+    $this->include('inc/class.sitemaps-provider.php');
+    $this->fields_controller = new ACFML\Fields_Controller();
+    $this->post_types_controller = new ACFML\Post_Types_Controller();
+    $this->taxonomies_controller = new ACFML\Taxonomies_Controller();
 
     // run other functions
     $this->detect_language();
@@ -678,10 +678,10 @@ class ACF_Multilingual {
     if( $wp_object = $this->resolve_url($url) ) {
       
       if( $wp_object instanceof \WP_Post ) {
-        $new_url = $this->acfml_post_types->get_post_link($wp_object, $requested_language);
+        $new_url = $this->post_types_controller->get_post_link($wp_object, $requested_language);
         return $new_url;
       } elseif( $wp_object instanceof \WP_Post_Type ) {
-        $new_url = $this->acfml_post_types->get_post_type_archive_link($wp_object->name, $requested_language);
+        $new_url = $this->post_types_controller->get_post_type_archive_link($wp_object->name, $requested_language);
         return $new_url;
       }
     }

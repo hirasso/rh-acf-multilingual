@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class ACFML_Post_Types {
+class Post_Types_Controller {
   
   private $prefix;
   private $default_language;

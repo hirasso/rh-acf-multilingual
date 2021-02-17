@@ -22,27 +22,35 @@ function acfml_get_current_language() {
 }
 
 /**
- * This function is documented in class.acfml-post-types.php > add_post_type
+ * This function is documented in acfml.php > get_languages
+ *
+ */
+function acfml_get_languages(?string $format = null) {
+  return acfml()->get_languages($format);
+}
+
+/**
+ * This function is documented in class.post-types-controller.php > add_post_type
  */
 function acfml_add_post_type($post_type, ?array $args = []) {
   if( did_action('init') ) {
-    acfml()->acfml_post_types->add_post_type($post_type, $args);
+    acfml()->post_types_controller->add_post_type($post_type, $args);
   } else {
     add_action('init', function () use ($post_type, $args) {
-      acfml()->acfml_post_types->add_post_type($post_type, $args);
+      acfml()->post_types_controller->add_post_type($post_type, $args);
     }, 11); // after default 'init' hook
   }
 }
 
 /**
-* This function is documented in class.acfml-taxonomies.php > add_taxonomy
+* This function is documented in class.taxonomies-controller.php > add_taxonomy
 */
 function acfml_add_taxonomy( $taxonomy ) {
   if( did_action('init') ) {
-    acfml()->acfml_taxonomies->add_taxonomy($taxonomy);
+    acfml()->taxonomies_controller->add_taxonomy($taxonomy);
   } else {
     add_action('init', function () use ($taxonomy) {
-      acfml()->acfml_taxonomies->add_taxonomy($taxonomy);
+      acfml()->taxonomies_controller->add_taxonomy($taxonomy);
     }, 11); // after default 'init' hook
   }
 }

@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class ACFML_Admin {
+class Admin {
   
   private $prefix;
 
@@ -133,7 +133,7 @@ class ACFML_Admin {
    * @return string
    */
   private function get_hashed_post_types(): string {
-    return md5( json_encode(acfml()->acfml_post_types->get_multilingual_post_types()) );
+    return md5( json_encode(acfml()->post_types_controller->get_multilingual_post_types()) );
   }
 
   /**
@@ -145,7 +145,7 @@ class ACFML_Admin {
   private function get_hashed_settings(): string {
     $settings = [
       'languages' => acfml()->get_languages('slug'),
-      'post_types' => acfml()->acfml_post_types->get_multilingual_post_types('full', false)
+      'post_types' => acfml()->post_types_controller->get_multilingual_post_types('full', false)
     ];
     $hash = md5( json_encode($settings) );
     return $hash;

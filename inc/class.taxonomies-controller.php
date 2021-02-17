@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class ACFML_Taxonomies {
+class Taxonomies_Controller {
   
   private $prefix;
   private $default_language;
