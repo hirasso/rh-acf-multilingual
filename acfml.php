@@ -989,20 +989,33 @@ class ACF_Multilingual {
     // allow deactivation
     if( !apply_filters('acfml/redirect_front_page', true) ) return;
     
-    if( $_COOKIE['acfml-language'] ?? null ) return;
+    if( !is_front_page() || is_robots() ) return;
 
     $current_language = $this->get_current_language();
-    $user_language = strtolower(substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2));
+    $user_language = strtolower(substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2));    
+
+    if( $_COOKIE['acfml-language'] ?? null ) return;
     
     if( !$this->is_language_enabled($user_language) ) $user_language = $this->get_default_language();
     
     if( $current_language === $user_language ) return;
 
-    if( is_front_page() && !is_robots() ) {
-      wp_redirect( $this->home_url('', $user_language) );
-      exit;
-    }
+    wp_redirect( user_trailingslashit($this->home_url('', $user_language)) );
+    exit;
     
+  }
+
+  /**
+   * Check if the current page was called from an internal referrer
+   *
+   * @return boolean
+   */
+  private function is_internal_referrer(): bool {
+    $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+    if( !$referrer ) return false;
+    $parsed_referrer = wp_parse_url($referrer);
+    $parsed_current_url = wp_parse_url($this->get_current_url());
+    return $parsed_referrer['host'] === $parsed_current_url['host'];    
   }
 
   /**
