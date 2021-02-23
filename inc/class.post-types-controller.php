@@ -566,10 +566,16 @@ class Post_Types_Controller {
    */
   public function pre_get_posts( $query ) {
     
-    if( !$query->is_main_query() ) return;
+    // Skip if suppress_filters is set or query is for an attachment.
+    if (
+      ($query->query_vars['suppress_filters'] ?? false) ||
+      ($query->query_vars['attachment'] ?? false)
+    ) {
+      return;
+    }
     
     $language = acfml()->get_current_language();
-    $default_language = acfml()->get_default_language();
+    
     if( acfml()->is_default_language($language) ) return;
 
     $post_type = $query->queried_object->post_type ?? $query->get('post_type') ?: false;
