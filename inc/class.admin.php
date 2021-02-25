@@ -260,12 +260,23 @@ class Admin {
     $languages = acfml()->get_languages();
     // bail early if the requested language is not installed
     if( !array_key_exists($lang_GET, $languages) ) return;
-    $locale = $languages[$lang_GET]['locale'];
+    $language = $languages[$lang_GET];
+    $locale = $language['locale'];
     // bail early if the user locale is the same as the requested already
     if( $locale === get_user_locale() ) return;
     // update the current users locale, redirect afterwards
     $user = wp_get_current_user();
     update_user_meta($user->ID, 'locale', $locale);
+    // add a notice
+    $this->add_notice(
+      'acfml-changed-admin-language', 
+      sprintf(__('Changed the admin language to %s'), $language['name']),
+      [
+        'type' => 'success',
+        'is_dismissible' => true
+      ]
+    );
+    // do the redirect
     wp_redirect( remove_query_arg('lang') );
     exit;
   }

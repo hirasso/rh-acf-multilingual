@@ -1,6 +1,7 @@
 #### 0.0.4 (2021-02-25)
 
-- Automatically download admin language packs (#d693acd)
+- `acfml_get_language_switcher`: default return changed to `raw` (> array) (#73e5c6f)
+- Automatically download admin language packs (#6c79bbc)
 
 #### 0.0.3 (2021-02-23)
 

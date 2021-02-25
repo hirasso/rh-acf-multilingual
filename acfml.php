@@ -415,11 +415,11 @@ class ACF_Multilingual {
    *                                  to see the default settings.
    * 
    *                                  - format:
-   *                                      - 'list' (default): Returns HTML like this: <ul><li><a></li><li><a></li>...</ul>
+   *                                      - 'raw' (default): Returns an array
+   *                                      - 'list': Returns HTML like this: <ul><li><a></li><li><a></li>...</ul>
    *                                      - 'list_items': Samle as 'list', but without the wrapping <ul> element
    *                                      - 'dropdown': Returns HTML like this: <select><option><option>...</select>
    *                                      - '$key:$value': Returns an array containing the contents of one column as keys and of another column as values
-   *                                      - 'raw': Returns an array
    *                                  - display_names_as: 
    *                                      – 'name' (default): e.g. 'English', 'Deutsch', ...
    *                                      – 'slug': e.g. 'en', 'de', ...
@@ -437,7 +437,7 @@ class ACF_Multilingual {
     static $dropdown_count = 0;
     static $list_count = 0;
     $args = $this->to_object(wp_parse_args($args, [
-      'format' => 'list',
+      'format' => 'raw',
       'display_names_as' => 'name',
       'hide_current' => false,
       'url' => null,
@@ -660,9 +660,9 @@ class ACF_Multilingual {
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
 
-    // Return a simple query arg language for admin context
-    if( is_admin() ) {
-      return add_query_arg('lang', $requested_language, $this->get_current_url());
+    // Return a simple query arg language for admin urls
+    if( strpos($url, admin_url()) !== false ) {
+      return add_query_arg('lang', $requested_language, $url);
     }
     
     if( $wp_object = $this->resolve_url($url) ) {
@@ -841,14 +841,9 @@ class ACF_Multilingual {
    * @return void
    */
   public function wp_head() {
-    $default_language = $this->get_default_language();
-    $languages = $this->get_languages();
-    foreach( $languages as &$language ) {
-      $language['url'] = $this->convert_current_url($language['slug']);
-      $language['is_default'] = $this->is_default_language($language['slug']);
-    }
+    $switcher = $this->get_language_switcher();
     echo $this->get_template('meta-tags', [
-      'languages' => $languages,
+      'languages' => $switcher,
     ]);
   }
 
