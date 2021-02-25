@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: ACF Multilingual
- * Version: 0.0.3
+ * Version: 0.0.4
  * Author: Rasso Hilber
  * Description: A lightweight solution to support multiple languages with WordPress and Advanced Custom Fields
  * Author URI: https://rassohilber.com
@@ -235,7 +235,11 @@ class ACF_Multilingual {
    * @return void
    */
   public function admin_init() {
-    
+    /** WordPress Translation Installation API */
+    require_once ABSPATH . 'wp-admin/includes/translation-install.php';
+    foreach( $this->get_languages('full') as $language ) {
+      wp_download_language_pack($language['locale']);
+    }
   }
 
   /**

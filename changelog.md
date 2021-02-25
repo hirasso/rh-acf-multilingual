@@ -1,6 +1,10 @@
+#### 0.0.4 (2021-02-25)
+
+- Automatically download admin language packs (#d693acd)
+
 #### 0.0.3 (2021-02-23)
 
-- Skip `pre_get_posts` if `suppress_filters==true` or query is for an attachment. (#eb95ea1)
+- Skip `pre_get_posts` if `suppress_filters==true` or query is for an attachment. (#cb41ffe)
 - add `user_trailingslashit` for front page redirect (#f25217a)
 - Support for language switcher in admin bar on frontend (#9957010)
 
