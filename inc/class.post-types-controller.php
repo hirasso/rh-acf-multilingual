@@ -474,11 +474,12 @@ class Post_Types_Controller {
 
     // save slug of the default language to the post_name
     remove_action('acf/save_post', [$this, 'save_post']);
-    wp_update_post([
+    $post_args = [
       'ID' => $post_id,
       'post_name' => $post_slugs[$this->default_language],
       'post_title' => $post_titles[$this->default_language]
-    ]);
+    ];
+    wp_update_post($post_args);
     add_action('acf/save_post', [$this, 'save_post'], 20);
   }
 

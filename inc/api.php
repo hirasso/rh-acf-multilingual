@@ -55,7 +55,12 @@ function acfml_add_taxonomy( $taxonomy ) {
   }
 }
 
-
+/**
+ * Get a permalink in each language for a post
+ *
+ * @param int|\WP_Post $post
+ * @return array|null
+ */
 function acfml_get_permalinks($post): ?array {
   $permalink = get_permalink($post);
   $switcher = acfml_get_language_switcher([

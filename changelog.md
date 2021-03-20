@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-03-20)
 
-- add function to re-save ALL posts (#a4dfa21)
+- add new API function `acfml_get_permalinks` (#d760508)
+- add function to re-save ALL posts (#898ab5a)
 
 #### 0.0.4 (2021-03-20)
 
