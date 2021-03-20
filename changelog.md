@@ -1,6 +1,7 @@
-#### 0.0.4 (2021-02-25)
+#### 0.0.4 (2021-03-20)
 
-- `acfml_get_language_switcher`: default return changed to `raw` (> array) (#73e5c6f)
+- Detect language from GET in admin-ajax.php (some clients don't send a referrer header) (#f300120)
+- `acfml_get_language_switcher`: default return changed to `raw` (> array) (#4a121d6)
 - Automatically download admin language packs (#6c79bbc)
 
 #### 0.0.3 (2021-02-23)

@@ -253,6 +253,8 @@ class Admin {
    * @return void
    */
   public function maybe_set_admin_language() {
+    // bail early if this is an AJAX request
+    if( wp_doing_ajax() ) return;
     // get the language from the URL
     $lang_GET = $_GET['lang'] ?? null;
     // bail early if no 'lang' param found in $_GET

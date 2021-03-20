@@ -134,6 +134,9 @@ class ACF_Multilingual {
     // convert links in sitemaps entries
     add_filter('wp_sitemaps_index_entry', [$this, 'sitemaps_index_entry'], 10);
     add_action('init', [$this, 'add_sitemaps_provider']);
+
+    // add current language to admin-ajax.php 
+    add_filter('admin_url', [$this, 'convert_admin_ajax_url'], 10, 3);
   }
 
   /**
@@ -574,19 +577,25 @@ class ACF_Multilingual {
    *
    */
   public function detect_language() {
+    // return early if language was already detected
     if( $this->language ) return $this->language;
-    $referrer = $_SERVER['HTTP_REFERER'] ?? '';
-    // ajax requests: check referrer to detect if called from frontend.
-    if( wp_doing_ajax() && $referrer && strpos($referrer, admin_url()) !== 0 ) {
-      $language = $this->get_language_in_url($referrer);
-    } elseif( is_admin() ) {
+    
+    $language = $this->get_default_language();
+    $lang_GET = $_GET['lang'] ?? '';
+
+    if( wp_doing_ajax() && $lang_GET ) { // ajax requests: get language from GET parameter
+      $language = $lang_GET;
+    } elseif( is_admin() ) { // admin: get language from user setting
       $locale = determine_locale();
       $language = explode('_', $locale)[0];
-    } else {
+    } else { // frontend: get language from URL
       $language = $this->get_language_in_url($this->get_current_url());
     }
+    // reset to default language if the detected is not enabled
     if( !$this->is_language_enabled($language) ) $language = $this->get_default_language();
+    // set the class property
     $this->language = $language;
+    // set a constant containing the current language
     $this->define('ACFML_CURRENT_LANGUAGE', $language);
     return $language;
   }
@@ -913,9 +922,9 @@ class ACF_Multilingual {
     $path = explode('?', $path)[0];
     $path = trim($path, '/');
     // prepare the $path
-    $path     = rawurlencode( urldecode( $path ) );
-    $path     = str_replace( '%2F', '/', $path );
-    $path     = str_replace( '%20', ' ', $path );
+    $path = rawurlencode( urldecode( $path ) );
+    $path = str_replace( '%2F', '/', $path );
+    $path = str_replace( '%20', ' ', $path );
     
     return $path;
   }
@@ -1005,19 +1014,6 @@ class ACF_Multilingual {
   }
 
   /**
-   * Check if the current page was called from an internal referrer
-   *
-   * @return boolean
-   */
-  private function is_internal_referrer(): bool {
-    $referrer = $_SERVER['HTTP_REFERER'] ?? '';
-    if( !$referrer ) return false;
-    $parsed_referrer = wp_parse_url($referrer);
-    $parsed_current_url = wp_parse_url($this->get_current_url());
-    return $parsed_referrer['host'] === $parsed_current_url['host'];    
-  }
-
-  /**
    * Save the language in a cookie
    *
    * @return void
@@ -1066,6 +1062,20 @@ class ACF_Multilingual {
       wp_redirect($converted_url);
       exit;
     }
+  }
+
+  /**
+   * Add the current language to admin-ajax.php
+   *
+   * @param string $url
+   * @param string $path
+   * @param int $blog_id
+   * @return string
+   */
+  public function convert_admin_ajax_url($url, $path, $blog_id): string {
+    if( strpos($path, 'admin-ajax.php') === false ) return $url;
+    $url = add_query_arg('lang', $this->get_current_language(), $url);
+    return $url;
   }
 
 
