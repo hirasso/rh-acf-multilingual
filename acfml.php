@@ -565,9 +565,9 @@ class ACF_Multilingual {
   /**
    * Detect language in different contexts
    *
-   * @return void
+   * @return string
    */
-  public function detect_language(): void {
+  public function detect_language(): string {
     // return early if language was already detected
     if( $this->language ) return $this->language;
     
