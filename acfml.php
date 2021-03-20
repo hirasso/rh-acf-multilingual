@@ -305,9 +305,9 @@ class ACF_Multilingual {
   }
 
   /**
-   * Get the home url in the requested or the default language
+   * Get home url in requested or default language
    *
-   * @param string|Null $lang
+   * @param string|null $lang
    * @param string
    */
   public function home_url($path = '', $lang = null) {
@@ -323,7 +323,7 @@ class ACF_Multilingual {
    * @param string $path
    * @param string
    */
-  private function asset_uri( $path ) {
+  private function asset_uri( $path ): string {
     $uri = plugins_url( $path, __FILE__ );
     $file = $this->get_file_path( $path );
     if( file_exists( $file ) ) {
@@ -337,16 +337,16 @@ class ACF_Multilingual {
    * Helper function to transform an array to an object
    *
    * @param array $array
-   * @return stdClass
+   * @return object
    */
-  public function to_object( $array ) {
+  public function to_object( $array ): object {
     return json_decode(json_encode($array));
   }
 
   /**
    * Helper function to detect a development environment
    */
-  private function is_dev() {
+  private function is_dev(): bool {
     if( defined('WP_ENV') && WP_ENV === 'development' ) return true;
     if( wp_get_environment_type() === 'development' ) return true;
     return false;
@@ -360,7 +360,7 @@ class ACF_Multilingual {
    * @param boolean $allow_filter
    * @return string
    */
-  public function get_template($template_name, $value = null, $allow_filter = true) {
+  public function get_template($template_name, $value = null, $allow_filter = true): string {
     $value = $this->to_object($value);
     $path = $this->get_file_path("templates/$template_name.php");
     if( $allow_filter ) $path = apply_filters("acfml/template/$template_name", $path);
@@ -375,9 +375,9 @@ class ACF_Multilingual {
    * Get all activated languages
    *
    * @param string $format    'full' or 'slug'
-   * @return Array
+   * @return array
    */
-  public function get_languages( $format = 'full' ) {
+  public function get_languages( $format = 'full' ): array {
     $languages = $this->languages;
     if( $format === 'slug' ) return array_column($languages, 'slug');
     return $languages;
@@ -543,16 +543,6 @@ class ACF_Multilingual {
   }
 
   /**
-   * Check if a language exists
-   *
-   * @param string $lang
-   * @return bool
-   */
-  private function language_exists($lang): bool {
-    return in_array($lang, array_column($this->get_languages(), 'slug'));
-  }
-
-  /**
    * Check if a language is the default language
    *
    * @param string $language
@@ -575,8 +565,9 @@ class ACF_Multilingual {
   /**
    * Detect language in different contexts
    *
+   * @return void
    */
-  public function detect_language() {
+  public function detect_language(): void {
     // return early if language was already detected
     if( $this->language ) return $this->language;
     
@@ -601,26 +592,12 @@ class ACF_Multilingual {
   }
 
   /**
-   * Get admin language. First checks for a Cookie, falls back to user language
-   * 
-   * @return string
-   */
-  public function get_admin_language(): string {
-    global $locale;
-    // if( !$language ) {
-    //   $user_locale = get_user_locale();
-    //   $language = explode('_', $locale)[0];
-    // }
-    // return $language;
-  }
-
-  /**
    * Switch to a langauge
    *
    * @param string $language    the slug of the language, e.g. 'en' or 'de'
    * @return void
    */
-  public function switch_to_language($language) {
+  public function switch_to_language($language): bool {
     $languages = $this->get_languages('slug');
     if( !in_array($language, $languages) ) return false;
     $this->language = $language;
@@ -632,7 +609,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function reset_language() {
+  public function reset_language(): void {
     $this->language = defined('ACFML_CURRENT_LANGUAGE') ? ACFML_CURRENT_LANGUAGE : $this->get_default_language();
   }
 
@@ -709,7 +686,7 @@ class ACF_Multilingual {
    *
    * @return Array
    */
-  private function get_link_filters():array {
+  private function get_link_filters(): array {
     $filters = [
       "simple" => [
         "author_feed_link" => 10,
@@ -749,7 +726,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function add_link_filters() {
+  public function add_link_filters(): void {
     $filters = $this->get_link_filters();
     foreach( $filters['simple'] as $filter_name => $priority ) {
       add_filter($filter_name, [$this, 'simple_convert_url'], intval($priority));
@@ -764,7 +741,7 @@ class ACF_Multilingual {
   *
   * @return void
   */
-  public function remove_link_filters() {
+  public function remove_link_filters(): void {
     $filters = $this->get_link_filters();
     foreach( $filters['simple'] as $filter_name => $priority ) {
       remove_filter($filter_name, [$this, 'simple_convert_url']);
@@ -780,7 +757,7 @@ class ACF_Multilingual {
    * @param string $language
    * @param string
    */
-  public function convert_current_url($language) {
+  public function convert_current_url($language): string {
     $url = $this->convert_url($this->get_current_url(), $language);
     return $url;
   }
@@ -790,7 +767,7 @@ class ACF_Multilingual {
    *
    * @param string the detecte language
    */
-  public function get_language_in_url($url) {
+  public function get_language_in_url($url): string {
     $url = untrailingslashit($url);
     $path = str_replace(home_url(), '', $url);
     $regex_languages = implode('|', $this->get_languages('slug'));
@@ -804,7 +781,7 @@ class ACF_Multilingual {
    *
    * @param string $url
    */
-  private function get_current_url() {
+  private function get_current_url(): string {
     $url = set_url_scheme( 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
     return $url;
   }
@@ -813,9 +790,9 @@ class ACF_Multilingual {
    * Filter locale in frontend
    *
    * @param [type] $locale
-   * @return void
+   * @return string|null
    */
-  public function filter_frontend_locale($locale) {
+  public function filter_frontend_locale($locale): ?string {
     if( is_admin() ) return $locale;
     return str_replace('_', '-', $this->get_language_info($this->get_current_language())['locale']);
   }
@@ -824,10 +801,10 @@ class ACF_Multilingual {
    * Prepend language information to all rewrite rules
    *
    * @link https://wordpress.stackexchange.com/a/238369/18713
-   * @param Array $rules
-   * @return Array
+   * @param array $rules
+   * @return array
    */
-  public function rewrite_rules_array($rules) {
+  public function rewrite_rules_array($rules): array {
     $new_rules = array();
 
     // match /{locale} with or without trailing slash
@@ -849,7 +826,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function wp_head() {
+  public function wp_head(): void {
     $switcher = $this->get_language_switcher();
     echo $this->get_template('meta-tags', [
       'languages' => $switcher,
@@ -862,7 +839,7 @@ class ACF_Multilingual {
    * @param string $value
    * @param string
    */
-  public function format_acf_field_wysiwyg($value) {
+  public function format_acf_field_wysiwyg($value): string {
     return $this->convert_urls_in_string($value);
   }
 
@@ -872,7 +849,7 @@ class ACF_Multilingual {
    * @param [type] $url
    * @return void
    */
-  private function strip_protocol($url) {
+  private function strip_protocol(string $url): string {
     return preg_replace('#^https?:#', '', $url);
   }
 
@@ -882,7 +859,7 @@ class ACF_Multilingual {
    * @param string $string
    * @param string
    */
-  public function convert_urls_in_string($string) {
+  public function convert_urls_in_string(string $string): string {
     $string = preg_replace_callback('/href=[\'|\"](?<url>http.*?)[\'|\"]/', function($matches) {
       $url = $matches['url'];
       if( strpos($this->strip_protocol($url), $this->strip_protocol(home_url())) !== false ) {
@@ -891,20 +868,6 @@ class ACF_Multilingual {
       return "href=\"$url\"";
     }, $string);
     return $string;
-  }
-
-  /**
-   * Get a field's value, or if there is no value, return the fallback
-   *
-   * @param string $selector
-   * @param [type] $fallback
-   * @param boolean $post_id
-   * @param boolean $format_value
-   * @return Mixed
-   */
-  public function get_field_or(String $selector, $fallback, $post_id = false, $format_value = true) {
-    $value = get_field($selector, $post_id, $format_value);
-    return $value ?: $fallback;
   }
 
   /**
@@ -917,7 +880,7 @@ class ACF_Multilingual {
    * @param string $url
    * @param string
    */
-  private function get_url_path(String $url): string {
+  private function get_url_path(string $url): string {
     $path = str_replace(home_url(), '', $url);
     $path = explode('?', $path)[0];
     $path = trim($path, '/');
@@ -934,7 +897,7 @@ class ACF_Multilingual {
    *
    * @param string|null $url
    * @param string|null $language
-   * @return mixed one of null, \WP_Post, \WP_Post_Type, \WP_Term
+   * @return mixed: one of null, \WP_Post, \WP_Post_Type, \WP_Term
    */
   public function resolve_url(?string $url = null) {
     global $wp, $wp_the_query;
@@ -1043,7 +1006,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function add_sitemaps_provider() {
+  public function add_sitemaps_provider(): void {
     if( !$this->current_language_is_default() ) return;
     // registers the new provider for the sitemap
     $provider = new ACFML\ACFML_Sitemaps_Provider();
@@ -1055,7 +1018,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function redirect_canonical() {
+  public function redirect_canonical(): void {
     $url = $this->get_current_url();
     $converted_url = $this->convert_url($url);
     if( $url !== $converted_url ) {
