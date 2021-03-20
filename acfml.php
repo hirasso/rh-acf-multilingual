@@ -114,7 +114,7 @@ class ACF_Multilingual {
   private function add_hooks() {
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_style']);
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
-    add_action('admin_init', [$this, 'admin_init'], 11);
+    add_action('admin_init', [$this, 'download_language_packs'], 11);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX-1);
 
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
@@ -219,7 +219,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function get_prefix() {
+  public function get_prefix(): string {
     return $this->prefix;
   }
 
@@ -228,7 +228,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function flush_rewrite_rules() {
+  public function flush_rewrite_rules(): void {
     flush_rewrite_rules(true);
   }
 
@@ -237,7 +237,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function admin_init() {
+  public function download_language_packs(): void {
     /** WordPress Translation Installation API */
     require_once ABSPATH . 'wp-admin/includes/translation-install.php';
     foreach( $this->get_languages('full') as $language ) {
