@@ -1,3 +1,7 @@
+#### 0.0.5 (2021-03-20)
+
+- add function to re-save ALL posts (#a4dfa21)
+
 #### 0.0.4 (2021-03-20)
 
 - Detect language from GET in admin-ajax.php (some clients don't send a referrer header) (#178b4fe)

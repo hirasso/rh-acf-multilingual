@@ -54,3 +54,13 @@ function acfml_add_taxonomy( $taxonomy ) {
     }, 11); // after default 'init' hook
   }
 }
+
+
+function acfml_get_permalinks($post): ?array {
+  $permalink = get_permalink($post);
+  $switcher = acfml_get_language_switcher([
+    'url' => $permalink,
+    'format' => 'slug:url'
+  ]);
+  return $switcher;
+}

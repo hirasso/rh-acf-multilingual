@@ -1026,4 +1026,23 @@ class Post_Types_Controller {
     );
   }
 
+  /**
+   * Resave ALL posts
+   *
+   * @return void
+   */
+  public function resave_all_posts(): void {
+    $post_ids = get_posts([
+      'post_type' => $this->get_multilingual_post_types(),
+      'posts_per_page' => -1,
+      'fields' => 'ids',
+    ]);
+    // bail early if no posts were found
+    if( !count($post_ids) ) return;
+    // trigger save_post for each post with empty slugs
+    foreach( $post_ids as $post_id ) {
+      $this->save_post($post_id);
+    }
+  }
+
 }
