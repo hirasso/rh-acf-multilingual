@@ -36,6 +36,9 @@ class Taxonomies_Controller {
 
     // methods
     add_action('init', [$this, 'add_title_field_group'], 12);
+
+    // query filters
+    add_filter('pre_get_terms', [$this, 'pre_get_terms'], 999);
   }
 
   /**
@@ -187,5 +190,23 @@ class Taxonomies_Controller {
       add_filter('get_term', [$this, 'get_term'], 10, 2);
     }
     return $value;
+  }
+
+  /**
+   * Filter WP_Term_Query
+   *
+   * @param \WP_Term_Query $query
+   * @return void
+   * 
+   */
+  public function pre_get_terms( $query ) {
+    if( acfml()->current_language_is_default() ) return;
+    $slug = $query->query_vars['slug'];
+    if( is_array($slug) ) $slug = $slug[0];
+    if( $slug ) {
+      // pre_dump($slug);
+    }
+    
+    // pre_dump($query);
   }
 }

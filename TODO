@@ -35,3 +35,6 @@
 
 Optional:
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
+    ❍ Generate and save slugs in each language
+    ❍ use pre_get_terms to map `slug` to meta field `acfml_slug_lang`
+    ❍ Make rewrite base slugs translatable (e.g. category -> kategorie)
