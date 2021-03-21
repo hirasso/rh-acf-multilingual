@@ -1,6 +1,7 @@
-#### 0.0.5 (2021-03-20)
+#### 0.0.5 (2021-03-21)
 
-- add new API function `acfml_get_permalinks` (#d760508)
+- add rewrite endpoints to converted urls (#6071e90)
+- add new API function `acfml_get_permalinks` (#f955315)
 - add function to re-save ALL posts (#898ab5a)
 
 #### 0.0.4 (2021-03-20)

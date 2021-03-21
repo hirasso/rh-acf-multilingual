@@ -651,10 +651,11 @@ class ACF_Multilingual {
       return add_query_arg('lang', $requested_language, $url);
     }
     
-    if( $wp_object = $this->resolve_url($url) ) {
-      
+    if( $wp_query = $this->resolve_url($url) ) {
+      $wp_object = $wp_query->get_queried_object();
       if( $wp_object instanceof \WP_Post ) {
         $new_url = $this->post_types_controller->get_post_link($wp_object, $requested_language);
+        $new_url = $this->add_rewrite_endpoints_to_url($new_url, $wp_query);
         return $new_url;
       } elseif( $wp_object instanceof \WP_Post_Type ) {
         $new_url = $this->post_types_controller->get_post_type_archive_link($wp_object->name, $requested_language);
@@ -664,6 +665,22 @@ class ACF_Multilingual {
     
     // if nothing special was found, only inject the language code
     return $this->simple_convert_url($url, $requested_language);
+  }
+
+  private function add_rewrite_endpoints_to_url($url, $wp_query) {
+    global $wp_rewrite;
+    $endpoints = $wp_rewrite->endpoints ?? [];
+    foreach( $endpoints as $endpoint ) {
+      $endpoint_name = $endpoint[1];
+      $endpoint_query_var = $endpoint[2];
+      if( isset($wp_query->query[$endpoint_query_var]) ) {
+        $url = trailingslashit($url) . "$endpoint_name/";
+        if( !empty($wp_query->query[$endpoint_query_var]) ) {
+          $url .= "{$wp_query->query[$endpoint_query_var]}/";
+        }
+      }
+    }
+    return $url;
   }
 
   /**
@@ -948,7 +965,7 @@ class ACF_Multilingual {
     // reset the language
     $this->reset_language();
     
-    return $query->get_queried_object();
+    return $query;
   }
 
   /**
