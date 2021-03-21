@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-03-21)
 
-- `pre_get_posts`: fall back to post_type `post` if empty (#d5229ff)
+- preserve possible appended url fragments in converted urls (#2be45d4)
+- `pre_get_posts`: fall back to post_type `post` if empty (#000d6b5)
 - add rewrite endpoints to converted urls (#e6d4d9b)
 - add new API function `acfml_get_permalinks` (#f955315)
 - add function to re-save ALL posts (#898ab5a)

@@ -651,16 +651,39 @@ class ACF_Multilingual {
       return add_query_arg('lang', $requested_language, $url);
     }
     
-    if( $wp_query = $this->resolve_url($url) ) {
-      $wp_object = $wp_query->get_queried_object();
-      
+    $untranslated_object_url = null;
+    $translated_object_url = null;
+    $wp_query = $this->resolve_url($url);
+
+    if( $wp_query && $wp_object = $wp_query->get_queried_object() ) {
+
       if( $wp_object instanceof \WP_Post ) {
-        $new_url = $this->post_types_controller->get_post_link($wp_object, $requested_language);
-        return $new_url;
+        /**
+         * The url resolved to an object of type 'post'. Retrieve URLs for that
+         */
+        $untranslated_object_url = $this->post_types_controller->get_post_link($wp_object, $this->get_language_in_url($url));
+        $translated_object_url = $this->post_types_controller->get_post_link($wp_object, $requested_language);
+
       } elseif( $wp_object instanceof \WP_Post_Type ) {
-        $new_url = $this->post_types_controller->get_post_type_archive_link($wp_object->name, $requested_language);
-        return $new_url;
+        /**
+        * The url resolved to an object of type 'post_type'. Retrieve URLs for that
+        */
+        $untranslated_object_url = $this->post_types_controller->get_post_type_archive_link($wp_object->name, $this->get_language_in_url($url));
+        $translated_object_url = $this->post_types_controller->get_post_type_archive_link($wp_object->name, $requested_language);
+
       }
+    }
+
+    if( $translated_object_url ) {
+      /**
+       * append any possible stuff from the original URL, like: 
+       *    - https://your-site.com/[...]/custom-endpoint/
+       *    - https://your-site.com/[...]?json=true&paged=2
+       */
+      if( $append_to_url = str_replace($untranslated_object_url, '', $url) ) {
+        $translated_object_url .= $append_to_url;
+      }
+      return $translated_object_url;
     }
     
     // if nothing special was found, only inject the language code
@@ -894,13 +917,13 @@ class ACF_Multilingual {
   }
 
   /**
-   * Uses built-in WP functionality to parse and query for a given URL, but with a custom URL and language
+   * Uses built-in WP functionality to parse and query for any given internal URL
    *
    * @param string|null $url
    * @param string|null $language
-   * @return mixed: one of null, \WP_Post, \WP_Post_Type, \WP_Term
+   * @return \WP_Query|null
    */
-  public function resolve_url(?string $url = null) {
+  public function resolve_url(?string $url = null): ?\WP_Query {
     global $wp, $wp_the_query;
     
     // parse defaults

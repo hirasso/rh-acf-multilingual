@@ -120,24 +120,6 @@ class Admin {
   }
 
   /**
-   * Get a hash of the active languages
-   *
-   * @return string
-   */
-  private function get_hashed_languages(): string {
-    return md5( json_encode(acfml()->get_languages('slug')) );
-  }
-
-  /**
-   * Get hashed post types
-   *
-   * @return string
-   */
-  private function get_hashed_post_types(): string {
-    return md5( json_encode(acfml()->post_types_controller->get_multilingual_post_types()) );
-  }
-
-  /**
    * Hash something
    *
    * @param mixed $value

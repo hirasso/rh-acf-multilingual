@@ -108,10 +108,11 @@ class Post_Types_Controller {
    * Check if a given post type is multilingual
    *
    * @param string $post_type
+   * @param bool $check_supports_title
    * @return boolean
    */
-  public function is_multilingual_post_type( $post_type ):bool {
-    return in_array($post_type, $this->get_multilingual_post_types());
+  public function is_multilingual_post_type( $post_type, $check_supports_title = false ):bool {
+    return in_array($post_type, $this->get_multilingual_post_types('names', $check_supports_title));
   }
   
   /**
@@ -580,7 +581,7 @@ class Post_Types_Controller {
     if( acfml()->is_default_language($language) ) return;
 
     $post_type = $query->queried_object->post_type ?? $query->get('post_type') ?: 'post';
-    
+
     // don't do anything if the post type is not multilingual
     if( !$this->is_multilingual_post_type($post_type) ) return;
 
