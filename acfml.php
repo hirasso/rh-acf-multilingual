@@ -115,7 +115,7 @@ class ACF_Multilingual {
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_style']);
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
     add_action('admin_init', [$this, 'download_language_packs'], 11);
-    add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], PHP_INT_MAX-1);
+    add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], 999);
 
     // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
     add_filter('locale', [$this, 'filter_frontend_locale']);
