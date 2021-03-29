@@ -8,6 +8,20 @@ function acfml_get_language_switcher(?array $args = []) {
 }
 
 /**
+ * This function is documented in acfml.php > convert_url
+ */
+function acfml_convert_url(?string $url = null, ?string $lang = null): string {
+  return acfml()->convert_url($url, $lang);
+}
+
+/**
+ * This function is documented in acfml.php > get_converted_urls
+ */
+function acfml_get_converted_urls(?string $url = null): array {
+  return acfml()->get_converted_urls($url);
+}
+
+/**
  * This function is documented in acfml.php > add_language
  */
 function acfml_add_language(string $slug, ?string $locale = null, ?string $name = null): array {
@@ -23,7 +37,6 @@ function acfml_get_current_language() {
 
 /**
  * This function is documented in acfml.php > get_languages
- *
  */
 function acfml_get_languages(?string $format = null) {
   return acfml()->get_languages($format);
@@ -53,19 +66,4 @@ function acfml_add_taxonomy( $taxonomy ) {
       acfml()->taxonomies_controller->add_taxonomy($taxonomy);
     }, 11); // after default 'init' hook
   }
-}
-
-/**
- * Get a permalink in each language for a post
- *
- * @param int|\WP_Post $post
- * @return array|null
- */
-function acfml_get_permalinks($post): ?array {
-  $permalink = get_permalink($post);
-  $switcher = acfml_get_language_switcher([
-    'url' => $permalink,
-    'format' => 'slug:url'
-  ]);
-  return $switcher;
 }

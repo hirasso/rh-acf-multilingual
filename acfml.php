@@ -412,6 +412,21 @@ class ACF_Multilingual {
   }
 
   /**
+   * Get converted URLs for all languages, based on a given URL
+   *
+   * @param string $url
+   * @return void
+   */
+  public function get_converted_urls( ?string $url = null ): array {
+    $languages = $this->get_languages('slug');
+    $urls = [];
+    foreach( $languages as $lang ) {
+      $urls[$lang] = $url ? $this->convert_url($url, $lang) : $this->convert_current_url($lang);
+    }
+    return $urls;
+  }
+
+  /**
    * Generate a language switcher for use in the frontend.
    *
    * @param array|null $args          An array with settings for your language switcher. Look at the wp_parse_args below
@@ -448,6 +463,7 @@ class ACF_Multilingual {
       // 'hide_if_no_translation' => true, // @TODO
     ]));
     $languages = $this->get_languages();
+    $urls = $this->get_converted_urls($args->url);
     foreach( $languages as $key => &$language ) {
       $language['is_default'] = $this->is_default_language($language['slug']);
       $language['is_current'] = $language['slug'] === $this->get_current_language();
@@ -456,7 +472,7 @@ class ACF_Multilingual {
       if( $this->is_default_language($language['slug']) ) $language['html_classes'][] = 'is-default-language';
       if( $args->hide_current && $language['is_current'] ) unset($languages[$key]);
       $this->debug = true;
-      $language['url'] = $args->url ? $this->convert_url($args->url, $language['slug']) : $this->convert_current_url($language['slug']);
+      $language['url'] = $urls[$language['slug']];
       $this->debug = false;
       switch( $args->display_names_as ) {
         case 'name':
@@ -640,9 +656,12 @@ class ACF_Multilingual {
   * 
   * @return string $url
   */
-  public function convert_url( string $url, string $requested_language = null ): string {
+  public function convert_url( ?string $url = null, ?string $requested_language = null ): string {
     
+    // fill in defaults
+    if( !$url ) $url = $this->get_current_url();
     if( !$requested_language ) $requested_language = $this->get_current_language();
+
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
 
@@ -851,9 +870,10 @@ class ACF_Multilingual {
    * @return void
    */
   public function wp_head(): void {
-    $switcher = $this->get_language_switcher();
+    $urls = $this->get_converted_urls();
     echo $this->get_template('meta-tags', [
-      'languages' => $switcher,
+      'urls' => $urls,
+      'default_language' => $this->get_default_language()
     ]);
   }
 

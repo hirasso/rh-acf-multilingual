@@ -1,6 +1,7 @@
-#### 0.0.5 (2021-03-21)
+#### 0.0.5 (2021-03-29)
 
-- saner filter priority for `rewrite_rules_array` (#0961b2b)
+- more arbitrary api function `get_converted_urls` (#aa7c296)
+- saner filter priority for `rewrite_rules_array` (#561999e)
 - preserve possible appended url fragments in converted urls (#6b78f2a)
 - `pre_get_posts`: fall back to post_type `post` if empty (#000d6b5)
 - add rewrite endpoints to converted urls (#e6d4d9b)
