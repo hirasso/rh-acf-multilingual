@@ -126,8 +126,10 @@ class ACF_Multilingual {
     add_action('template_redirect', [$this, 'redirect_front_page'], 1);
     add_action('template_redirect', [$this, 'redirect_canonical']);
     add_action('init', [$this, 'save_language_in_cookie']);
-    // links in the_content
+
+    // ACF Field Filters
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
+    add_filter('acf/format_value/type=page_link', [$this, 'format_acf_field_page_link'], 11);
 
     add_action('admin_init', [$this->admin, 'maybe_show_notice_flush_rewrite_rules']);
     add_action('admin_init', [$this->admin, 'maybe_flush_rewrite_rules']);
@@ -886,6 +888,20 @@ class ACF_Multilingual {
    */
   public function format_acf_field_wysiwyg($value): string {
     return $this->convert_urls_in_string($value);
+  }
+
+  /**
+   * Format ACF field 'Page Link'
+   *
+   * @param string|array|null $value
+   * @return string|array|null
+   */
+  public function format_acf_field_page_link($value) {
+    if( !$value ) return $value;
+    // account for single values
+    if( !is_array($value) ) return $this->convert_url($value);
+    $value = array_map([$this, 'convert_url'], $value);
+    return $value;
   }
 
   /**
