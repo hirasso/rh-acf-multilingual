@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-03-29)
 
-- convert URLs in `acf/format_value/type=page_link` (#19b648c)
+- add README (#68d2757)
+- convert URLs in `acf/format_value/type=page_link` (#3539eab)
 - more arbitrary api function `get_converted_urls` (#e360532)
 - saner filter priority for `rewrite_rules_array` (#561999e)
 - preserve possible appended url fragments in converted urls (#6b78f2a)
