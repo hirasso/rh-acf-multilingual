@@ -46,7 +46,7 @@ function acfml_get_languages(?string $format = null) {
  * This function is documented in class.post-types-controller.php > add_post_type
  */
 function acfml_add_post_type($post_type, ?array $args = []) {
-  if( did_action('init') ) {
+  if( did_action('init') || doing_action('init') ) {
     acfml()->post_types_controller->add_post_type($post_type, $args);
   } else {
     add_action('init', function () use ($post_type, $args) {
@@ -59,7 +59,7 @@ function acfml_add_post_type($post_type, ?array $args = []) {
 * This function is documented in class.taxonomies-controller.php > add_taxonomy
 */
 function acfml_add_taxonomy( $taxonomy ) {
-  if( did_action('init') ) {
+  if( did_action('init') || doing_action('init') ) {
     acfml()->taxonomies_controller->add_taxonomy($taxonomy);
   } else {
     add_action('init', function () use ($taxonomy) {

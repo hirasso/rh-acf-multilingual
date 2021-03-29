@@ -112,24 +112,8 @@ class Post_Types_Controller {
    * @return boolean
    */
   public function is_multilingual_post_type( $post_type, $check_supports_title = false ):bool {
-    return in_array($post_type, $this->get_multilingual_post_types('names', $check_supports_title));
-  }
-  
-  /**
-   * Get multilingual CUSTOM (not _builtin) post types
-   *
-   * @return array
-   */
-  private function get_multilingual_custom_post_types():array {
-    $builtin = get_post_types([
-      'public' => true,
-      '_builtin' => true
-    ]);
-    $post_types = $this->get_multilingual_post_types();
-    foreach( $post_types as $key => $type ) {
-      if( in_array($type, $builtin) ) unset($post_types[$key]);
-    }
-    return $post_types;
+    $post_types = $this->get_multilingual_post_types('names', $check_supports_title);
+    return in_array($post_type, $post_types);
   }
 
   /**
@@ -671,10 +655,12 @@ class Post_Types_Controller {
     // prepare post types
     $slug_in_string = $matches['slugs_in_string'];
     $post_types = $this->in_string_to_array($matches['post_type_in_string']);
-
+    
     $queries = [];
     foreach( $post_types as $post_type ) {
+      
       if( $this->is_multilingual_post_type($post_type) ) {
+        
         $queries[] = "(
           SELECT ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
           LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )

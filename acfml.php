@@ -104,6 +104,7 @@ class ACF_Multilingual {
     $this->load_textdomain();
     $this->admin->add_hooks();
     $this->add_hooks();
+
   }
 
   /**
@@ -970,10 +971,13 @@ class ACF_Multilingual {
     remove_action( 'parse_request', 'rest_api_loaded' );
     // create a new \WP instance
     $new_wp = new WP();
+
     // copy the (previously filtered) public query vars over from the main $wp object
     $new_wp->public_query_vars = $wp->public_query_vars;
+    
     // parse the request, using the overwritten $_SERVER vars
     $new_wp->parse_request();
+    $new_wp->build_query_string();
 
     // Reset $_SERVER
     $_SERVER = $__SERVER;
