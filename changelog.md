@@ -1,6 +1,7 @@
-#### 0.0.5 (2021-03-29)
+#### 0.0.5 (2021-04-16)
 
-- add README (#68d2757)
+- Initialize on plugins loaded (#ef9dd2f)
+- add README (#d7304d7)
 - convert URLs in `acf/format_value/type=page_link` (#3539eab)
 - more arbitrary api function `get_converted_urls` (#e360532)
 - saner filter priority for `rewrite_rules_array` (#561999e)

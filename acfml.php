@@ -13,6 +13,10 @@ if( !defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 if( ! class_exists('ACF_Multilingual') ) :
 
+define( 'ACFML', true );
+define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
+define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
+
 class ACF_Multilingual {
 
   private $prefix = 'acfml';
@@ -59,10 +63,6 @@ class ACF_Multilingual {
    * @return void
    */
   public function initialize() {
-
-    $this->define( 'ACFML', true );
-    $this->define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
-    $this->define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 
     // include API
     $this->include('inc/api.php');
@@ -140,21 +140,6 @@ class ACF_Multilingual {
 
     // add current language to admin-ajax.php 
     add_filter('admin_url', [$this, 'convert_admin_ajax_url'], 10, 3);
-  }
-
-  /**
-   * define
-   *
-   * Defines a constant if doesnt already exist.
-   *
-   * @param	string $name The constant name.
-   * @param	mixed $value The constant value.
-   * @returnvoid
-   */
-  function define( $name, $value = true ) {
-    if( !defined($name) ) {
-      define( $name, $value );
-    }
   }
 
   /*
@@ -342,7 +327,7 @@ class ACF_Multilingual {
    * @param array $array
    * @return object
    */
-  public function to_object( $array ): object {
+  public function to_object( $array ): ?object {
     return json_decode(json_encode($array));
   }
 
@@ -584,11 +569,11 @@ class ACF_Multilingual {
   /**
    * Detect language in different contexts
    *
-   * @return string
+   * @return void
    */
-  public function detect_language(): string {
+  public function detect_language(): void {
     // return early if language was already detected
-    if( $this->language ) return $this->language;
+    if( $this->language ) return;
     
     $language = $this->get_default_language();
     $lang_GET = $_GET['lang'] ?? '';
@@ -606,8 +591,7 @@ class ACF_Multilingual {
     // set the class property
     $this->language = $language;
     // set a constant containing the current language
-    $this->define('ACFML_CURRENT_LANGUAGE', $language);
-    return $language;
+    if( !defined('ACFML_CURRENT_LANGUAGE') ) define('ACFML_CURRENT_LANGUAGE', $language);
   }
 
   /**
@@ -1123,13 +1107,14 @@ function acfml():ACF_Multilingual {
   global $acfml;
 
   // Instantiate only once.
-  if( !isset($acfml) ) {
-    $acfml = new ACF_Multilingual();
-    $acfml->initialize();
-  }
+  if( isset($acfml) ) return $acfml;
+
+  $acfml = new ACF_Multilingual();
+  $acfml->initialize();
+
   return $acfml;
 }
 
-acfml(); // Instantiate
+add_action('plugins_loaded', 'acfml'); // Instantiate
 
 endif; // class_exists check
