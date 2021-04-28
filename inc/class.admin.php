@@ -2,6 +2,9 @@
 
 namespace ACFML;
 
+use Gettext\Scanner\PhpScanner;
+use Gettext\Translations;
+
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class Admin {
@@ -22,15 +25,8 @@ class Admin {
   public function add_hooks() {
     add_action('admin_bar_menu', [$this, 'add_admin_bar_menu'], 100);
     add_action('admin_init', [$this, 'maybe_set_admin_language']);
-  }
-
-  /**
-   * Runs on acf_init
-   *
-   * @return void
-   */
-  function acf_init() {
-    //$this->add_options_page();
+    add_action('acf/init', [$this, 'add_options_page']);
+    // add_action('init', [$this, 'find_translatable_strings']);
   }
 
   /**
@@ -38,13 +34,32 @@ class Admin {
    *
    * @return void
    */
-  private function add_options_page() {
+  public function add_options_page(): void {
+    if( !function_exists('acf_add_options_page') ) return;
     acf_add_options_page([
-      'page_title' => __('ACF Multilingual Settings', 'acfml'),
-      'menu_title' => __('ACF Multilingual', 'acfml'),
-      'menu_slug' => "$this->prefix-options",
-      'capability' => 'manage_options',
-      'parent_slug' => 'options-general.php'
+      'page_title' => 'ACFML',
+      'menu_title' => 'ACFML',
+      'menu_slug' => "acfml-options",
+      'capability' => 'edit_others_posts',
+      'icon_url' => 'dashicons-translation',
+      'autoload' => true
+    ]);
+    // Add the Options field group
+    acf_add_local_field_group([
+      'key' => 'group_acfml_options',
+      'title' => __('ACFML Options'),
+      'menu_order' => -1000,
+      'style' => 'default',
+      'position' => 'acf_after_title',
+      'location' => [
+        [
+          [
+            'param' => 'options_page',
+            'operator' => '==',
+            'value' => 'acfml-options'
+          ]
+        ]
+      ],
     ]);
   }
 
@@ -280,6 +295,53 @@ class Admin {
     $this->show_notice($message, [
       'type' => 'error'
     ]);
+  }
+
+  /**
+   * Helper function to recursively scan folders for a glob
+   *
+   * @param string $pattern
+   * @param integer $flags
+   * @return array
+   */
+  private function rglob(string $pattern, $flags = 0): array {
+    $files = glob($pattern, $flags); 
+    foreach( glob(dirname($pattern).'/*', GLOB_ONLYDIR|GLOB_NOSORT) as $dir ) {
+      $files = array_merge($files, $this->rglob($dir.'/'.basename($pattern), $flags));
+    }
+    return $files;
+  }
+
+  /**
+   * Finds translatable strings
+   *
+   * @return array
+   */
+  public function find_translatable_strings(): array {
+    $strings = [];
+    
+    //Create a new scanner, adding a translation for each domain we want to get:
+    $scanner = new PhpScanner(Translations::create('rh'));
+    $scanner->setDefaultDomain('rh');
+    
+    // Find theme files
+    $theme_files = $this->rglob(get_template_directory() . '/*.php');
+    
+    // Scan files
+    foreach ($theme_files as $file) {
+      $scanner->scanFile($file);
+    }
+
+    // Get translations
+    $domains = $scanner->getTranslations();
+    pre_dump($domains);
+    foreach( $domains as $translations ) {
+      foreach( $translations as $translation ) {
+        pre_dump($translation);
+      }
+    }
+    wp_die();
+    return $strings;
   }
 
 }

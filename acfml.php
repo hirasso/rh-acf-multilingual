@@ -17,6 +17,8 @@ define( 'ACFML', true );
 define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 
+require_once(ACFML_PATH . '/vendor/autoload.php');
+
 class ACF_Multilingual {
 
   private $prefix = 'acfml';
@@ -904,14 +906,18 @@ class ACF_Multilingual {
    * @param string $string
    * @param string
    */
-  public function convert_urls_in_string(string $string): string {
-    $string = preg_replace_callback('/href=[\'|\"](?<url>http.*?)[\'|\"]/', function($matches) {
-      $url = $matches['url'];
-      if( strpos($this->strip_protocol($url), $this->strip_protocol(home_url())) !== false ) {
-        $url = $this->convert_url($url);
-      }
-      return "href=\"$url\"";
-    }, $string);
+  public function convert_urls_in_string(string $string, ?string $lang = null): string {
+    $string = preg_replace_callback(
+      '#\bhttps?://[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', 
+      function($matches) use ($lang) {
+        $url = $matches[0];
+        if( strpos($this->strip_protocol($url), $this->strip_protocol(home_url())) !== false ) {
+          $url = $this->convert_url($url, $lang);
+        }
+        return $url;
+      }, 
+      $string
+    );
     return $string;
   }
 

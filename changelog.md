@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-04-28)
 
-- Add composer (#b0a60fe)
+- Add UI for string translations (#73dc3eb)
+- Add composer (#4cb7200)
 - Initialize on plugins loaded (#1c6333f)
 - add README (#d7304d7)
 - convert URLs in `acf/format_value/type=page_link` (#3539eab)

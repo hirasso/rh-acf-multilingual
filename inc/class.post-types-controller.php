@@ -59,6 +59,7 @@ class Post_Types_Controller {
     add_action('admin_init', [$this, 'check_for_posts_with_empty_slugs']);
     add_action('admin_init', [$this, 'maybe_resave_posts']);
     add_action('init', [$this, 'setup_acf_fields'], 12);
+    add_action('init', [$this, 'add_slugs_translations_ui'], 11);
     
   }
 
@@ -1031,6 +1032,73 @@ class Post_Types_Controller {
     foreach( $post_ids as $post_id ) {
       $this->save_post($post_id);
     }
+  }
+
+  /**
+   * Add UI to translate slugs
+   *
+   * @return void
+   */
+  public function add_slugs_translations_ui(): void {
+
+    $post_types = $this->get_multilingual_post_types('names', false);
+    if( empty($post_types) ) return;
+    
+    // Add one row for each post type
+    foreach( $post_types as $post_type ) {
+
+      $pt_object = get_post_type_object($post_type);
+
+      if( !$pt_object->has_archive && !$pt_object->rewrite ) continue;
+      
+      acf_add_local_field([
+        'key' => "field_acfml_slugs_$post_type",
+        'label' => "Slugs for {$pt_object->labels->name} ({$post_type})",
+        'name' => "acfml_slugs_$post_type",
+        'type' => 'group',
+        'parent' => 'group_acfml_options',
+        'layout' => 'block'
+      ]);
+
+      // Add fields for archive slugs
+      if( $pt_object->has_archive ) {
+        acf_add_local_field([
+          'key' => "field_acfml_archive_slug_{$post_type}",
+          'name' => "archive_slug",
+          'label' => 'Archives',
+          'type' => 'text',
+          'parent' => "field_acfml_slugs_$post_type",
+          'acfml_multilingual' => true,
+          'prepend' => home_url('/'),
+          'placeholder' => $pt_object->has_archive,
+          'wrapper' => [
+            'width' => '50%'
+          ],
+          'acfml_sanitize_callback' => 'sanitize_title',
+        ]);
+      }
+      
+      // Add fields for rewrite slugs
+      if( $pt_object->rewrite ) {
+        acf_add_local_field([
+          'key' => "field_acfml_rewrite_slug_{$post_type}",
+          'name' => "rewrite_slug",
+          'label' => 'Single Entries',
+          'type' => 'text',
+          'parent' => "field_acfml_slugs_$post_type",
+          'acfml_multilingual' => true,
+          'prepend' => home_url('/'),
+          'append' => "/$post_type-name/",
+          'placeholder' => $pt_object->rewrite['slug'],
+          'wrapper' => [
+            'width' => '50%'
+          ],
+          'acfml_sanitize_callback' => 'sanitize_title',
+        ]);
+      }
+      
+    }
+
   }
 
 }
