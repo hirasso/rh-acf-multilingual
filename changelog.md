@@ -1,6 +1,7 @@
-#### 0.0.5 (2021-04-16)
+#### 0.0.5 (2021-04-28)
 
-- Initialize on plugins loaded (#ef9dd2f)
+- Add composer (#b0a60fe)
+- Initialize on plugins loaded (#1c6333f)
 - add README (#d7304d7)
 - convert URLs in `acf/format_value/type=page_link` (#3539eab)
 - more arbitrary api function `get_converted_urls` (#e360532)
