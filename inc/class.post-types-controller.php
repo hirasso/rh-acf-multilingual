@@ -677,7 +677,7 @@ class Post_Types_Controller {
       } else {
         $queries[] = "(
           SELECT ID, post_name, post_parent, post_type
-          FROM prg_posts
+          FROM $wpdb->posts
           WHERE post_name IN ($slug_in_string)
           AND post_type = '$post_type'
           AND post_status NOT IN ('trash')
