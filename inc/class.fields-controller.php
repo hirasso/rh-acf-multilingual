@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class ACFML_Fields {
+class Fields_Controller {
 
   // for which field types should 'acfml_multilingual' be available?
   private $multilingual_field_types = [
@@ -36,7 +36,8 @@ class ACFML_Fields {
     }
     // add hooks for generated multilingual fields (type of those will be 'group')
     add_filter("acf/format_value/type=group", [$this, 'format_multilingual_value'], 12, 3);
-    add_filter("acf/update_value/type=group", [$this, 'update_multilingual_value'], 12, 3);
+    add_filter("acf/update_value/type=group", [$this, 'before_update_multilingual_value'], 9, 4);
+    add_filter("acf/update_value/type=group", [$this, 'after_update_multilingual_value'], 12, 4);
     add_action("acf/render_field/type=group", [$this, 'render_multilingual_field'], 5);
     add_filter("acf/load_value/type=group", [$this, 'inject_previous_monolingual_value'], 10, 3);
     add_filter("acf/field_wrapper_attributes", [$this, "field_wrapper_attributes"], 10, 2);
@@ -83,6 +84,7 @@ class ACFML_Fields {
     if( empty($field['acfml_multilingual']) ) return $field;
     
     $active_language_tab = $this->get_active_language_tab($field);
+    $required_all = $field['acfml_all_required'] ?? false;
 
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
@@ -102,14 +104,18 @@ class ACFML_Fields {
         'name' => "{$field['name']}_{$lang}",
         '_name' => "$lang",
         // Only the default language of a sub-field should be required
-        'required' => $lang === $default_language && $field['required'],
+        'required' => $required_all || $lang === $default_language && $field['required'],
         'acfml_multilingual' => 0,
         'acfml_multilingual_subfield' => 1,
         'wrapper' => $wrapper,
       ]);
+      if( !empty($field['prepend']) ) {
+        $sub_field['prepend'] = acfml()->convert_urls_in_string($field['prepend'], $lang);
+      }
       // add the subfield
       $sub_fields[] = $sub_field;
     }
+    
     // Add 'required'-indicator to the groups label, if it is set to required
     $label = $field['label'];
     if( $field['required'] ) $label .= " <span class=\"acf-required\">*</span>";
@@ -170,6 +176,24 @@ class ACFML_Fields {
     return $value;
   }
 
+
+  /**
+   * Applies custom "acfml_sanitize_callback" to field values before saving to the database.
+   * Used for slugs
+   *
+   * @param mixed $value
+   * @param int $post_id
+   * @param array $field
+   * @return mixed
+   */
+  public function before_update_multilingual_value( $value, $post_id, $field, $value_before ) {
+    if( !$this->is_acfml_group($field) ) return $value;
+    if( is_array($value) && !empty($field['acfml_sanitize_callback']) && function_exists($field['acfml_sanitize_callback']) ) {
+      $value = array_map($field['acfml_sanitize_callback'], $value);
+    }
+    return $value;
+  }
+
   /**
    * Write the default language's $value to the group $value itself
    *
@@ -178,7 +202,7 @@ class ACFML_Fields {
    * @param array $field
    * @return mixed
    */
-  public function update_multilingual_value( $value, $post_id, $field ) {
+  public function after_update_multilingual_value( $value, $post_id, $field, $value_before ) {
     if( !$this->is_acfml_group($field) ) return $value;
     $default_language = acfml()->get_default_language();
     $value = get_field("{$field['name']}_$default_language", $post_id, false);

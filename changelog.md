@@ -1,6 +1,49 @@
-#### 0.0.2 (2021-02-10)
+#### 0.0.5 (2021-04-28)
 
-- Make the first language always the default (#3354a24)
+- Add UI for string translations (#73dc3eb)
+- Add composer (#4cb7200)
+- Initialize on plugins loaded (#1c6333f)
+- add README (#d7304d7)
+- convert URLs in `acf/format_value/type=page_link` (#3539eab)
+- more arbitrary api function `get_converted_urls` (#e360532)
+- saner filter priority for `rewrite_rules_array` (#561999e)
+- preserve possible appended url fragments in converted urls (#6b78f2a)
+- `pre_get_posts`: fall back to post_type `post` if empty (#000d6b5)
+- add rewrite endpoints to converted urls (#e6d4d9b)
+- add new API function `acfml_get_permalinks` (#f955315)
+- add function to re-save ALL posts (#898ab5a)
+
+#### 0.0.4 (2021-03-20)
+
+- Detect language from GET in admin-ajax.php (some clients don't send a referrer header) (#178b4fe)
+- `acfml_get_language_switcher`: default return changed to `raw` (> array) (#4a121d6)
+- Automatically download admin language packs (#6c79bbc)
+
+#### 0.0.3 (2021-02-23)
+
+- Skip `pre_get_posts` if `suppress_filters==true` or query is for an attachment. (#cb41ffe)
+- add `user_trailingslashit` for front page redirect (#f25217a)
+- Support for language switcher in admin bar on frontend (#9957010)
+
+#### 0.0.2 (2021-02-17)
+
+- Add admin bar item to switch the current user's language (#c481ed5)
+- add `ACFML_Sitemaps_Provider` (#50d2eae)
+- only do pre_get_posts for supported post types (#e729a60)
+- deeper check for changed settings (#ebbb0d8)
+- check for 'title' support in most cases, canonical redirect for archives (#2b0020e)
+- add field setting bool `acfml_all_required` (#86fb2c3)
+- Remove ACF nag on `beforeunload` (#86fb2c3)
+- trim the post title before saving (#e79d2e1)
+- `trim()` default post title before validating (#3a6fb5c)
+- sync post titles in other languages as long as they are not translated manually (#dd3f0ea)
+- Always save post titles for all languages to support `'orderby' => 'title'`in non-default languages (#c2c048a)
+- Support for `'orderby' => 'title'` (#c9e5176)
+- new API function `acfml_add_taxonomy` (#b1b9171)
+- flush rewrite rules also on change of enabled post types (#80fd54a)
+- optimize plugin initialization (#5c85eaf)
+- prevent rest api issues (#d2a6026)
+- Make the first language always the default (#2d83671)
 
 #### 0.0.1 (2021-02-09)
 

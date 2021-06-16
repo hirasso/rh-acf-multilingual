@@ -4,7 +4,7 @@ namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class ACFML_Post_Types {
+class Post_Types_Controller {
   
   private $prefix;
   private $default_language;
@@ -45,18 +45,21 @@ class ACFML_Post_Types {
     add_filter('query', [$this, 'query__find_post_by_old_slug']);
     add_action('template_redirect', [$this, 'prepare_old_slug_redirect'], 9 );
     
-    // hooks
     add_filter('the_title', [$this, 'single_post_title'], 10, 2);
     add_filter('single_post_title', [$this, 'single_post_title'], 10, 2);
     add_filter('admin_body_class', [$this, 'admin_body_class'], 20);
-    add_action("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_default_value"], 10, 3);
+    
+    add_filter("acf/load_value/key={$this->title_field_key}_{$this->default_language}", [$this, "load_value_default_post_title"], 10, 3);
+    add_filter("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
+    add_action("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
+    add_filter("acf/update_value/key={$this->title_field_key}_{$this->default_language}", [$this, "update_value_default_post_title"], 10, 4 );
 
     add_action('acf/save_post', [$this, 'save_post'], 20);
 
     add_action('admin_init', [$this, 'check_for_posts_with_empty_slugs']);
-    add_action('admin_init', [$this, 'maybe_generate_slugs']);
-    
-    add_action('init', [$this, 'setup_acf_fields'], 11);
+    add_action('admin_init', [$this, 'maybe_resave_posts']);
+    add_action('init', [$this, 'setup_acf_fields'], 12);
+    add_action('init', [$this, 'add_slugs_translations_ui'], 11);
     
   }
 
@@ -72,6 +75,9 @@ class ACFML_Post_Types {
     // attachments are not supported. They are horrible edge cases :P
     $unsupported_post_types = ["attachment"];
     if( in_array($post_type, $unsupported_post_types) ) return;
+    if( !post_type_exists($post_type) ) throw new \ErrorException(
+      sprintf(__('[ACFML] Error: Could not add post type "%s", it does not exist'), $post_type)
+    );
     // add the post type and it's arguments to the array
     $this->multilingual_post_types[$post_type] = $args;
     // parse translated post type labels
@@ -89,8 +95,13 @@ class ACFML_Post_Types {
    * @param $format 
    * @return array
    */
-  public function get_multilingual_post_types( ?string $format = 'names' ): array {
+  public function get_multilingual_post_types( ?string $format = 'names', $check_supports_title = true ): array {
     $post_types = $this->multilingual_post_types;
+    if( $check_supports_title ) {
+      foreach( $post_types as $pt => $value ) {
+        if( !post_type_supports($pt, 'title') ) unset($post_types[$pt]);
+      }
+    }
     return $format === 'names' ? array_keys($post_types) : $post_types;
   }
 
@@ -98,27 +109,12 @@ class ACFML_Post_Types {
    * Check if a given post type is multilingual
    *
    * @param string $post_type
+   * @param bool $check_supports_title
    * @return boolean
    */
-  public function is_multilingual_post_type( $post_type ):bool {
-    return in_array($post_type, $this->get_multilingual_post_types());
-  }
-  
-  /**
-   * Get multilingual CUSTOM (not _builtin) post types
-   *
-   * @return array
-   */
-  private function get_multilingual_custom_post_types():array {
-    $builtin = get_post_types([
-      'public' => true,
-      '_builtin' => true
-    ]);
-    $post_types = $this->get_multilingual_post_types();
-    foreach( $post_types as $key => $type ) {
-      if( in_array($type, $builtin) ) unset($post_types[$key]);
-    }
-    return $post_types;
+  public function is_multilingual_post_type( $post_type, $check_supports_title = false ):bool {
+    $post_types = $this->get_multilingual_post_types('names', $check_supports_title);
+    return in_array($post_type, $post_types);
   }
 
   /**
@@ -202,12 +198,13 @@ class ACFML_Post_Types {
     // generate location rules for multilingual titles
     $locations = [];
     foreach( $post_types as $pt ) {
-      $location = [
-        'param' => 'post_type',
-        'operator' => '==',
-        'value' => $pt
+      $locations[] = [
+        [
+          'param' => 'post_type',
+          'operator' => '==',
+          'value' => $pt
+        ]
       ];
-      $locations[] = [$location];
     }
     
     // create the title field group
@@ -223,11 +220,12 @@ class ACFML_Post_Types {
     // create the title field
     acf_add_local_field(array(
       'key' => $this->title_field_key,
-      'label' => 'Title',
+      'label' => __('Title'),
       'placeholder' => __('Add title'),
       'name' => $this->title_field_name,
       'type' => 'text',
       'acfml_multilingual' => true,
+      'acfml_all_required' => true,
       'required' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
@@ -355,7 +353,7 @@ class ACFML_Post_Types {
    * @param Array $field
    * @return Mixed
    */
-  public function load_default_value( $value, $post_id, $field ) {
+  public function load_value_default_post_title( $value, $post_id, $field ) {
     if($value) return $value;
     $post_status = get_post_status($post_id);
     if( !in_array($post_status, ['auto-draft']) ) {
@@ -365,12 +363,40 @@ class ACFML_Post_Types {
   }
 
   /**
+   * Validate the default post title
+   *
+   * @param bool $valid
+   * @param string $value
+   * @param array $field
+   * @param [type] $input_name
+   * @return mixed
+   */
+  public function validate_value_default_post_title( $valid, $value, $field, $input_name ) {
+    if( !trim($value) ) $valid = false;
+    return $valid;
+  }
+
+  /**
+   * Trim the default post title
+   *
+   * @param mixed $value
+   * @param int $post_id
+   * @param array $field
+   * @param mixed $original
+   * @return mixed
+   */
+  public function update_value_default_post_title( $value, $post_id, $field, $original ) {
+    $value = trim($value);
+    return $value;
+  }
+
+  /**
    * Filter Admin Body Class
    *
    * @param string $class
    * @param string
    */
-  public function admin_body_class($class) {
+  public function admin_body_class($class): string {
     global $pagenow, $typenow;
     if( !in_array($pagenow, ['post.php', 'post-new.php']) ) return $class;
     if( in_array($typenow, $this->get_multilingual_post_types()) ) $class .= " acfml-multilingual-post-type";
@@ -380,10 +406,11 @@ class ACFML_Post_Types {
   /**
    * Update a post's slugs
    *
-   * @param Int $post_id
-   * @return Void
+   * @param int $post_id
+   * @global string $locale
+   * @return void
    */
-  function save_post($post_id):Void {
+  function save_post($post_id): void {
     global $locale;
     
     // cache WP locale, so that we can temporarily overwrite it
@@ -391,6 +418,8 @@ class ACFML_Post_Types {
     $cached_locale = get_locale();
 
     $languages = acfml()->get_languages('slug');
+
+    // get the \WP_Post object
     $post = get_post($post_id);
 
     // bail early if the post type is not multilingual
@@ -398,47 +427,45 @@ class ACFML_Post_Types {
 
     // bail early based on the post's status
     if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;
-    
-    // This array will contain all post titles for the slugs to be generated from
-    $post_titles = [];
-    // get the post title of the default language (should always have some)
-    $default_post_title = acfml()->get_field_or("{$this->title_field_name}_{$this->default_language}", $post->post_title, $post_id);
-    $post_titles[$this->default_language] = $default_post_title;
 
     // prepare post titles so there is one for every language
+    $post_titles = [];
     foreach( $languages as $lang ) {
-      // do nothing for the default language
-      if( $lang === $this->default_language ) continue;
-      $post_titles[$lang] = acfml()->get_field_or("{$this->title_field_name}_{$lang}", $default_post_title, $post_id);
+      $post_title = trim(get_field("{$this->title_field_name}_{$lang}", $post_id));
+      if( !$post_title ) {
+        $post_title = $post->post_title;
+        update_field("{$this->title_field_name}_{$lang}", $post_title, $post_id);
+      }
+      $post_titles[$lang] = $post_title;
     }
 
-    $post_slugs = [];
     // generate slugs for every language
+    $post_slugs = [];
     foreach( $languages as $lang ) {
       // get the slug from the field
-      $raw_slug = acfml()->get_field_or("{$this->slug_field_name}_{$lang}", $post_titles[$lang], $post_id);
-
-      // set locale to current $lang, so that sanitize_title can run on full power
+      $raw_slug = get_field("{$this->slug_field_name}_{$lang}", $post_id);
+      if( !$raw_slug ) $raw_slug = $post_titles[$lang];
+      // set global locale to current $lang, so that sanitize_title can run on full power
       $locale = acfml()->get_language_info($lang)['locale'];
       // sanitize the slug
       $slug = sanitize_title($raw_slug);
-      // reset locale
+      // reset global locale
       $locale = $cached_locale;
-
       // make the slug unique
-      $slug = $this->get_unique_post_slug( $slug, get_post($post_id), $lang );
+      $slug = $this->get_unique_post_slug( $slug, $post, $lang );
       // save the unique slug to the database
       update_field("{$this->slug_field_name}_{$lang}", $slug, $post_id);
       $post_slugs[$lang] = $slug;
     }
-    
+
     // save slug of the default language to the post_name
     remove_action('acf/save_post', [$this, 'save_post']);
-    wp_update_post([
+    $post_args = [
       'ID' => $post_id,
       'post_name' => $post_slugs[$this->default_language],
       'post_title' => $post_titles[$this->default_language]
-    ]);
+    ];
+    wp_update_post($post_args);
     add_action('acf/save_post', [$this, 'save_post'], 20);
   }
 
@@ -507,7 +534,7 @@ class ACFML_Post_Types {
    * @return Array
    */
   public function rewrite_rules_array($rules) {
-    foreach( $this->get_multilingual_custom_post_types() as $post_type ) {
+    foreach( $this->get_multilingual_post_types('names', false) as $post_type ) {
 
       $rules = $this->multilingual_rewrite_slugs($rules, $post_type);
       $rules = $this->multilingual_archive_slugs($rules, $post_type);
@@ -526,12 +553,23 @@ class ACFML_Post_Types {
    */
   public function pre_get_posts( $query ) {
     
-    if( !$query->is_main_query() ) return;
+    // Skip if suppress_filters is set or query is for an attachment.
+    if (
+      ($query->query_vars['suppress_filters'] ?? false) ||
+      ($query->query_vars['attachment'] ?? false)
+    ) {
+      return;
+    }
     
     $language = acfml()->get_current_language();
+    
     if( acfml()->is_default_language($language) ) return;
 
-    $post_type = $query->queried_object->post_type ?? $query->get('post_type') ?: false;
+    $post_type = $query->queried_object->post_type ?? $query->get('post_type') ?: 'post';
+
+    // don't do anything if the post type is not multilingual
+    if( !$this->is_multilingual_post_type($post_type) ) return;
+
     $post_type_object = get_post_type_object($post_type);
 
     // bootstrap meta query
@@ -550,7 +588,6 @@ class ACFML_Post_Types {
       if( $post_type_object ) unset($query->query_vars[$post_type_object->query_var]);
     }
     
-    
     // Allow posts to be set to non-public
     $meta_query['acfml_lang_active'] = [
       'relation' => 'OR',
@@ -565,7 +602,38 @@ class ACFML_Post_Types {
       ]
     ];
     
+    // add acfml_post_title so that we can adjust the order accordingliy
+    $meta_query['acfml_post_title'] = [
+      'key' => "acfml_post_title_$language",
+      'compare' => 'EXISTS'
+    ];
+
+    // adjust orderby
+    $orderby = $query->get('orderby');
+    $order = $query->get('order');
+    
+    if( $orderby === 'title' ) {
+      // accounts for simple 'title'
+      $orderby = ['acfml_post_title' => $order];
+    } elseif( is_array($orderby) && array_key_exists('title', $orderby) ) {
+      // accounts for something like ['menu_order' => 'asc', 'title' => 'DESC' ]
+      $orderby['acfml_post_title'] = $orderby['title'];
+      unset( $orderby['title'] );
+    } elseif( in_array('title', explode(' ', $orderby) ) ) {
+      // accounts for crazy strings like 'menu_order title'
+      $orderby_fields = explode(' ', $orderby);
+      $orderby = [];
+      foreach( $orderby_fields as $field ) {
+        if( $field === 'title' ) {
+          $orderby['acfml_post_title'] = $order;
+        } else {
+          $orderby[$field] = $order;
+        }
+      }
+    }
+
     $query->set('meta_query', $meta_query);
+    $query->set('orderby', $orderby);
 
   }
 
@@ -588,10 +656,12 @@ class ACFML_Post_Types {
     // prepare post types
     $slug_in_string = $matches['slugs_in_string'];
     $post_types = $this->in_string_to_array($matches['post_type_in_string']);
-
+    
     $queries = [];
     foreach( $post_types as $post_type ) {
+      
       if( $this->is_multilingual_post_type($post_type) ) {
+        
         $queries[] = "(
           SELECT ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
           LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
@@ -863,11 +933,19 @@ class ACFML_Post_Types {
    * @param integer $posts_per_page
    * @return array
    */
-  private function find_posts_with_empty_slug(string $language, $posts_per_page = 0): array {
+  private function find_posts_with_missing_data(string $language, $posts_per_page = 0): array {
     $posts = get_posts([
       'post_type' => $this->get_multilingual_post_types(),
       'meta_query' => [
         'relation' => 'OR',
+        [
+          'key' => "{$this->title_field_name}_{$language}",
+          'value' => ''
+        ],
+        [
+          'key' => "{$this->title_field_name}_{$language}",
+          'compare' => 'NOT EXISTS'
+        ],
         [
           'key' => "{$this->slug_field_name}_{$language}",
           'value' => ''
@@ -890,7 +968,7 @@ class ACFML_Post_Types {
    */
   public function check_for_posts_with_empty_slugs() {
     foreach( acfml()->get_languages('slug') as $lang ) {
-      $posts = $this->find_posts_with_empty_slug($lang, 1);
+      $posts = $this->find_posts_with_missing_data($lang, 1);
       if( count($posts) ) {
         acfml()->admin->add_notice(
           'empty_slugs_notice',
@@ -906,13 +984,13 @@ class ACFML_Post_Types {
    *
    * @return void
    */
-  public function maybe_generate_slugs() {
+  public function maybe_resave_posts() {
     // check nonce
-    if( !acfml()->admin->verify_nonce('acfml_generate_slugs') ) return;
+    if( !acfml()->admin->verify_nonce('acfml_nonce_resave_posts') ) return;
     // find posts with empty slugs for each language
     $post_ids = [];
     foreach( acfml()->get_languages('slug') as $lang ) {
-      $posts = $this->find_posts_with_empty_slug($lang, -1);
+      $posts = $this->find_posts_with_missing_data($lang, -1);
       $post_ids = array_unique(array_merge($post_ids, $posts));
     }
     $count = count($post_ids);
@@ -935,6 +1013,92 @@ class ACFML_Post_Types {
         'is_dismissible' => true
       ]
     );
+  }
+
+  /**
+   * Resave ALL posts
+   *
+   * @return void
+   */
+  public function resave_all_posts(): void {
+    $post_ids = get_posts([
+      'post_type' => $this->get_multilingual_post_types(),
+      'posts_per_page' => -1,
+      'fields' => 'ids',
+    ]);
+    // bail early if no posts were found
+    if( !count($post_ids) ) return;
+    // trigger save_post for each post with empty slugs
+    foreach( $post_ids as $post_id ) {
+      $this->save_post($post_id);
+    }
+  }
+
+  /**
+   * Add UI to translate slugs
+   *
+   * @return void
+   */
+  public function add_slugs_translations_ui(): void {
+
+    $post_types = $this->get_multilingual_post_types('names', false);
+    if( empty($post_types) ) return;
+    
+    // Add one row for each post type
+    foreach( $post_types as $post_type ) {
+
+      $pt_object = get_post_type_object($post_type);
+
+      if( !$pt_object->has_archive && !$pt_object->rewrite ) continue;
+      
+      acf_add_local_field([
+        'key' => "field_acfml_slugs_$post_type",
+        'label' => "Slugs for {$pt_object->labels->name} ({$post_type})",
+        'name' => "acfml_slugs_$post_type",
+        'type' => 'group',
+        'parent' => 'group_acfml_options',
+        'layout' => 'block'
+      ]);
+
+      // Add fields for archive slugs
+      if( $pt_object->has_archive ) {
+        acf_add_local_field([
+          'key' => "field_acfml_archive_slug_{$post_type}",
+          'name' => "archive_slug",
+          'label' => 'Archives',
+          'type' => 'text',
+          'parent' => "field_acfml_slugs_$post_type",
+          'acfml_multilingual' => true,
+          'prepend' => home_url('/'),
+          'placeholder' => $pt_object->has_archive,
+          'wrapper' => [
+            'width' => '50%'
+          ],
+          'acfml_sanitize_callback' => 'sanitize_title',
+        ]);
+      }
+      
+      // Add fields for rewrite slugs
+      if( $pt_object->rewrite ) {
+        acf_add_local_field([
+          'key' => "field_acfml_rewrite_slug_{$post_type}",
+          'name' => "rewrite_slug",
+          'label' => 'Single Entries',
+          'type' => 'text',
+          'parent' => "field_acfml_slugs_$post_type",
+          'acfml_multilingual' => true,
+          'prepend' => home_url('/'),
+          'append' => "/$post_type-name/",
+          'placeholder' => $pt_object->rewrite['slug'],
+          'wrapper' => [
+            'width' => '50%'
+          ],
+          'acfml_sanitize_callback' => 'sanitize_title',
+        ]);
+      }
+      
+    }
+
   }
 
 }

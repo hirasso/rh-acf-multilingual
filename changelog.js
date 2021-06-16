@@ -103,8 +103,19 @@ async function generateChangelog() {
     lastCommit = commit;
     let date = new Date(commit.date).toISOString().split('T')[0];
     let shortHash = commit.hash.substr(0,7);
-    let message = `${commit.message} (#${shortHash})`;
-    changelog = addCommitMessageToChangelog( getPluginVersion( pluginFile ), message, changelog, date );
+
+    let messages = commit.message.split('- ');
+    messages = messages.filter(message => Boolean(message));
+    messages = messages.map(message => {
+      message = message.trim();
+      message = `${message} (#${shortHash})`
+      return message;
+    });
+    for( const message of messages ) {
+      changelog = addCommitMessageToChangelog( getPluginVersion( pluginFile ), message, changelog, date );  
+    }
+    
+    
   }
   return changelog;
 }

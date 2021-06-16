@@ -21,43 +21,51 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
-#: ../acfml.php:102
+#: ../acfml.php:150
 msgid "ACF Multilingual requires the plugin %s to be installed and activated."
 msgstr "ACF Multilingual benötigt das Plugin %s."
 
-#: ../inc/class.acfml-admin.php:35
+#: ../inc/class.admin.php:42
 msgid "ACF Multilingual Settings"
 msgstr "ACF Multilingual Einstellungen"
 
-#: ../inc/class.acfml-admin.php:36
+#: ../inc/class.admin.php:43
 msgid "ACF Multilingual"
 msgstr "ACF Multilingual"
 
-#: ../inc/class.acfml-admin.php:153
+#: ../inc/class.admin.php:200
 msgid "Rewrite Rules successfully flushed"
 msgstr "Die Rewrite-Rules wurden erfolgreich erneuert"
 
-#: ../inc/class.acfml-fields.php:54
+#: ../inc/class.admin.php:230
+msgid "Switch your admin language"
+msgstr "Admin-Sprache wechseln"
+
+#: ../inc/class.admin.php:241
+msgid "Switch to %s"
+msgstr "Zu %s wechseln"
+
+#: ../inc/class.fields-controller.php:54
 msgid "Multilingual?"
 msgstr "Mehrsprachig?"
 
-#: ../inc/class.acfml-post-types.php:262
+#: ../inc/class.post-types-controller.php:290
 msgid "Show language in frontend?"
 msgstr "Sprache im Frontend anzeigen?"
 
-#: ../inc/class.acfml-post-types.php:260
+#: ../inc/class.post-types-controller.php:288
 msgid "The default language is always active"
 msgstr "Die Standard-Sprache ist immer aktiv"
 
-#: ../inc/class.acfml-post-types.php:275
+#: ../inc/class.post-types-controller.php:303
 msgid "Leave empty to generate the link from title"
 msgstr "Leer lassen, um den link aus dem Titel generieren zu lassen"
 
-#: ../inc/class.acfml-post-types.php:930, ../inc/class.acfml-post-types.php:946
+#: ../inc/class.post-types-controller.php:1012
 msgid "ACF Multilingual successfully processed %s %s."
 msgstr "ACF Multilingual hat erfolgreich %s %s konvertiert."
 
-#: ../inc/class.acfml-post-types.php:932, ../inc/class.acfml-post-types.php:948
+#: ../inc/class.post-types-controller.php:1014
 msgid "post"
 msgid_plural "posts"
 msgstr[0] "Eintrag"
@@ -68,20 +76,20 @@ msgid ""
 "ACF Multilingual needs to process some of your existing posts to make them "
 "available in all languages."
 msgstr ""
-"ACF Multilingual muss einige der vorhandenen Einträge konvertieren, um sie "
+"ACF Multilingual muss einige der vorhandenen Einträge aktualisieren, um sie "
 "in allen Sprachen verfügbar zu machen."
 
 #: ../templates/notice-empty-slugs-detected.php:4
 msgid "Process now"
-msgstr "Jetzt konvertieren"
+msgstr "Jetzt aktualisieren"
 
 #: ../templates/notice-flush-rewrite-rules.php:1
 msgid ""
-"ACF Multilingual detected a change in your language settings and needs to "
-"flush your rewrite rules."
+"ACF Multilingual detected a change in your settings and needs to flush your "
+"rewrite rules."
 msgstr ""
-"ACF Multilingual hat eine Änderungen in den Spracheinstellungen entdeckt und "
-"muss die Rewrite-Rules neu generieren."
+"ACF Multilingual hat eine Änderungen in den Einstellungen entdeckt und muss "
+"die Rewrite-Rules neu generieren."
 
 #: ../templates/notice-flush-rewrite-rules.php:4
 msgid "Flush Rewrite Rules Now"

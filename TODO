@@ -26,8 +26,8 @@
   ✔ Translate links in wp-sitemap.xml
   ✔ Do nothing if no languages are registered
   ✔ Move `acfml` setting for post types to `supports`
-  ❍ Add canonical redirect for `de/event/weihnachten/` to `de/veranstaltung/weihnachten`
-  ❍ Add Sitemap Provider for non-default languages
+  ✔ Add canonical redirect for `de/event/weihnachten/` to `de/veranstaltung/weihnachten`
+  ✔ Add Sitemap Provider for non-default languages
   ✔ Add api template for
     ✔ acfml_add_language
     ✔ acfml_register_post_type
@@ -35,3 +35,6 @@
 
 Optional:
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
+    ❍ Generate and save slugs in each language
+    ❍ use pre_get_terms to map `slug` to meta field `acfml_slug_lang`
+    ❍ Make rewrite base slugs translatable (e.g. category -> kategorie)
