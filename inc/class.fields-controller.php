@@ -151,11 +151,11 @@ class Fields_Controller {
   public function inject_previous_monolingual_value( $value, $post_id, $field ) {
     // bail early if field is empty or not multilingual
     if( !$this->is_acfml_group($field) ) return $value;
-    // parse value from before the field became multilingual to the default value
-    $default_language = acfml()->get_default_language();
     // bail early if no value or array
     if( !$value || is_array($value) ) return $value;
-    // This value will be autofilled by the monolingual value
+    
+    $default_language = acfml()->get_default_language();
+    // This field's value will be autofilled by the monolingual value
     $hook_name = "acf/load_value/key={$field['key']}_$default_language";
     // A self-erasing hook, since filters would add up 
     // inside a repeater or flexible content field.
