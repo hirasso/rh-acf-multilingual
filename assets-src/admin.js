@@ -83,9 +83,7 @@ export default class ACFML {
       $('[data-setting="title"]').remove();
     });
     acf.addAction(`ready_field/key=field_acfml_post_title_${acfml.defaultLanguage}`, field => {
-      acf.unload.stopListening();
       if( !acfml.isMobile && !field.val() ) field.$input().focus();
-      setTimeout(() => {acf.unload.startListening()}, 100);
     });
     acf.addAction(`ready_field/key=field_acfml_slug`, $field => {
       // $('.postbox#slugdiv').remove();
