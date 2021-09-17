@@ -1,6 +1,10 @@
-#### 0.0.5 (2021-04-28)
+#### 0.0.5 (2021-09-17)
 
-- Add UI for string translations (#73dc3eb)
+- Fix `inject_previous_monolingual_value` (#e240793)
+- Merged in bugfix/query-for-translated-pages (pull request #2)  use $wpdb->posts table in query generation insted of hard coded prg_posts  Approved-by: Rasso Hilber (#c8f06cb)
+- use $wpdb->posts table in query generation insted of hard coded prg_posts (#e768aec)
+- Merged rhilber/rh-acf-multilingual into master (#1619b12)
+- Add UI for string translations (#9845203)
 - Add composer (#4cb7200)
 - Initialize on plugins loaded (#1c6333f)
 - add README (#d7304d7)

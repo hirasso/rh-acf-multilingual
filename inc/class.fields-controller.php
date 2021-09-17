@@ -153,9 +153,10 @@ class Fields_Controller {
     if( !$this->is_acfml_group($field) ) return $value;
     // parse value from before the field became multilingual to the default value
     $default_language = acfml()->get_default_language();
+    
     if( $value && !is_array($value) ) {
       add_filter("acf/load_value/key={$field['key']}_$default_language", function($sub_field_value) use ($value) {
-        return $sub_field_value ? $sub_field_value : $value;
+        return $value;
       });
     }
     return $value;
