@@ -153,13 +153,43 @@ class Fields_Controller {
     if( !$this->is_acfml_group($field) ) return $value;
     // parse value from before the field became multilingual to the default value
     $default_language = acfml()->get_default_language();
-    // if there is a previous value and it's not an array, return this value for the default subfield's value
-    if( $value && !is_array($value) ) {
-      add_filter("acf/load_value/key={$field['key']}_$default_language", function($sub_field_value) use ($value) {
-        return $value;
-      });
-    }
+    // bail early if no value or array
+    if( !$value || is_array($value) ) return $value;
+    // This value will be autofilled by the monolingual value
+    $hook_name = "acf/load_value/key={$field['key']}_$default_language";
+    // A self-erasing hook, since filters would add up 
+    // inside a repeater or flexible content field.
+    // https://gist.github.com/stevegrunwell/c8307af5b88310ac1c49f6fa91f62bcb
+    $self_erasing_hook = function() use ($value, $hook_name, &$self_erasing_hook) {
+      remove_filter($hook_name, $self_erasing_hook);
+      return $value;
+    };
+    add_filter($hook_name, $self_erasing_hook);
+    
     return $value;
+  }
+
+  /**
+   * Register a filter to run exactly one time.
+   *
+   * The arguments match that of add_filter(), but this function will also register a second
+   * callback designed to remove the first immediately after it runs.
+   *
+   * @param string   $hook     The filter name.
+   * @param callable $callback The callback function.
+   * @param int      $priority Optional. The priority at which the callback should be executed.
+   *                           Default is 10.
+   * @param int      $args     Optional. The number of arguments expected by the callback function.
+   *                           Default is 1.
+   * @return bool Like add_filter(), this function always returns true.
+   */
+  public function add_filter_once( $hook, $callback, $priority = 10, $args = 1 ) {
+    $singular = function () use ( $hook, $callback, $priority, $args, &$singular ) {
+      call_user_func_array( $callback, func_get_args() );
+      remove_filter( $hook, $singular, $priority, $args );
+    };
+
+    return add_filter( $hook, $singular, $priority, $args );
   }
 
   /**
