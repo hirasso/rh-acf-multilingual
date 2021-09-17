@@ -27,6 +27,10 @@
   "watchreload": {
     "files": "**/*.php"
   },
+  "browserslist": [
+    "> 1%",
+    "not dead"
+  ],
   "postcss": {
     "plugins": {
       "autoprefixer": true
