@@ -809,7 +809,7 @@ class Post_Types_Controller {
    * @param string $language
    * @return string|null
    */
-  private function get_post_slug( \WP_Post $post, string $language ): ?string { 
+  public function get_post_slug( \WP_Post $post, string $language ): ?string {
     if( !$this->is_multilingual_post_type($post->post_type) ) return $post->post_name;
     $slug = get_field("{$this->slug_field_name}_{$language}", $post->ID);
     if( !$slug && acfml()->is_default_language($language) ) return $post->post_name;
