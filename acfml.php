@@ -17,7 +17,7 @@ define( 'ACFML', true );
 define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 
-require_once(ACFML_PATH . '/vendor/autoload.php');
+require_once(ACFML_PATH . 'vendor/autoload.php');
 
 class ACF_Multilingual {
 
