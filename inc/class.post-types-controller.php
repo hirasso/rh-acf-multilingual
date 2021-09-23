@@ -701,6 +701,24 @@ class Post_Types_Controller {
   }
 
   /**
+   * Get a WordPress Post default and translated urls.
+   *
+   * @param \WP_Post $post
+   * @return array
+   */
+  public function get_post_urls( \WP_Post $post ): array {
+    $languages = acfml()->get_languages('slug');
+
+    $urls = [];
+
+    foreach ($languages as $lang) {
+      $urls[$lang] = $this->get_post_link($post, $lang);
+    }
+
+    return $urls;
+  }
+
+  /**
    * Get translated permalink for a post
    *
    * @param \WP_Post $post

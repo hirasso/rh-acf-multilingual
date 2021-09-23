@@ -22,6 +22,16 @@ function acfml_get_converted_urls(?string $url = null): array {
 }
 
 /**
+ * This function is documented in inc/class.post-types-controller.php > get_post_urls
+ *
+ * @param WP_Post $post
+ * @return array
+ */
+function acfml_get_post_permalinks(WP_Post $post): array {
+    return acfml()->post_types_controller->get_post_urls($post);
+}
+
+/**
  * This function is documented in acfml.php > add_language
  */
 function acfml_add_language(string $slug, ?string $locale = null, ?string $name = null): array {
