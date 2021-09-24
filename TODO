@@ -1,40 +1,43 @@
-07.11.2020:
-  ✔ Filter for canonical_redirect
-  ✔ Generator for Language Switcher
-  ✔ Admin-JS and Styles
-  ✔ Add acf filter for loading values in the frontend
-  ✔ Maybe rename the whole thing
-  ✔ Make Post Titles multilingual
-  ✔ Unique Post Slugs
-  ✔ get_post_by_path
-  ✔ Filter Post-/Page-/CPT-/Term-/Tag-Links for custom slugs
-  ✔ Filter wp_old_slug_redirect
-  ✔ Convert URLs in text fields
-  ✔ Query for custom slugs in path
-  ✔ No taxonomy support
-  ✔ use 'request' to fetch actual post by translated slug
-  ✔ Use the same functionality for URL paths in links
-  ✔ Set appropriate locale while sanitizing titles for slugs, reset afterwards
-  ✔ Use WP Cache get_post_by_path calls
-  ✔ Filter for translation in document title
-  ✔ Check url_to_postid
-  ✔ use native permalink with $leavename for get_post_link
-  ✔ Remember field language choices in admin on update
-  ✔ Redirect frontend to user agent language
-  ✔ Re-generation of slugs
-  ✔ Flush Rewrite Rules if languages have been changed
-  ✔ Translate links in wp-sitemap.xml
-  ✔ Do nothing if no languages are registered
-  ✔ Move `acfml` setting for post types to `supports`
-  ✔ Add canonical redirect for `de/event/weihnachten/` to `de/veranstaltung/weihnachten`
-  ✔ Add Sitemap Provider for non-default languages
-  ✔ Add api template for
-    ✔ acfml_add_language
-    ✔ acfml_register_post_type
-    ✔ acfml_get_language_switcher
+Features:
+  ❍ New UI layout option to display fields next to each other and disable language switching buttons
 
-Optional:
+Taxonomies:
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
     ❍ Generate and save slugs in each language
     ❍ use pre_get_terms to map `slug` to meta field `acfml_slug_lang`
     ❍ Make rewrite base slugs translatable (e.g. category -> kategorie)
+
+Archive:
+  ✔ Filter for canonical_redirect @project(07.11.2020)
+  ✔ Generator for Language Switcher @project(07.11.2020)
+  ✔ Admin-JS and Styles @project(07.11.2020)
+  ✔ Add acf filter for loading values in the frontend @project(07.11.2020)
+  ✔ Maybe rename the whole thing @project(07.11.2020)
+  ✔ Make Post Titles multilingual @project(07.11.2020)
+  ✔ Unique Post Slugs @project(07.11.2020)
+  ✔ get_post_by_path @project(07.11.2020)
+  ✔ Filter Post-/Page-/CPT-/Term-/Tag-Links for custom slugs @project(07.11.2020)
+  ✔ Filter wp_old_slug_redirect @project(07.11.2020)
+  ✔ Convert URLs in text fields @project(07.11.2020)
+  ✔ Query for custom slugs in path @project(07.11.2020)
+  ✔ No taxonomy support @project(07.11.2020)
+  ✔ use 'request' to fetch actual post by translated slug @project(07.11.2020)
+  ✔ Use the same functionality for URL paths in links @project(07.11.2020)
+  ✔ Set appropriate locale while sanitizing titles for slugs, reset afterwards @project(07.11.2020)
+  ✔ Use WP Cache get_post_by_path calls @project(07.11.2020)
+  ✔ Filter for translation in document title @project(07.11.2020)
+  ✔ Check url_to_postid @project(07.11.2020)
+  ✔ use native permalink with $leavename for get_post_link @project(07.11.2020)
+  ✔ Remember field language choices in admin on update @project(07.11.2020)
+  ✔ Redirect frontend to user agent language @project(07.11.2020)
+  ✔ Re-generation of slugs @project(07.11.2020)
+  ✔ Flush Rewrite Rules if languages have been changed @project(07.11.2020)
+  ✔ Translate links in wp-sitemap.xml @project(07.11.2020)
+  ✔ Do nothing if no languages are registered @project(07.11.2020)
+  ✔ Move `acfml` setting for post types to `supports` @project(07.11.2020)
+  ✔ Add canonical redirect for `de/event/weihnachten/` to `de/veranstaltung/weihnachten` @project(07.11.2020)
+  ✔ Add Sitemap Provider for non-default languages @project(07.11.2020)
+  ✔ Add api template for @project(07.11.2020)
+  ✔ acfml_add_language @project(07.11.2020)
+  ✔ acfml_register_post_type @project(07.11.2020)
+  ✔ acfml_get_language_switcher @project(07.11.2020)
