@@ -96,7 +96,6 @@ class ACF_Multilingual {
     $this->include('inc/class.fields-controller.php');
     $this->include('inc/class.post-types-controller.php');
     $this->include('inc/class.taxonomies-controller.php');
-    $this->include('inc/class.sitemaps-provider.php');
     $this->fields_controller = new ACFML\Fields_Controller();
     $this->post_types_controller = new ACFML\Post_Types_Controller();
     $this->taxonomies_controller = new ACFML\Taxonomies_Controller();
@@ -1074,6 +1073,7 @@ class ACF_Multilingual {
    */
   public function add_sitemaps_provider(): void {
     if( !$this->current_language_is_default() ) return;
+    $this->include('inc/class.sitemaps-provider.php');
     // registers the new provider for the sitemap
     $provider = new ACFML\ACFML_Sitemaps_Provider();
     wp_register_sitemap_provider( 'languages', $provider );
