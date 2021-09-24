@@ -11,13 +11,13 @@
 
 if( !defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-if( ! class_exists('ACF_Multilingual') ) :
-
 define( 'ACFML', true );
 define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 
 require_once(ACFML_PATH . 'vendor/autoload.php');
+
+if( ! class_exists('ACF_Multilingual') ) :
 
 class ACF_Multilingual {
 

@@ -1,5 +1,11 @@
-#### 0.0.5 (2021-09-17)
+#### 0.0.5 (2021-09-23)
 
+- Merged in feature-get-post--permalinks-api (pull request #6)  Get post urls by WP_Post object  Approved-by: Rasso Hilber (#1fc6ca6)
+- Merged in get-post-slug-public-method (pull request #5)  Making get_post_slug() public  Approved-by: Rasso Hilber (#4c0e28e)
+- Merged in fix-requiring-composer-autoload (pull request #4)  Removing leading slash from autoload.php import  Approved-by: Rasso Hilber (#d97e4dc)
+- Get post urls by WP_Post object (#90ffbec)
+- Making get_post_slug() public  It’s usefull and can’t see a reason why it should stay a private method. (#56b128f)
+- Removing leading slash from autoload.php import  plugin_dir_path() already adds a trailing slash (#db7c634)
 - Fix migration of monolingual values in repeaters (#a99bf48)
 - Disable ACF `beforeunload` promt when focusing title input (#ade4abb)
 - Fix `inject_previous_monolingual_value` (#07f9875)
