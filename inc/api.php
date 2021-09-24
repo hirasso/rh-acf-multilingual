@@ -32,6 +32,14 @@ function acfml_get_post_permalinks(WP_Post $post): array {
 }
 
 /**
+ * This function is documented in acfml.php > home_url
+ *
+ */
+function acfml_home_url(string $path = '', ?string $lang = null): string {
+  return acfml()->home_url($path, $lang);
+}
+
+/**
  * This function is documented in acfml.php > add_language
  */
 function acfml_add_language(string $slug, ?string $locale = null, ?string $name = null): array {

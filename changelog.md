@@ -1,5 +1,6 @@
 #### 0.0.5 (2021-09-24)
 
+- add api function `acfml_home_url` (#eb3e6c1)
 - Support for RTL and CSS logical properties in admin (#20e2fc8)
 - Merged in feature-get-post--permalinks-api (pull request #6)  Get post urls by WP_Post object  Approved-by: Rasso Hilber (#1fc6ca6)
 - Merged in get-post-slug-public-method (pull request #5)  Making get_post_slug() public  Approved-by: Rasso Hilber (#4c0e28e)

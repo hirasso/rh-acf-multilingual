@@ -290,7 +290,7 @@ class ACF_Multilingual {
    * @param string $key
    * @return string|null
    */
-  public function get_admin_cookie( string $key ) {
+  public function get_admin_cookie( string $key ): ?string {
     $cookie_name = $key . "_" . $this->get_cookie_hash();
     $cookie = $_COOKIE[$cookie_name] ?? null;
     return json_decode( stripslashes($cookie) );
@@ -299,10 +299,11 @@ class ACF_Multilingual {
   /**
    * Get home url in requested or default language
    *
+   * @param string $path
    * @param string|null $lang
-   * @param string
+   * @return string
    */
-  public function home_url($path = '', $lang = null) {
+  public function home_url(string $path = '', ?string $lang = null): string {
     $home_url = home_url();
     if( !$lang ) $lang = $this->get_current_language();
     if( $lang === $this->get_default_language() ) return $home_url . $path;
