@@ -1,5 +1,6 @@
-#### 0.0.5 (2021-09-23)
+#### 0.0.5 (2021-09-24)
 
+- Support for RTL and CSS logical properties in admin (#d970c99)
 - Merged in feature-get-post--permalinks-api (pull request #6)  Get post urls by WP_Post object  Approved-by: Rasso Hilber (#1fc6ca6)
 - Merged in get-post-slug-public-method (pull request #5)  Making get_post_slug() public  Approved-by: Rasso Hilber (#4c0e28e)
 - Merged in fix-requiring-composer-autoload (pull request #4)  Removing leading slash from autoload.php import  Approved-by: Rasso Hilber (#d97e4dc)

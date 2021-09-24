@@ -8,7 +8,7 @@
     "preinstall": "git config core.hooksPath .githooks",
     "bundle": "node parcel-bundler.js -f \"assets-src/*.js\" -o \"assets\"",
     "generate-pot": "node ./lang/acfml-pot.js",
-    "watch": "npm run bundle",
+    "watch": "npm run bundle -- --url https://acf-multilingual.test --sync",
     "build": "npm run bundle -- --production"
   },
   "babel": {
@@ -33,7 +33,8 @@
   ],
   "postcss": {
     "plugins": {
-      "autoprefixer": true
+      "autoprefixer": true,
+      "postcss-logical": true
     }
   },
   "author": "Rasso Hilber",
@@ -43,14 +44,15 @@
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-transform-runtime": "^7.9.6",
     "autoprefixer": "^9.7.6",
+    "browser-sync": "^2.27.5",
     "find-parent-dir": "^0.3.0",
     "glob": "^7.1.6",
     "minimist": "^1.2.5",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-watch-reload": "^1.0.0",
+    "postcss-logical": "^4.0.2",
     "rimraf": "^3.0.2",
     "sass": "^1.26.5",
     "wp-pot": "^1.9.8"
-  },
-  "dependencies": {}
+  }
 }

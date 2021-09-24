@@ -42,6 +42,9 @@
   flex-wrap: wrap;
   position: relative;
 }
+[dir=rtl] .acfml-tabs {
+  flex-direction: row-reverse;
+}
 .acfml-tab {
   cursor: pointer;
   display: block;

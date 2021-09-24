@@ -105,6 +105,10 @@ class ACF_Multilingual {
     $this->detect_language();
     $this->load_textdomain();
     $this->admin->add_hooks();
+
+    // Switch locale manually, since the 'locale' filter is running too late for some functionality
+    if( !is_admin() ) \switch_to_locale($this->get_frontend_locale());
+
     $this->add_hooks();
 
   }
@@ -120,7 +124,6 @@ class ACF_Multilingual {
     add_action('admin_init', [$this, 'download_language_packs'], 11);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], 999);
 
-    // add_action('init', [$this, 'flush_rewrite_rules'], PHP_INT_MAX);
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('wp_head', [$this, 'wp_head']);
 
@@ -826,6 +829,15 @@ class ACF_Multilingual {
    */
   public function filter_frontend_locale($locale): ?string {
     if( is_admin() ) return $locale;
+    return $this->get_frontend_locale();
+  }
+
+  /**
+   * Gets and converts the frontend locale
+   *
+   * @return string
+   */
+  private function get_frontend_locale(): string {
     return str_replace('_', '-', $this->get_language_info($this->get_current_language())['locale']);
   }
 
