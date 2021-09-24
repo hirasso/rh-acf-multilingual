@@ -422,7 +422,7 @@ class Post_Types_Controller {
     $post = get_post($post_id);
 
     // bail early if the post type is not multilingual
-    if( !$this->is_multilingual_post_type($post->post_type) ) return;
+    if( null === $post || !$this->is_multilingual_post_type($post->post_type) ) return;
 
     // bail early based on the post's status
     if ( in_array( $post->post_status, ['draft', 'pending', 'auto-draft'], true ) ) return;
