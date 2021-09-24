@@ -54,8 +54,8 @@ export default class ACFML {
       const $tabs = $el.find('.acfml-tab');
       $tabs.removeClass('is-active');
       $tabs.filter(`[data-language=${language}]`).addClass('is-active');
-      $childFields.removeClass('is-visible');
-      $childFields.filter(`[data-name=${language}]`).addClass('is-visible');
+      $childFields.removeClass('acfml-is-visible');
+      $childFields.filter(`[data-name=${language}]`).addClass('acfml-is-visible');
       $el.attr('data-acfml-language', language);
       acf.doAction('acfml/switch_language', $el, language);
     })
@@ -107,7 +107,7 @@ export default class ACFML {
     let acfml_language_tabs = {};
     $('.acfml-multilingual-field').each((i, el) => {
       const key = $(el).attr('data-key');
-      const language = $(el).find('.acfml-field.is-visible').attr('data-name');
+      const language = $(el).find('.acfml-field.acfml-is-visible').attr('data-name');
       acfml_language_tabs[key] = language;
     })
     this.addToStore('acfml_language_tabs', acfml_language_tabs);

@@ -94,7 +94,7 @@ class Fields_Controller {
       // prepare wrapper
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfml-field';
-      if( $lang === $active_language_tab ) $wrapper['class'] .= ' is-visible';
+      if( $lang === $active_language_tab ) $wrapper['class'] .= ' acfml-is-visible';
       if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang}";
       $wrapper['width'] = '';
       // prepare subfield
