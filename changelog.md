@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-09-24)
 
-- Fix wrong return value  in `get_admin_cookie` (#baca52a)
+- New Filter `format_acf_field_link` + New Function to detect links to physical locations 🧐 (#a0cf2e6)
+- Fix wrong return value  in `get_admin_cookie` (#dd87409)
 - add api function `acfml_home_url` (#c356e7b)
 - Support for RTL and CSS logical properties in admin (#20e2fc8)
 - Merged in feature-get-post--permalinks-api (pull request #6)  Get post urls by WP_Post object  Approved-by: Rasso Hilber (#1fc6ca6)

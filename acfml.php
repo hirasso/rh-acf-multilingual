@@ -134,6 +134,7 @@ class ACF_Multilingual {
     // ACF Field Filters
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
     add_filter('acf/format_value/type=page_link', [$this, 'format_acf_field_page_link'], 11);
+    add_filter('acf/format_value/type=link', [$this, 'format_acf_field_link'], 11);
 
     add_action('admin_init', [$this->admin, 'maybe_show_notice_flush_rewrite_rules']);
     add_action('admin_init', [$this->admin, 'maybe_flush_rewrite_rules']);
@@ -654,6 +655,9 @@ class ACF_Multilingual {
     if( !$url ) $url = $this->get_current_url();
     if( !$requested_language ) $requested_language = $this->get_current_language();
 
+    // bail early if the URL is not internal
+    if( !$this->is_internal_url($url) ) return $url;
+
     // bail early if this URL points towards the WP content directory
     if( strpos($url, content_url()) === 0 ) return $url;
 
@@ -889,6 +893,25 @@ class ACF_Multilingual {
   }
 
   /**
+   * Filter ACF value for field type 'link'
+   *
+   * @param string|array $value
+   * @return string|array
+   */
+  public function format_acf_field_link($value) {
+    if( empty($value) ) return;
+    // handle return type 'array'
+    if( !empty($value['url']) ) {
+      $value['url'] = $this->convert_url($value['url']);
+      return $value;
+    } 
+    // handle return type 'url'
+    if( is_string($value) ) return $this->convert_url($value);
+    
+    return $value;
+  }
+
+  /**
    * Format ACF field 'Page Link'
    *
    * @param string|array|null $value
@@ -923,14 +946,52 @@ class ACF_Multilingual {
       '#\bhttps?://[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', 
       function($matches) use ($lang) {
         $url = $matches[0];
-        if( strpos($this->strip_protocol($url), $this->strip_protocol(home_url())) !== false ) {
-          $url = $this->convert_url($url, $lang);
-        }
-        return $url;
+        return $this->convert_url($url, $lang);
       }, 
       $string
     );
     return $string;
+  }
+
+  /**
+   * Checks if an URL is internal
+   *
+   * @param string $url
+   * @return boolean
+   */
+  private function is_internal_url( string $url ): bool {
+    
+    if( !$this->url_contains_home_url($url) ) return false;
+    
+    if( $this->url_points_to_physical_location($url) ) return false;
+    
+    return true;
+  }
+
+  /**
+   * Tests if an URL contains the WP home_url
+   *
+   * @param string $url
+   * @return boolean
+   */
+  private function url_contains_home_url(string $url): bool {
+    return strpos($this->strip_protocol($url), $this->strip_protocol(home_url())) !== false;
+  }
+
+  /**
+   * Tests if an URL points to a dir or file on the server
+   *
+   * @param string $url
+   * @return boolean
+   */
+  private function url_points_to_physical_location(string $url): bool {
+    $path = substr( 
+      $this->strip_protocol($url), 
+      strlen($this->strip_protocol(home_url()))
+    );
+    $path = trim($path, '/');
+    $root_dir = trailingslashit(dirname($_SERVER['DOCUMENT_ROOT'] . $_SERVER['PHP_SELF']));
+    return !empty($path) && file_exists($root_dir . $path);
   }
 
   /**
