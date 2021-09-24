@@ -1,7 +1,7 @@
 Features:
   ❍ New UI layout option to display fields next to each other and disable language switching buttons
-  ❍ RTL support
-    ❍ Set global $wp_locale;
+  ✔ RTL support
+  ❍ Filter Link field
 
 Taxonomies:
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies

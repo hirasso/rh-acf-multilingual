@@ -288,9 +288,9 @@ class ACF_Multilingual {
    * Get an admin cookie
    *
    * @param string $key
-   * @return string|null
+   * @return object|null
    */
-  public function get_admin_cookie( string $key ): ?string {
+  public function get_admin_cookie( string $key ): ?object {
     $cookie_name = $key . "_" . $this->get_cookie_hash();
     $cookie = $_COOKIE[$cookie_name] ?? null;
     return json_decode( stripslashes($cookie) );
