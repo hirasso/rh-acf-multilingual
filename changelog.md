@@ -1,6 +1,6 @@
 #### 0.0.5 (2021-09-25)
 
-- Refactor URL comparisons 💖 (#ffe0dcf)
+- Refactor URL comparisons 💖 (#c7fc073)
 - Merged in fix-check-post-for-null (pull request #7)  check for null value before using $post object  Approved-by: Rasso Hilber (#f5b0828)
 - New Filter `format_acf_field_link` + New Function to detect links to physical locations 🧐 (#b8da2cb)
 - check for null value before using $post object  When saving acf-option pages $post can be NULL. (#2c06959)

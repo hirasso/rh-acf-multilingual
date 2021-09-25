@@ -1000,23 +1000,18 @@ class ACF_Multilingual {
    * @return boolean
    */
   private function url_points_to_physical_location(string $url): bool {
-    // get the path relative from wp_home
-    $path_from_wp_home = substr( 
-      set_url_scheme($url, 'http'), 
-      strlen(set_url_scheme(home_url(), 'http'))
-    );
-    $path_from_wp_home = trim($path_from_wp_home, '/');
-
+    
+    $path_from_home = $this->get_path_from_home($url);
     // bail early if the path is empty
-    if( empty($path_from_wp_home) ) return false;
+    if( empty($path_from_home) ) return false;
 
     // return true if a file exists on the absolute path location
     $document_root = dirname($_SERVER['SCRIPT_FILENAME']);
-    return file_exists("$document_root/$path_from_wp_home");
+    return file_exists("$document_root/$path_from_home");
   }
 
   /**
-   * Get path from URL
+   * Get path relative to home_url
    *
    * – removes home url 
    * – removes query
@@ -1025,7 +1020,7 @@ class ACF_Multilingual {
    * @param string $url
    * @param string
    */
-  private function get_url_path(string $url): string {
+  private function get_path_from_home(string $url): string {
     $path = str_replace(home_url(), '', $url);
     $path = explode('?', $path)[0];
     $path = trim($path, '/');
@@ -1033,7 +1028,6 @@ class ACF_Multilingual {
     $path = rawurlencode( urldecode( $path ) );
     $path = str_replace( '%2F', '/', $path );
     $path = str_replace( '%20', ' ', $path );
-    
     return $path;
   }
 
@@ -1051,7 +1045,7 @@ class ACF_Multilingual {
     $url = $url ?? $this->get_current_url();
 
     // get the path from the url, return early if none
-    $path = $this->get_url_path($url);
+    $path = $this->get_path_from_home($url);
     
     // bail early if no path found.
     if( !$path ) return null;
