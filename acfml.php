@@ -659,10 +659,10 @@ class ACF_Multilingual {
     if( !$this->is_internal_url($url) ) return $url;
 
     // bail early if this URL points towards the WP content directory
-    if( strpos($url, content_url()) === 0 ) return $url;
+    if( $this->url_starts_with($url, content_url()) ) return $url; 
 
     // Return a simple query arg language for admin urls
-    if( strpos($url, admin_url()) !== false ) {
+    if( $this->url_starts_with($url, admin_url()) ) {
       return add_query_arg('lang', $requested_language, $url);
     }
     
@@ -961,7 +961,7 @@ class ACF_Multilingual {
    */
   private function is_internal_url( string $url ): bool {
     
-    if( !$this->url_contains_home_url($url) ) return false;
+    if( !$this->url_starts_with($url, home_url()) ) return false;
     
     if( $this->url_points_to_physical_location($url) ) return false;
     
@@ -969,13 +969,28 @@ class ACF_Multilingual {
   }
 
   /**
-   * Tests if an URL contains the WP home_url
+   * Checks if an URL starts with another URL
+   * 
+   * Protocol agnostic. e.g.:
+   * "http://my-site.com/my-path/ > "https://my-site.com/" resolves to true
    *
-   * @param string $url
+   * @param string $haystack_url
+   * @param string $needle_url
    * @return boolean
    */
-  private function url_contains_home_url(string $url): bool {
-    return strpos($this->strip_protocol($url), $this->strip_protocol(home_url())) !== false;
+  private function url_starts_with(string $haystack_url, string $needle_url): bool {
+    return $this->string_starts_with(set_url_scheme($haystack_url, 'http'), set_url_scheme($needle_url, 'http'));
+  }
+
+  /**
+   * Tests if a string starts with a sub-string
+   *
+   * @param string $string
+   * @param string $sub_string
+   * @return boolean
+   */
+  private function string_starts_with(string $string, string $sub_string): bool {
+    return stripos($string, $sub_string) === 0;
   }
 
   /**
@@ -985,13 +1000,19 @@ class ACF_Multilingual {
    * @return boolean
    */
   private function url_points_to_physical_location(string $url): bool {
-    $path = substr( 
-      $this->strip_protocol($url), 
-      strlen($this->strip_protocol(home_url()))
+    // get the path relative from wp_home
+    $path_from_wp_home = substr( 
+      set_url_scheme($url, 'http'), 
+      strlen(set_url_scheme(home_url(), 'http'))
     );
-    $path = trim($path, '/');
-    $root_dir = trailingslashit(dirname($_SERVER['DOCUMENT_ROOT'] . $_SERVER['PHP_SELF']));
-    return !empty($path) && file_exists($root_dir . $path);
+    $path_from_wp_home = trim($path_from_wp_home, '/');
+
+    // bail early if the path is empty
+    if( empty($path_from_wp_home) ) return false;
+
+    // return true if a file exists on the absolute path location
+    $document_root = dirname($_SERVER['SCRIPT_FILENAME']);
+    return file_exists("$document_root/$path_from_wp_home");
   }
 
   /**

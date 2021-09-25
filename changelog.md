@@ -1,6 +1,9 @@
-#### 0.0.5 (2021-09-24)
+#### 0.0.5 (2021-09-25)
 
-- New Filter `format_acf_field_link` + New Function to detect links to physical locations 🧐 (#a0cf2e6)
+- Refactor URL comparisons 💖 (#ffe0dcf)
+- Merged in fix-check-post-for-null (pull request #7)  check for null value before using $post object  Approved-by: Rasso Hilber (#f5b0828)
+- New Filter `format_acf_field_link` + New Function to detect links to physical locations 🧐 (#b8da2cb)
+- check for null value before using $post object  When saving acf-option pages $post can be NULL. (#2c06959)
 - Fix wrong return value  in `get_admin_cookie` (#dd87409)
 - add api function `acfml_home_url` (#c356e7b)
 - Support for RTL and CSS logical properties in admin (#20e2fc8)
