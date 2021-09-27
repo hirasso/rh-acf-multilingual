@@ -204,9 +204,8 @@ class Taxonomies_Controller {
     $slug = $query->query_vars['slug'];
     if( is_array($slug) ) $slug = $slug[0];
     if( $slug ) {
-      // pre_dump($slug);
+      // @todo: maybe add taxonomy support?!
     }
     
-    // pre_dump($query);
   }
 }
