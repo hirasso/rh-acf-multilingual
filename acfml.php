@@ -22,7 +22,7 @@ if( ! class_exists('ACF_Multilingual') ) :
 class ACF_Multilingual {
 
   private $prefix = 'acfml';
-  private $debug = false;
+  public $debug = false;
   private $language = null;
   private $languages = [];
 
@@ -128,7 +128,7 @@ class ACF_Multilingual {
 
     $this->add_link_filters();
     add_action('template_redirect', [$this, 'redirect_front_page'], 1);
-    add_action('template_redirect', [$this, 'redirect_canonical']);
+    add_action('template_redirect', [$this, 'redirect_default_language_urls']);
     add_action('init', [$this, 'save_language_in_cookie']);
 
     // ACF Field Filters
@@ -651,6 +651,8 @@ class ACF_Multilingual {
   */
   public function convert_url( ?string $url = null, ?string $requested_language = null ): string {
     
+    $url = $this->remove_default_language_from_url($url);
+    
     // fill in defaults
     if( !$url ) $url = $this->get_current_url();
     if( !$requested_language ) $requested_language = $this->get_current_language();
@@ -674,7 +676,7 @@ class ACF_Multilingual {
     $wp_query = $this->resolve_url($url);
 
     if( $wp_query && $wp_object = $wp_query->get_queried_object() ) {
-
+      
       if( $wp_object instanceof \WP_Post ) {
         /**
          * The url resolved to an object of type 'post'. Retrieve URLs for that
@@ -712,6 +714,21 @@ class ACF_Multilingual {
   }
 
   /**
+   * Converts e.g. https://site.com/{default_language_slug}/my-slug/ to https://site.com/my-slug/
+   * (the same URL without the default language slug, if present)
+   *
+   * @param string $url
+   * @return string
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function remove_default_language_from_url(string $url): string {
+    if( !$this->is_default_language($this->get_language_in_url($url)) ) return $url;
+    $default_language = $this->get_default_language();
+    $url = str_ireplace(home_url("/$default_language"), home_url(), $url);
+    return $url;
+  }
+
+  /**
    * Simply replaces the language code in an URL, or strips it for the default language
    *
    * @param string $url
@@ -719,6 +736,7 @@ class ACF_Multilingual {
    * @return string
    */
   public function simple_convert_url( string $url, string $requested_language = null ): string {
+    $url = $this->remove_default_language_from_url($url);
     $current_language = $this->get_language_in_url($url);
     $current_home_url = $this->home_url('', $current_language);
     $new_home_url = $this->home_url('', $requested_language);
@@ -756,7 +774,7 @@ class ACF_Multilingual {
         "post_type_link" => 10,
         "attachment_link" => 10,
         "post_type_archive_link" => 10,
-        "redirect_canonical" => 10,
+        "redirect_canonical" => 10, // only fires if WordPress has detected a canonical conflict, e.g. ?p=225 with pretty permalinks active will redirect to the pretty URL 
       ],
     ];
 
@@ -1115,6 +1133,7 @@ class ACF_Multilingual {
 
     if( $_COOKIE['acfml-language'] ?? null ) return;
     
+    
     if( !$this->is_language_enabled($user_language) ) $user_language = $this->get_default_language();
     
     if( $current_language === $user_language ) return;
@@ -1167,11 +1186,19 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function redirect_canonical(): void {
+  public function redirect_default_language_urls(): void {
+    
     $url = $this->get_current_url();
-    $converted_url = $this->convert_url($url);
-    if( $url !== $converted_url ) {
-      wp_redirect($converted_url);
+
+    // bail early for URLs that are not in the default language
+    if( !$this->is_default_language($this->get_language_in_url($url)) ) return;
+
+    // get the clean URL (without e.g. [...]/{default_language_slug}/)
+    $clean_url = $this->remove_default_language_from_url($url);
+    
+    // redirects URLs like https://my-site.com/{default_language_slug}/my-post/ to https://my-site.com/my-post/
+    if( $url !== $clean_url ) {
+      wp_redirect($clean_url);
       exit;
     }
   }
