@@ -665,6 +665,9 @@ class ACF_Multilingual {
     if( $this->url_starts_with($url, admin_url()) ) {
       return add_query_arg('lang', $requested_language, $url);
     }
+
+    // bail early if the URL already is in the requested language
+    if( $this->get_language_in_url($url) === $requested_language ) return $url;
     
     $untranslated_object_url = null;
     $translated_object_url = null;
