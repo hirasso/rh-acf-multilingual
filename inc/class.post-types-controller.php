@@ -564,7 +564,7 @@ class Post_Types_Controller {
     
     if( acfml()->is_default_language($language) ) return;
 
-    $post_type = $query->queried_object->post_type ?? $query->get('post_type') ?: 'post';
+    $post_type = $this->guess_post_type($query);
 
     // don't do anything if the post type is not multilingual
     if( !$this->is_multilingual_post_type($post_type) ) return;
@@ -574,7 +574,7 @@ class Post_Types_Controller {
     // bootstrap meta query
     $meta_query = $query->get('meta_query') ?: [];
     // prepare for single query of type 'post'
-    if( !is_post_type_hierarchical($post_type) && $query->is_single() ) {
+    if( $query->is_single() && !is_post_type_hierarchical($post_type) ) {
       $meta_query['acfml_slug'] = [
         [
           'key' => "acfml_slug_$language",
@@ -634,6 +634,22 @@ class Post_Types_Controller {
     $query->set('meta_query', $meta_query);
     $query->set('orderby', $orderby);
 
+  }
+
+  /**
+   * Guess the post type from a \WP_Query
+   *
+   * @param \WP_Query $query
+   * @return string|null
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function guess_post_type( \WP_Query $query ): ?string {
+    $post_type = $query->queried_object->post_type ?? $query->get('post_type');
+    if( empty($post_type) && $query->is_tax() ) {
+      $taxonomy = get_taxonomy(get_queried_object()->taxonomy);
+      $post_type = $taxonomy->object_type[0] ?? $post_type;
+    }
+    return $post_type[0] ?? $post_type;
   }
 
 

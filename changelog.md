@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-09-27)
 
-- optimize `convert_url`  for edge  cases where the a WP_Post can have various URLs (#b358058)
+- guess post_type in taxonomy archives (#a0ebeb2)
+- optimize `convert_url`  for edge  cases where the a WP_Post can have various URLs (#72b7496)
 - don't convert url if already requested language (#3856ec2)
 - Refactor URL comparisons 💖 (#c7fc073)
 - Merged in fix-check-post-for-null (pull request #7)  check for null value before using $post object  Approved-by: Rasso Hilber (#f5b0828)
