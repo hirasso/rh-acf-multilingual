@@ -563,8 +563,16 @@ class Post_Types_Controller {
     $language = acfml()->get_current_language();
     
     if( acfml()->is_default_language($language) ) return;
+    
+    $post_types = $this->guess_post_types($query);
+    /**
+     * For now, an array of post types is not supported.
+     * Will be improved if required by a future project
+     */
+    if( count($post_types) > 1 ) return;
 
-    $post_type = $this->guess_post_type($query);
+    // Always use the first post_type in the array
+    $post_type = $post_types[0];
 
     // don't do anything if the post type is not multilingual
     if( !$this->is_multilingual_post_type($post_type) ) return;
@@ -640,16 +648,22 @@ class Post_Types_Controller {
    * Guess the post type from a \WP_Query
    *
    * @param \WP_Query $query
-   * @return string|null
+   * @return array
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  private function guess_post_type( \WP_Query $query ): ?string {
+  private function guess_post_types( \WP_Query $query ): array {
+    // first try to get the post type directly from the $query
     $post_type = $query->queried_object->post_type ?? $query->get('post_type');
-    if( empty($post_type) && $query->is_tax() ) {
+    if( !empty($post_type) ) return is_array($post_type) ? $post_type : [$post_type];
+
+    // if the post type is not set and we are inside a taxonomy archive
+    if( $query->is_tax() ) {
       $taxonomy = get_taxonomy(get_queried_object()->taxonomy);
-      $post_type = $taxonomy->object_type[0] ?? $post_type;
+      // if the taxonomie's object type is not empty, set the $post_type to that
+      if( !empty($taxonomy->object_type) ) return $taxonomy->object_type;
     }
-    return $post_type[0] ?? $post_type;
+    // finally return 'post'
+    return ['post'];
   }
 
 

@@ -1,5 +1,6 @@
 #### 0.0.5 (2021-09-27)
 
+- guess requested post types from `wp_query` (#1d261fb)
 - guess post_type in taxonomy archives (#d734a61)
 - optimize `convert_url`  for edge  cases where the a WP_Post can have various URLs (#72b7496)
 - don't convert url if already requested language (#3856ec2)
