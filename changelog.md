@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-09-27)
 
-- don't convert url if already requested language (#8e46ee4)
+- optimize `convert_url`  for edge  cases where the a WP_Post can have various URLs (#b358058)
+- don't convert url if already requested language (#3856ec2)
 - Refactor URL comparisons 💖 (#c7fc073)
 - Merged in fix-check-post-for-null (pull request #7)  check for null value before using $post object  Approved-by: Rasso Hilber (#f5b0828)
 - New Filter `format_acf_field_link` + New Function to detect links to physical locations 🧐 (#b8da2cb)

@@ -698,7 +698,10 @@ class ACF_Multilingual {
        *    - https://your-site.com/[...]/custom-endpoint/
        *    - https://your-site.com/[...]?json=true&paged=2
        */
-      if( $append_to_url = str_replace($untranslated_object_url, '', $url) ) {
+      if( 
+        strpos($url, $untranslated_object_url) === 0 && 
+        ( $append_to_url = str_replace($untranslated_object_url, '', $url) )
+        ) {
         $translated_object_url .= $append_to_url;
       }
       return $translated_object_url;
