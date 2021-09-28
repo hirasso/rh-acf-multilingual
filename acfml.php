@@ -724,7 +724,13 @@ class ACF_Multilingual {
   private function remove_default_language_from_url(string $url): string {
     if( !$this->is_default_language($this->get_language_in_url($url)) ) return $url;
     $default_language = $this->get_default_language();
-    $url = str_ireplace(home_url("/$default_language"), home_url(), $url);
+    // $pattern = preg_quote(home_url("/$default_language/"), '/') . '?$';
+    // in this case, a simple str_replace seems to be enough
+    $url = str_ireplace(
+      \home_url("/$default_language/"), 
+      \home_url(),
+      $url
+    );
     return $url;
   }
 
