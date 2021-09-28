@@ -601,23 +601,29 @@ class Post_Types_Controller {
       [
         'key' => "acfml_lang_active_$language",
         'value' => 1,
-        'type' => 'NUMERIC'
-      ],
-      [
-        'key' => "acfml_lang_active_$language",
-        'compare' => 'NOT EXISTS',
+        'type' => 'NUMERIC',
       ]
     ];
-    
+
+    /**
+    * This makes the query slow. That's why it is set to opt-in via filter
+    */
+    if( apply_filters('acfml/allow_lang_active_not_exists', false) ) {
+      $meta_query['acfml_lang_active'][] = [
+        'key' => "acfml_lang_active_$language",
+        'compare' => 'NOT EXISTS',
+      ];
+    }
+
+    // adjust orderby
+    $orderby = $query->get('orderby');
+    $order = $query->get('order');
+
     // add acfml_post_title so that we can adjust the order accordingliy
     $meta_query['acfml_post_title'] = [
       'key' => "acfml_post_title_$language",
       'compare' => 'EXISTS'
     ];
-
-    // adjust orderby
-    $orderby = $query->get('orderby');
-    $order = $query->get('order');
     
     if( $orderby === 'title' ) {
       // accounts for simple 'title'
@@ -637,6 +643,9 @@ class Post_Types_Controller {
           $orderby[$field] = $order;
         }
       }
+    } else {
+      // if we don't need it, unset the meta query for the title
+      unset($meta_query['acfml_post_title']);
     }
 
     $query->set('meta_query', $meta_query);
@@ -670,10 +679,10 @@ class Post_Types_Controller {
   /**
    * Detect and overwrite the query for get_page_by_path
    *
-   * @param [type] $query
+   * @param string $query
    * @return void
    */
-  public function query__get_page_by_path($query) {
+  public function query__get_page_by_path(string $query): string {
     global $wpdb;
     
     $language = acfml()->get_current_language();
@@ -692,7 +701,7 @@ class Post_Types_Controller {
       if( $this->is_multilingual_post_type($post_type) ) {
         
         $queries[] = "(
-          SELECT ID, acfml_mt1.meta_value AS post_name, post_parent, post_type FROM $wpdb->posts
+          SELECT ID, post_parent, post_type, (acfml_mt1.meta_value AS post_name) FROM $wpdb->posts
           LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
           WHERE 
           (
