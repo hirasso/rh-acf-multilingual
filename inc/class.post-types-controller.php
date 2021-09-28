@@ -457,6 +457,8 @@ class Post_Types_Controller {
       $post_slugs[$lang] = $slug;
     }
 
+    // @TODO maybe set acfml_lang_active_ if not set
+
     // save slug of the default language to the post_name
     remove_action('acf/save_post', [$this, 'save_post']);
     $post_args = [
@@ -602,18 +604,13 @@ class Post_Types_Controller {
         'key' => "acfml_lang_active_$language",
         'value' => 1,
         'type' => 'NUMERIC',
-      ]
-    ];
-
-    /**
-    * This makes the query slow. That's why it is set to opt-in via filter
-    */
-    if( apply_filters('acfml/allow_lang_active_not_exists', false) ) {
-      $meta_query['acfml_lang_active'][] = [
+      ],
+      // @TODO remove this when the value is never empty anymore
+      [
         'key' => "acfml_lang_active_$language",
         'compare' => 'NOT EXISTS',
-      ];
-    }
+      ]
+    ];
 
     // adjust orderby
     $orderby = $query->get('orderby');
