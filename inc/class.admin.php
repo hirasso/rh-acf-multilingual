@@ -96,21 +96,6 @@ class Admin {
   }
 
   /**
-   * Hash something
-   *
-   * @param mixed $value
-   * @return string
-   */
-  private function get_hashed_settings(): string {
-    $settings = [
-      'languages' => acfml()->get_languages('slug'),
-      'post_types' => acfml()->post_types_controller->get_multilingual_post_types('full', false)
-    ];
-    $hash = md5( json_encode($settings) );
-    return $hash;
-  }
-
-  /**
    * Verifies a nonce for a certain action
    *
    * @param string $action
@@ -131,13 +116,8 @@ class Admin {
   public function maybe_show_notice_flush_rewrite_rules(): void {
     $languages = acfml()->get_languages();
     if( !count($languages) ) return;
+    if( !acfml()->settings_have_changed('rewrite_rules') ) return;
 
-    $hashed_settings = $this->get_hashed_settings();
-    // delete_option('acfml_hashed_settings');
-    
-    $settings_changed = !hash_equals($hashed_settings, (string) get_option('acfml_hashed_settings'));
-    
-    if( !$settings_changed ) return;
     // add nag to flush the rewrite rules
     $this->add_notice(
       'acfml_flush_rewrite_rules',
@@ -162,8 +142,7 @@ class Admin {
         'is_dismissible' => true
       ]
     );
-    // update settings hash
-    update_option('acfml_hashed_settings', $this->get_hashed_settings());
+    acfml()->save_hashed_settings('rewrite_rules');
     // flush the rules
     flush_rewrite_rules();
   }

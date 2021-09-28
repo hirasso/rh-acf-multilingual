@@ -56,7 +56,7 @@ class Post_Types_Controller {
 
     add_action('acf/save_post', [$this, 'save_post'], 20);
 
-    add_action('admin_init', [$this, 'check_for_posts_with_empty_slugs']);
+    add_action('admin_init', [$this, 'maybe_check_for_posts_with_empty_slugs']);
     add_action('admin_init', [$this, 'maybe_resave_posts']);
     add_action('init', [$this, 'setup_acf_fields'], 12);
     
@@ -1019,10 +1019,16 @@ class Post_Types_Controller {
    *
    * @return void
    */
-  public function check_for_posts_with_empty_slugs() {
+  public function maybe_check_for_posts_with_empty_slugs() {
+    
+    if( !acfml()->settings_have_changed('empty_slugs') ) return;
+    
+    $found_empty_posts = false;
+
     foreach( acfml()->get_languages('slug') as $lang ) {
       $posts = $this->find_posts_with_missing_data($lang, 1);
       if( count($posts) ) {
+        $found_empty_posts = true;
         acfml()->admin->add_notice(
           'empty_slugs_notice',
           acfml()->get_template('notice-empty-slugs-detected', null, false),
@@ -1030,6 +1036,9 @@ class Post_Types_Controller {
         break;
       }
     }
+
+    if( !$found_empty_posts ) acfml()->save_hashed_settings('empty_slugs');
+    
   }
 
   /**
@@ -1040,6 +1049,7 @@ class Post_Types_Controller {
   public function maybe_resave_posts() {
     // check nonce
     if( !acfml()->admin->verify_nonce('acfml_nonce_resave_posts') ) return;
+    acfml()->save_hashed_settings('empty_slugs');
     // find posts with empty slugs for each language
     $post_ids = [];
     foreach( acfml()->get_languages('slug') as $lang ) {

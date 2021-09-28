@@ -1219,6 +1219,46 @@ class ACF_Multilingual {
   }
 
 
+  /**
+   * Get hashed settings
+   *
+   * @return string
+   */
+  public function get_hashed_settings(): string {
+    $settings = [
+      'languages' => acfml()->get_languages('slug'),
+      'post_types' => acfml()->post_types_controller->get_multilingual_post_types('full', false)
+    ];
+    $hash = md5( json_encode($settings) );
+    return $hash;
+  }
+
+  /**
+   * Detect if the settings of ACFML have changed
+   *
+   * @param string $postfix
+   * @return boolean
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function settings_have_changed(string $postfix): bool {
+    $hashed_settings = $this->get_hashed_settings();
+    // uncomment to debug
+    // delete_option('acfml_hashed_settings');
+    return !hash_equals($hashed_settings, (string) get_option("acfml_hashed_settings_$postfix"));
+  }
+
+  /**
+   * Saves a hash of the current settings in the database
+   *
+   * @param string $postfix
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function save_hashed_settings(string $postfix): void {
+    // update settings hash
+    update_option("acfml_hashed_settings_$postfix", $this->get_hashed_settings());
+  }
+
 }
 
 /**

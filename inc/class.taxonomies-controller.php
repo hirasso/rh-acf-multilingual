@@ -94,7 +94,7 @@ class Taxonomies_Controller {
    *
    * @return Array
    */
-  private function get_multilingual_taxonomies() {
+  public function get_multilingual_taxonomies() {
     return $this->taxonomies;
   }
 
