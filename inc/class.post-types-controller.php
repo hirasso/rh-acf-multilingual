@@ -701,7 +701,7 @@ class Post_Types_Controller {
       if( $this->is_multilingual_post_type($post_type) ) {
         
         $queries[] = "(
-          SELECT ID, post_parent, post_type, (acfml_mt1.meta_value AS post_name) FROM $wpdb->posts
+          SELECT ID, post_parent, post_type, acfml_mt1.meta_value AS post_name FROM $wpdb->posts
           LEFT JOIN $wpdb->postmeta AS acfml_mt1 ON ( $wpdb->posts.ID = acfml_mt1.post_id )
           WHERE 
           (
