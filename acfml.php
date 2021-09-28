@@ -724,13 +724,9 @@ class ACF_Multilingual {
   private function remove_default_language_from_url(string $url): string {
     if( !$this->is_default_language($this->get_language_in_url($url)) ) return $url;
     $default_language = $this->get_default_language();
-    // $pattern = preg_quote(home_url("/$default_language/"), '/') . '?$';
-    // in this case, a simple str_replace seems to be enough
-    $url = str_ireplace(
-      \home_url("/$default_language/"), 
-      \home_url(),
-      $url
-    );
+    $preg_home_url = preg_quote($this->strip_protocol(home_url("/$default_language")), '@');
+    $pattern = "@https?:$preg_home_url(?:\/|$)@";
+    $url = preg_replace($pattern, \home_url("/"), $url);
     return $url;
   }
 
@@ -1139,7 +1135,6 @@ class ACF_Multilingual {
 
     if( $_COOKIE['acfml-language'] ?? null ) return;
     
-    
     if( !$this->is_language_enabled($user_language) ) $user_language = $this->get_default_language();
     
     if( $current_language === $user_language ) return;
@@ -1200,11 +1195,11 @@ class ACF_Multilingual {
     if( !$this->is_default_language($this->get_language_in_url($url)) ) return;
 
     // get the clean URL (without e.g. [...]/{default_language_slug}/)
-    $clean_url = $this->remove_default_language_from_url($url);
+    $redirect_url = $this->remove_default_language_from_url($url);
     
     // redirects URLs like https://my-site.com/{default_language_slug}/my-post/ to https://my-site.com/my-post/
-    if( $url !== $clean_url ) {
-      wp_redirect($clean_url);
+    if( $url !== $redirect_url ) {
+      wp_redirect($redirect_url);
       exit;
     }
   }

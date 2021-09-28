@@ -1,6 +1,6 @@
 #### 0.0.5 (2021-09-28)
 
-- Performance Optimizations (#ed27ac1)
+- Performance Optimizations (#77d064e)
 - fix for `remove_default_language_from_url` (#1262fb8)
 - add clearer redirect logic (#a75f634)
 - guess requested post types from `wp_query` (#218858b)
