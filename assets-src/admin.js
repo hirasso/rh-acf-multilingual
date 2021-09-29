@@ -52,10 +52,18 @@ export default class ACFML {
       const $el = $(el);
       const $childFields = $el.find('.acf-input:first').find(".acfml-field");
       const $tabs = $el.find('.acfml-tab');
+      
       $tabs.removeClass('is-active');
       $tabs.filter(`[data-language=${language}]`).addClass('is-active');
       $childFields.removeClass('acfml-is-visible');
-      $childFields.filter(`[data-name=${language}]`).addClass('acfml-is-visible');
+
+      // find the active field
+      const $activeField = $childFields.filter(`[data-name=${language}]:first`);
+      $activeField.addClass('acfml-is-visible');
+      
+      // initializes delayed WYSIWYG fields
+      $activeField.find('.acf-editor-wrap.delay').trigger('mousedown');
+
       $el.attr('data-acfml-language', language);
       acf.doAction('acfml/switch_language', $el, language);
     })

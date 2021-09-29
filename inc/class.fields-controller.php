@@ -41,6 +41,7 @@ class Fields_Controller {
     add_action("acf/render_field/type=group", [$this, 'render_multilingual_field'], 5);
     add_filter("acf/load_value/type=group", [$this, 'inject_previous_monolingual_value'], 10, 3);
     add_filter("acf/field_wrapper_attributes", [$this, "field_wrapper_attributes"], 10, 2);
+    add_filter("acf/prepare_field/type=wysiwyg", [$this, "maybe_delay_wysiwyg"], 11);
   }
 
   /**
@@ -117,7 +118,8 @@ class Fields_Controller {
         'required' => $required_all || $lang === $default_language && $field['required'],
         'acfml_multilingual' => 0,
         'acfml_multilingual_subfield' => 1,
-        'acfml_field_language' => $language_info['name'],
+        'acfml_field_language' => $lang,
+        'acfml_field_is_hidden' => $ui_style === 'tabs' && !acfml()->is_default_language($lang),
         'wrapper' => $wrapper,
       ]);
       
@@ -339,9 +341,23 @@ class Fields_Controller {
       $wrapper['class'] .= ' acfml-is-default-language';
     }
     if( !empty($field['acfml_field_language']) ) {
-      $wrapper['data-field-language'] = $field['acfml_field_language'];
+      $wrapper['data-acfml-field-language'] = $field['acfml_field_language'];
     }
     return $wrapper;
   }
   
+  /**
+   * Sets delayed initialization to true for hidden acfml wysiwyg fields
+   *
+   * @param mixed $field
+   * @return mixed
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function maybe_delay_wysiwyg($field) {
+    if( empty($field) ) return $field;
+    $is_hidden = $field['acfml_field_is_hidden'] ?? null;
+    if( !$is_hidden ) return $field;
+    $field['delay'] = 1;
+    return $field;
+  }
 }

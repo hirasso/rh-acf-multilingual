@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-09-29)
 
-- optimize admin UI (#a1d4816)
+- Delay WYSIWYG editors in non-default language subfields (#47f6e28)
+- optimize admin UI (#66bd611)
 - add 'acfml_ui_style' = 'simple' (#7ee1a47)
 - Set default values for `acfml_lang_active` (#d739ebe)
 - Performance Optimizations (#77d064e)
