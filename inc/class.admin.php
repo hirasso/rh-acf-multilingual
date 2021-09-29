@@ -10,7 +10,7 @@ class Admin {
 
   public function __construct() {
     $this->prefix = acfml()->get_prefix();
-    add_action('admin_init', [$this, 'maybe_show_acf_missing_notice']);
+    add_action('admin_init', [$this, 'maybe_show_notice_acf_missing']);
     add_action('admin_notices', [$this, 'show_added_notices']);
   }
 
@@ -115,12 +115,12 @@ class Admin {
    */
   public function maybe_show_notice_flush_rewrite_rules(): void {
     $languages = acfml()->get_languages();
-    if( !count($languages) ) return;
+    
     if( !acfml()->settings_have_changed('rewrite_rules') ) return;
 
     // add nag to flush the rewrite rules
     $this->add_notice(
-      'acfml_flush_rewrite_rules',
+      'flush-rewrite-rules',
       acfml()->get_template('notice-flush-rewrite-rules', null, false)
     ); 
   }
@@ -135,7 +135,7 @@ class Admin {
     if( !$this->verify_nonce('acfml_flush_rewrite_rules') ) return;
     // add success notice
     $this->add_notice(
-      'acfml_flush_rewrite_rules',
+      'flush-rewrite-rules',
       __('Rewrite Rules successfully flushed', 'acfml'),
       [
         'type' => 'success',
@@ -208,7 +208,7 @@ class Admin {
     update_user_meta($user->ID, 'locale', $locale);
     // add a notice
     $this->add_notice(
-      'acfml-changed-admin-language', 
+      'changed-admin-language', 
       sprintf(__('Changed the admin language to %s'), $language['name']),
       [
         'type' => 'success',
@@ -225,7 +225,7 @@ class Admin {
    *
    * @return void
    */
-  public function  maybe_show_acf_missing_notice() {
+  public function  maybe_show_notice_acf_missing() {
     if( defined('ACF') ) return;
     $locale = determine_locale();
     $message = wp_sprintf(

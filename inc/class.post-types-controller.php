@@ -1037,7 +1037,7 @@ class Post_Types_Controller {
       $posts = $this->find_posts_with_missing_data($lang, 1);
       if( count($posts) ) {
         acfml()->admin->add_notice(
-          'notice_resave_posts',
+          'resave-posts',
           acfml()->get_template('notice-needs-resave-posts', null, false),
         );
         break;
@@ -1059,7 +1059,7 @@ class Post_Types_Controller {
 
     // add success message
     acfml()->admin->add_notice(
-      'notice_resave_posts',
+      'resave-posts',
       wp_sprintf( 
         __('ACF Multilingual successfully processed %s %s.', 'acfml'), 
         number_format_i18n($resaved_posts_count),
