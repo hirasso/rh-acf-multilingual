@@ -54,7 +54,7 @@ class Post_Types_Controller {
     add_action("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
     add_filter("acf/update_value/key={$this->title_field_key}_{$this->default_language}", [$this, "update_value_default_post_title"], 10, 4 );
 
-    add_action('acf/save_post', [$this, 'save_post'], 20);
+    add_action('save_post', [$this, 'save_post'], 20);
 
     add_action('admin_init', [$this, 'maybe_check_for_posts_with_empty_slugs']);
     add_action('admin_init', [$this, 'maybe_resave_posts']);
@@ -457,21 +457,27 @@ class Post_Types_Controller {
       $post_slugs[$lang] = $slug;
     }
 
-    // @TODO maybe set acfml_lang_active_ if not set
+    /**
+     * Sanitize values for "acfml_lang_active_$lang"
+     */
+    foreach( $languages as $lang ) {
+      $lang_active = get_post_meta($post_id, "acfml_lang_active_$lang", true);
+      if( !in_array($lang_active, ["0", "1"]) ) update_post_meta($post_id, "acfml_lang_active_$lang", "1");
+    }
 
     // save slug of the default language to the post_name
-    remove_action('acf/save_post', [$this, 'save_post']);
+    remove_action('save_post', [$this, 'save_post'], 20);
     $post_args = [
       'ID' => $post_id,
       'post_name' => $post_slugs[$this->default_language],
       'post_title' => $post_titles[$this->default_language]
     ];
     wp_update_post($post_args);
-    add_action('acf/save_post', [$this, 'save_post'], 20);
+    add_action('save_post', [$this, 'save_post'], 20);
   }
 
   /**
-   * Undocumented function
+   * Get a unique post slug for a post, respecting the language
    *
    * @param string $slug
    * @param WP_Post $post_id
@@ -604,11 +610,6 @@ class Post_Types_Controller {
         'key' => "acfml_lang_active_$language",
         'value' => 1,
         'type' => 'NUMERIC',
-      ],
-      // @TODO remove this when the value is never empty anymore
-      [
-        'key' => "acfml_lang_active_$language",
-        'compare' => 'NOT EXISTS',
       ]
     ];
 
@@ -986,7 +987,7 @@ class Post_Types_Controller {
    * @param integer $posts_per_page
    * @return array
    */
-  private function find_posts_with_missing_data(string $language, $posts_per_page = 0): array {
+  private function find_posts_with_missing_data(string $language, $posts_per_page): array {
     $posts = get_posts([
       'post_type' => $this->get_multilingual_post_types(),
       'meta_query' => [
@@ -1006,7 +1007,15 @@ class Post_Types_Controller {
         [
           'key' => "{$this->slug_field_name}_{$language}",
           'compare' => 'NOT EXISTS'
-        ]
+        ],
+        [
+          'key' => "acfml_lang_active_{$language}",
+          'value' => ''
+        ],
+        [
+          'key' => "acfml_lang_active_{$language}",
+          'compare' => 'NOT EXISTS'
+        ],
       ],
       'posts_per_page' => $posts_per_page,
       'fields' => 'ids',
@@ -1020,15 +1029,10 @@ class Post_Types_Controller {
    * @return void
    */
   public function maybe_check_for_posts_with_empty_slugs() {
-    
-    if( !acfml()->settings_have_changed('empty_slugs') ) return;
-    
-    $found_empty_posts = false;
 
     foreach( acfml()->get_languages('slug') as $lang ) {
       $posts = $this->find_posts_with_missing_data($lang, 1);
       if( count($posts) ) {
-        $found_empty_posts = true;
         acfml()->admin->add_notice(
           'empty_slugs_notice',
           acfml()->get_template('notice-empty-slugs-detected', null, false),
@@ -1036,8 +1040,6 @@ class Post_Types_Controller {
         break;
       }
     }
-
-    if( !$found_empty_posts ) acfml()->save_hashed_settings('empty_slugs');
     
   }
 
@@ -1049,7 +1051,7 @@ class Post_Types_Controller {
   public function maybe_resave_posts() {
     // check nonce
     if( !acfml()->admin->verify_nonce('acfml_nonce_resave_posts') ) return;
-    acfml()->save_hashed_settings('empty_slugs');
+    
     // find posts with empty slugs for each language
     $post_ids = [];
     foreach( acfml()->get_languages('slug') as $lang ) {
