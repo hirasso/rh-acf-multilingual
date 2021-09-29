@@ -225,6 +225,7 @@ class Post_Types_Controller {
       'type' => 'text',
       'acfml_multilingual' => true,
       'acfml_all_required' => true,
+      'acfml_suppress_filters' => true,
       'required' => true,
       'parent' => $this->field_group_key,
       'wrapper' => [
@@ -289,6 +290,7 @@ class Post_Types_Controller {
       'acfml_multilingual' => true,
       'acfml_ui_listen_to' => $this->title_field_name,
       'acfml_show_ui' => false,
+      'acfml_suppress_filters' => true,
       // 'readonly' => true,
       'parent' => $this->field_group_key,
       'prepend' => '/',
@@ -308,6 +310,7 @@ class Post_Types_Controller {
       'acfml_multilingual' => true,
       'default_value' => 1,
       'acfml_ui_listen_to' => $this->title_field_name,
+      'acfml_suppress_filters' => true,
       'acfml_show_ui' => false,
       'parent' => $this->field_group_key,
       'wrapper' => [

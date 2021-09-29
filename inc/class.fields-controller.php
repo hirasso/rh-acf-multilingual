@@ -86,10 +86,13 @@ class Fields_Controller {
     $active_language_tab = $this->get_active_language_tab($field);
     $required_all = $field['acfml_all_required'] ?? false;
 
-    // allow themes to alter ACFML-Fields
-    $field = apply_filters('acfml/load_field/type=' . $field['type'], $field);
-    $field = apply_filters('acfml/load_field/name=' . $field['_name'], $field);
-    $field = apply_filters('acfml/load_field/key=' . $field['key'], $field);
+    if( ($field['acfml_suppress_filters'] ?? false ) === false ) {
+      // allow themes to alter ACFML-Fields
+      $field = apply_filters('acfml/load_field', $field);
+      $field = apply_filters('acfml/load_field/type=' . $field['type'], $field);
+      $field = apply_filters('acfml/load_field/name=' . $field['_name'], $field);
+      $field = apply_filters('acfml/load_field/key=' . $field['key'], $field);
+    }
 
     $ui_style = $this->get_field_ui_style($field);
 
@@ -114,12 +117,11 @@ class Fields_Controller {
         'required' => $required_all || $lang === $default_language && $field['required'],
         'acfml_multilingual' => 0,
         'acfml_multilingual_subfield' => 1,
+        'acfml_field_language' => $language_info['name'],
         'wrapper' => $wrapper,
       ]);
-      if( !empty($field['prepend']) ) {
-        $sub_field['prepend'] = acfml()->convert_urls_in_string($field['prepend'], $lang);
-      }
-      if( $ui_style === 'simple' ) $sub_field['prepend'] = strtoupper($lang);
+      
+      // if( $ui_style === 'simple' ) $sub_field['prepend'] = strtoupper($lang);
       
       // add the subfield
       $sub_fields[] = $sub_field;
@@ -335,6 +337,9 @@ class Fields_Controller {
     }
     if( !empty($field['acfml_multilingual_subfield']) && acfml()->is_default_language($field['_name']) ) {
       $wrapper['class'] .= ' acfml-is-default-language';
+    }
+    if( !empty($field['acfml_field_language']) ) {
+      $wrapper['data-field-language'] = $field['acfml_field_language'];
     }
     return $wrapper;
   }

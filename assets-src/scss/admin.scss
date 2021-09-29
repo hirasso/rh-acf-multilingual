@@ -21,7 +21,8 @@
   gap: 1%;
 }
 
-.acfml-field > .acf-label,
+.acfml-ui-style--tabs .acfml-field > .acf-label,
+.acfml-ui-style--simple > .acf-label,
 .acf-field-acfml-slug > .acf-label,
 .acf-field-acfml-lang-active > .acf-label {
   display: none;
