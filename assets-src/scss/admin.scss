@@ -14,6 +14,12 @@
 .acfml-multilingual-field > .acf-input > .acf-fields > .acfml-field:not(.acfml-is-visible) {
   @include visually-hidden;
 }
+.acfml-ui-style--simple > .acf-input > .acf-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  &:after { display: none; }
+  gap: 1%;
+}
 
 .acfml-field > .acf-label,
 .acf-field-acfml-slug > .acf-label,

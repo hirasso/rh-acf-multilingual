@@ -288,7 +288,7 @@ class Post_Types_Controller {
       'instructions' => __('Leave empty to generate the link from title', 'acfml'),
       'acfml_multilingual' => true,
       'acfml_ui_listen_to' => $this->title_field_name,
-      'acfml_ui' => false,
+      'acfml_show_ui' => false,
       // 'readonly' => true,
       'parent' => $this->field_group_key,
       'prepend' => '/',
@@ -308,7 +308,7 @@ class Post_Types_Controller {
       'acfml_multilingual' => true,
       'default_value' => 1,
       'acfml_ui_listen_to' => $this->title_field_name,
-      'acfml_ui' => false,
+      'acfml_show_ui' => false,
       'parent' => $this->field_group_key,
       'wrapper' => [
         'width' => '30',

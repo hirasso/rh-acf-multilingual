@@ -86,6 +86,13 @@ class Fields_Controller {
     $active_language_tab = $this->get_active_language_tab($field);
     $required_all = $field['acfml_all_required'] ?? false;
 
+    // allow themes to alter ACFML-Fields
+    $field = apply_filters('acfml/load_field/type=' . $field['type'], $field);
+    $field = apply_filters('acfml/load_field/name=' . $field['_name'], $field);
+    $field = apply_filters('acfml/load_field/key=' . $field['key'], $field);
+
+    $ui_style = $this->get_field_ui_style($field);
+
     $default_language = acfml()->get_default_language();
     $sub_fields = [];
     $languages = acfml()->get_languages();
@@ -94,7 +101,7 @@ class Fields_Controller {
       // prepare wrapper
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfml-field';
-      if( $lang === $active_language_tab ) $wrapper['class'] .= ' acfml-is-visible';
+      if( $lang === $active_language_tab || $ui_style !== 'tabs' ) $wrapper['class'] .= ' acfml-is-visible';
       if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang}";
       $wrapper['width'] = '';
       // prepare subfield
@@ -112,6 +119,8 @@ class Fields_Controller {
       if( !empty($field['prepend']) ) {
         $sub_field['prepend'] = acfml()->convert_urls_in_string($field['prepend'], $lang);
       }
+      if( $ui_style === 'simple' ) $sub_field['prepend'] = strtoupper($lang);
+      
       // add the subfield
       $sub_fields[] = $sub_field;
     }
@@ -121,6 +130,7 @@ class Fields_Controller {
     if( $field['required'] ) $label .= " <span class=\"acf-required\">*</span>";
     $field_classes = explode(' ', $field['wrapper']['class']);
     $field_classes[] = "acfml-multilingual-field";
+    $field_classes[] = "acfml-ui-style--$ui_style";
     // Change the $field to a group that will hold all sub-fields for all languages
     
     $field = array_merge( $field, [
@@ -241,6 +251,17 @@ class Fields_Controller {
   }
 
   /**
+   * Field uses language tabs
+   *
+   * @param [type] $field
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function get_field_ui_style($field) {
+    return $field['acfml_ui_style'] ?? 'tabs';
+  }
+
+  /**
    * Renders Language Tabs for multilingual fields
    *
    * @param Array $field
@@ -251,9 +272,22 @@ class Fields_Controller {
     $default_field_language = $this->get_active_language_tab($field);
     $languages = acfml()->get_languages();
     if( count($languages) < 2 ) return;
-    $show_ui = $field['acfml_ui'] ?? true;
-    if( !$show_ui ) return;
-    // maybe remove default language
+    if( ($field['acfml_show_ui'] ?? true) === false ) return;
+    if( $this->get_field_ui_style($field) === 'tabs' ) {
+      $this->render_language_tabs($languages, $default_field_language);
+    }
+    
+  }
+
+  /**
+   * Renders language tabs for a field
+   *
+   * @param array $languages
+   * @param string $default_field_language
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function render_language_tabs(array $languages, string $default_field_language): void {
     ob_start(); ?>
     <div class="acfml-tabs-wrap">
       <div class="acfml-tabs acf-js-tooltip" title="<?= __('Double-click to switch globally', $this->prefix) ?>">
@@ -273,7 +307,7 @@ class Fields_Controller {
    * @param Array $field
    * @return string
    */
-  private function get_active_language_tab($field): string {
+  private function get_active_language_tab(array $field): string {
     $cookie = (array) acfml()->get_admin_cookie('acfml_language_tabs');
     return $cookie[$field['key']] ?? acfml()->get_default_language();
   }
