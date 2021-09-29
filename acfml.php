@@ -263,7 +263,7 @@ class ACF_Multilingual {
       'defaultLanguage' => $this->get_default_language(),
       'languages' => $this->get_languages(),
       'isMobile' => wp_is_mobile(),
-      'cookieHashForCurrentUri' => $this->get_cookie_hash()
+      'cookieHashForCurrentUri' => $this->get_cookie_hash_for_current_uri()
     ];
     ?><script id="acfml-settings"><?php ob_start() ?>
     var acfml = <?= json_encode($settings) ?>;
@@ -275,10 +275,10 @@ class ACF_Multilingual {
    *
    * @return string
    */
-  public function get_cookie_hash($uri = null) {
-    $uri = $uri ?? $_SERVER['REQUEST_URI'];
+  public function get_cookie_hash_for_current_uri() {
+    $uri = $_SERVER['REQUEST_URI'];
     $uri = remove_query_arg('message', $uri);
-    return md5($uri);
+    return hash("sha512", $uri);
   }
 
   /**
@@ -288,7 +288,7 @@ class ACF_Multilingual {
    * @return object|null
    */
   public function get_admin_cookie( string $key ): ?object {
-    $cookie_name = $key . "_" . $this->get_cookie_hash();
+    $cookie_name = $key . "_" . $this->get_cookie_hash_for_current_uri();
     $cookie = $_COOKIE[$cookie_name] ?? null;
     return json_decode( stripslashes($cookie) );
   }
@@ -1225,7 +1225,7 @@ class ACF_Multilingual {
       'languages' => acfml()->get_languages('slug'),
       'post_types' => acfml()->post_types_controller->get_multilingual_post_types('full', false)
     ];
-    $hash = md5( json_encode($settings) );
+    $hash = hash( "sha512", json_encode($settings) );
     return $hash;
   }
 
