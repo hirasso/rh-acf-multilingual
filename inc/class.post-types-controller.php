@@ -56,7 +56,7 @@ class Post_Types_Controller {
 
     add_action('save_post', [$this, 'save_post'], 20);
 
-    add_action('admin_init', [$this, 'maybe_check_for_posts_with_empty_slugs']);
+    add_action('admin_init', [$this, 'maybe_show_notice_needs_resave_posts']);
     add_action('admin_init', [$this, 'maybe_resave_posts']);
     add_action('init', [$this, 'setup_acf_fields'], 12);
     
@@ -1027,18 +1027,18 @@ class Post_Types_Controller {
   }
 
   /**
-   * Checks for posts that have empty slugs for certain languages
+   * Maybe show a notice that posts need to be re-saved
    *
    * @return void
    */
-  public function maybe_check_for_posts_with_empty_slugs() {
+  public function maybe_show_notice_needs_resave_posts() {
 
     foreach( acfml()->get_languages('slug') as $lang ) {
       $posts = $this->find_posts_with_missing_data($lang, 1);
       if( count($posts) ) {
         acfml()->admin->add_notice(
-          'empty_slugs_notice',
-          acfml()->get_template('notice-empty-slugs-detected', null, false),
+          'notice_resave_posts',
+          acfml()->get_template('notice-needs-resave-posts', null, false),
         );
         break;
       }
@@ -1047,7 +1047,7 @@ class Post_Types_Controller {
   }
 
   /**
-   * Generate slugs for prevously monolingual posts
+   * Maybe re-save posts on admin init
    *
    * @return void
    */
@@ -1055,22 +1055,11 @@ class Post_Types_Controller {
     // check nonce
     if( !acfml()->admin->verify_nonce('acfml_nonce_resave_posts') ) return;
     
-    // find posts with empty slugs for each language
-    $post_ids = [];
-    foreach( acfml()->get_languages('slug') as $lang ) {
-      $posts = $this->find_posts_with_missing_data($lang, -1);
-      $post_ids = array_unique(array_merge($post_ids, $posts));
-    }
-    $count = count($post_ids);
-    // bail early if no posts were found
-    if( !$count ) return;
-    // trigger save_post for each post with empty slugs
-    foreach( $post_ids as $post_id ) {
-      $this->save_post($post_id);
-    }
+    $count = $this->resave_posts();
+
     // add success message
     acfml()->admin->add_notice(
-      'empty_slugs_notice',
+      'notice_resave_posts',
       wp_sprintf( 
         __('ACF Multilingual successfully processed %s %s.', 'acfml'), 
         number_format_i18n($count),
@@ -1081,6 +1070,29 @@ class Post_Types_Controller {
         'is_dismissible' => true
       ]
     );
+  }
+
+  /**
+   * Re-save all posts that have data missing
+   *
+   * @return int resaved posts amount
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function resave_posts(): int {
+    // find posts with empty slugs for each language
+    $post_ids = [];
+    foreach( acfml()->get_languages('slug') as $lang ) {
+      $posts = $this->find_posts_with_missing_data($lang, -1);
+      $post_ids = array_unique(array_merge($post_ids, $posts));
+    }
+    $count = count($post_ids);
+    // bail early if no posts were found
+    if( !$count ) return $count;
+    // trigger save_post for each post with empty slugs
+    foreach( $post_ids as $post_id ) {
+      $this->save_post($post_id);
+    }
+    return $count;
   }
 
   /**
