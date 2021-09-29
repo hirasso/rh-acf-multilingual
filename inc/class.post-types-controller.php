@@ -1055,15 +1055,15 @@ class Post_Types_Controller {
     // check nonce
     if( !acfml()->admin->verify_nonce('acfml_nonce_resave_posts') ) return;
     
-    $count = $this->resave_posts();
+    $resaved_posts_count = $this->resave_posts();
 
     // add success message
     acfml()->admin->add_notice(
       'notice_resave_posts',
       wp_sprintf( 
         __('ACF Multilingual successfully processed %s %s.', 'acfml'), 
-        number_format_i18n($count),
-        _n( 'post', 'posts', $count, 'acfml' )
+        number_format_i18n($resaved_posts_count),
+        _n( 'post', 'posts', $resaved_posts_count, 'acfml' )
       ),
       [
         'type' => 'success',
