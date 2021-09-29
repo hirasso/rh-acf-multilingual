@@ -22,6 +22,8 @@ class Admin {
   public function add_hooks() {
     add_action('admin_bar_menu', [$this, 'add_admin_bar_menu'], 100);
     add_action('admin_init', [$this, 'maybe_set_admin_language']);
+    add_action('admin_init', [$this, 'maybe_show_notice_flush_rewrite_rules']);
+    add_action('admin_init', [$this, 'maybe_flush_rewrite_rules']);
   }
 
   /**

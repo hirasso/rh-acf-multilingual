@@ -104,11 +104,10 @@ class ACF_Multilingual {
     $this->detect_language();
     $this->load_textdomain();
     $this->admin->add_hooks();
+    $this->add_hooks();
 
     // Switch locale manually, since the 'locale' filter is running too late for some functionality
     if( !is_admin() ) \switch_to_locale($this->get_frontend_locale());
-
-    $this->add_hooks();
 
   }
 
@@ -135,9 +134,6 @@ class ACF_Multilingual {
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
     add_filter('acf/format_value/type=page_link', [$this, 'format_acf_field_page_link'], 11);
     add_filter('acf/format_value/type=link', [$this, 'format_acf_field_link'], 11);
-
-    add_action('admin_init', [$this->admin, 'maybe_show_notice_flush_rewrite_rules']);
-    add_action('admin_init', [$this->admin, 'maybe_flush_rewrite_rules']);
 
     // convert links in sitemaps entries
     add_filter('wp_sitemaps_index_entry', [$this, 'sitemaps_index_entry'], 10);
