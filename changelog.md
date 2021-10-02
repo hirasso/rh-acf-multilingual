@@ -1,5 +1,6 @@
-#### 0.0.5 (2021-09-29)
+#### 0.0.5 (2021-10-02)
 
+- Change plugin file structure to fit WP standards (#a74c661)
 - Delay WYSIWYG editors in non-default language subfields (#80e4d93)
 - optimize admin UI (#66bd611)
 - add 'acfml_ui_style' = 'simple' (#7ee1a47)
