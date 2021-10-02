@@ -1,6 +1,6 @@
 #### 0.0.5 (2021-10-02)
 
-- Add test for `acfml_add_language` (#7e32628)
+- Add test for `acfml_add_language` (#9c3103e)
 - Optimize changelog generation (#4a7c095)
 - Add WP test files (#ecf1325)
 - Change plugin file structure to fit WP standards (#e244d08)

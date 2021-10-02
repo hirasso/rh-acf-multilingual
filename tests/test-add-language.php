@@ -32,7 +32,7 @@ class AddLanguageTest extends WP_UnitTestCase {
         'name' => 'Deutsch',
       ),
     );
-    
+    // var_export( acfml_get_languages() )
     $this->assertEqualsCanonicalizing(acfml_get_languages(), $expected);
 		
 	}
