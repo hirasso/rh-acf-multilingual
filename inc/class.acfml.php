@@ -1,21 +1,4 @@
-<?php
-/**
- * Plugin Name: ACF Multilingual
- * Version: 0.0.5
- * Author: Rasso Hilber
- * Description: A lightweight solution to support multiple languages with WordPress and Advanced Custom Fields
- * Author URI: https://rassohilber.com
- * Text Domain: acfml
- * Domain Path: /lang
-**/
-
-if( !defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
-define( 'ACFML', true );
-define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
-define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
-
-require_once(ACFML_PATH . 'vendor/autoload.php');
+<?php 
 
 if( ! class_exists('ACF_Multilingual') ) :
 
@@ -314,7 +297,7 @@ class ACF_Multilingual {
    * @param string
    */
   private function asset_uri( $path ): string {
-    $uri = plugins_url( $path, __FILE__ );
+    $uri = ACFML_URL . $path;
     $file = $this->get_file_path( $path );
     if( file_exists( $file ) ) {
       $version = filemtime( $file );
