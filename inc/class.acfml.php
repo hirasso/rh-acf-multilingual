@@ -1240,29 +1240,4 @@ class ACF_Multilingual {
 
 }
 
-/**
- * acfml
- *
- * The main function responsible for returning the one true acfml instance to functions everywhere.
- * Use this function like you would a global variable, except without needing to declare the global.
- *
- * Example: <?php $acfml = acfml(); ?>
- *
- * @param	void
- * @return ACF_Multilingual
- */
-function acfml():ACF_Multilingual {
-  global $acfml;
-
-  // Instantiate only once.
-  if( isset($acfml) ) return $acfml;
-
-  $acfml = new ACF_Multilingual();
-  $acfml->initialize();
-
-  return $acfml;
-}
-
-add_action('plugins_loaded', 'acfml'); // Instantiate
-
 endif; // class_exists check

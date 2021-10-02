@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-10-02)
 
-- Optimize changelog (#4971442)
+- Restructure Code (#e1bb637)
+- Optimize changelog (#cd6ebb5)
 - Change plugin file structure to fit WP standards (#dc2339b)
 - Delay WYSIWYG editors in non-default language subfields (#80e4d93)
 - optimize admin UI (#66bd611)

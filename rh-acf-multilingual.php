@@ -19,3 +19,28 @@ define( 'ACFML_URL', plugins_url('/', __FILE__) );
 
 require_once(ACFML_PATH . 'vendor/autoload.php');
 require_once(ACFML_PATH . 'inc/class.acfml.php');
+
+/**
+ * acfml
+ *
+ * The main function responsible for returning the one true acfml instance to functions everywhere.
+ * Use this function like you would a global variable, except without needing to declare the global.
+ *
+ * Example: <?php $acfml = acfml(); ?>
+ *
+ * @param	void
+ * @return ACF_Multilingual
+ */
+function acfml():ACF_Multilingual {
+  static $acfml;
+
+  // Instantiate only once.
+  if( isset($acfml) ) return $acfml;
+
+  $acfml = new ACF_Multilingual();
+  $acfml->initialize();
+
+  return $acfml;
+}
+
+add_action('plugins_loaded', 'acfml'); // Instantiate
