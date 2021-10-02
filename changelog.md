@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-10-02)
 
-- Change plugin file structure to fit WP standards (#a74c661)
+- Add WP test files  Followed the official instructions: https://make.wordpress.org/cli/handbook/misc/plugin-unit-tests/  Installed phpunit ^7 using composer (#0eba5bb)
+- Change plugin file structure to fit WP standards (#e244d08)
 - Delay WYSIWYG editors in non-default language subfields (#80e4d93)
 - optimize admin UI (#66bd611)
 - add 'acfml_ui_style' = 'simple' (#7ee1a47)
