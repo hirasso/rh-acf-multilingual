@@ -521,10 +521,10 @@ class ACFMultilingual {
   /**
    * Get default language
    *
-   * @param string
+   * @param string|null
    */
-  public function get_default_language(): string {
-    $lang = $this->get_languages('slug')[0];
+  public function get_default_language(): ?string {
+    $lang = $this->get_languages('slug')[0] ?? null;
     return $lang;
   }
 
@@ -582,7 +582,7 @@ class ACFMultilingual {
    * @param string $language    the slug of the language, e.g. 'en' or 'de'
    * @return void
    */
-  public function switch_to_language($language): bool {
+  private function switch_to_language($language): bool {
     $languages = $this->get_languages('slug');
     if( !in_array($language, $languages) ) return false;
     $this->language = $language;
@@ -594,7 +594,7 @@ class ACFMultilingual {
    *
    * @return void
    */
-  public function reset_language(): void {
+  private function reset_language(): void {
     $this->language = defined('ACFML_CURRENT_LANGUAGE') ? ACFML_CURRENT_LANGUAGE : $this->get_default_language();
   }
 
@@ -806,9 +806,9 @@ class ACFMultilingual {
   /**
    * Detect language information in URL
    *
-   * @param string the detecte language
+   * @param string|null the detected language
    */
-  public function get_language_in_url($url): string {
+  public function get_language_in_url($url): ?string {
     $url = untrailingslashit($url);
     $path = str_replace(home_url(), '', $url);
     $regex_languages = implode('|', $this->get_languages('slug'));
