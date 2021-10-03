@@ -2,8 +2,6 @@
 
 namespace ACFML;
 
-use ACF_Multilingual;
-
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class Fields_Controller {
@@ -23,7 +21,7 @@ class Fields_Controller {
    * @param ACF_Multilingual|null $acfml
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function __construct(?\ACF_Multilingual $acfml = null) {
+  public function __construct(ACF_Multilingual $acfml) {
 
     // inject main class
     $this->acfml = $acfml;

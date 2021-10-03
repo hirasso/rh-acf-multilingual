@@ -17,7 +17,7 @@ class ACFML_Sitemaps_Provider extends \WP_Sitemaps_Provider {
    * @param ACF_Multilingual|null $acfml
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function __construct(?\ACF_Multilingual $acfml = null) {
+  public function __construct(ACF_Multilingual $acfml) {
 
     // inject main class
     $this->acfml       = $acfml;

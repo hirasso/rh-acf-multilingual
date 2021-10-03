@@ -1,6 +1,6 @@
 #### 0.0.5 (2021-10-03)
 
-- Add hint for installing wp-tests (#c6f1d50)
+- Add hint for installing wp-tests (#f1af4a1)
 - Add npm script `test:php` (#36e15d7)
 - Add dependency injection to make code testable (#24113f9)
 - Add test for `add_language` (#9093eef)

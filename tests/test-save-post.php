@@ -6,6 +6,8 @@
  */
 
 require_once(ACFML_PATH . 'inc/class.post-types-controller.php');
+
+use ACFML\ACF_Multilingual;
 use ACFML\Post_Types_Controller;
 
 /**

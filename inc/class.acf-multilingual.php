@@ -1,6 +1,6 @@
 <?php 
 
-if( ! class_exists('ACF_Multilingual') ) :
+namespace ACFML;
 
 class ACF_Multilingual {
 
@@ -12,28 +12,28 @@ class ACF_Multilingual {
   /**
    * Admin instance
    *
-   * @var ACFML\Admin
+   * @var Admin
    */
   public $admin; 
 
   /**
    * Fields_Controller instance
    *
-   * @var ACFML\Fields_Controller
+   * @var Fields_Controller
    */
   public $fields_controller; 
 
   /**
    * Post_Types_Controller instance
    *
-   * @var ACFML\Post_Types_Controller
+   * @var Post_Types_Controller
    */
   public $post_types_controller;
 
   /**
    * Taxonomies_Controller instance
    *
-   * @var ACFML\Taxonomies_Controller
+   * @var Taxonomies_Controller
    */
   public $taxonomies_controller; 
 
@@ -54,7 +54,7 @@ class ACF_Multilingual {
 
     // Include and instanciate admin class
     $this->include('inc/class.admin.php');
-    $this->admin = new ACFML\Admin($this);
+    $this->admin = new Admin($this);
     
     // hook into after_setup_theme to initialize
     add_action('after_setup_theme', [$this, 'maybe_fully_initialize'], 11);
@@ -79,9 +79,9 @@ class ACF_Multilingual {
     $this->include('inc/class.fields-controller.php');
     $this->include('inc/class.post-types-controller.php');
     $this->include('inc/class.taxonomies-controller.php');
-    $this->fields_controller = new ACFML\Fields_Controller($this);
-    $this->post_types_controller = new ACFML\Post_Types_Controller($this);
-    $this->taxonomies_controller = new ACFML\Taxonomies_Controller($this);
+    $this->fields_controller = new Fields_Controller($this);
+    $this->post_types_controller = new Post_Types_Controller($this);
+    $this->taxonomies_controller = new Taxonomies_Controller($this);
 
     // run other functions
     $this->detect_language();
@@ -1069,7 +1069,7 @@ class ACF_Multilingual {
     // prevent rest api issues
     remove_action( 'parse_request', 'rest_api_loaded' );
     // create a new \WP instance
-    $new_wp = new WP();
+    $new_wp = new \WP();
 
     // copy the (previously filtered) public query vars over from the main $wp object
     $new_wp->public_query_vars = $wp->public_query_vars;
@@ -1157,7 +1157,7 @@ class ACF_Multilingual {
     if( !$this->current_language_is_default() ) return;
     $this->include('inc/class.sitemaps-provider.php');
     // registers the new provider for the sitemap
-    $provider = new ACFML\ACFML_Sitemaps_Provider($this);
+    $provider = new ACFML_Sitemaps_Provider($this);
     wp_register_sitemap_provider( 'languages', $provider );
   }
 
@@ -1239,5 +1239,3 @@ class ACF_Multilingual {
   }
 
 }
-
-endif; // class_exists check
