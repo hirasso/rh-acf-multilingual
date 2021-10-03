@@ -1,5 +1,6 @@
-#### 0.0.5 (2021-10-02)
+#### 0.0.5 (2021-10-03)
 
+- Add ACF dependency for running tests (#03d7283)
 - Add test for `acfml_add_language` (#9c3103e)
 - Optimize changelog generation (#4a7c095)
 - Add WP test files (#ecf1325)

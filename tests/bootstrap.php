@@ -22,10 +22,13 @@ require_once $_tests_dir . '/includes/functions.php';
 /**
  * Manually load the plugin being tested.
  */
-function _manually_load_plugin() {
+function _manually_load_plugins() {
+  // require ACF, which is a dependency of ACFML
+  require dirname( dirname( dirname( __FILE__ ) ) ) . '/advanced-custom-fields-pro/acf.php';
+  // require the main plugin file
 	require dirname( dirname( __FILE__ ) ) . '/rh-acf-multilingual.php';
 }
-tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
+tests_add_filter( 'muplugins_loaded', '_manually_load_plugins' );
 
 // Start up the WP testing environment.
 require $_tests_dir . '/includes/bootstrap.php';
