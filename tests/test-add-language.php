@@ -5,18 +5,22 @@
  * @package ACFMultilingual
  */
 
+use ACFML\ACFMultilingual;
+
 /**
  * Tests add_lannguage
  */
-class AddLanguageTest extends WP_UnitTestCase {
+class GetLanguagesTest extends WP_UnitTestCase {
 
-	/**
-	 * A single example test.
-	 */
-	public function test_add_language() {
-    
-    acfml_add_language('en', 'en', 'English');
-    acfml_add_language('de', 'de_DE', 'Deutsch');
+  public function setUp() {
+    parent::setUp();
+  }
+
+	public function test_get_languages_full() {
+
+    $acfml = new ACFMultilingual();
+    $acfml->add_language('en', 'en', 'English');
+    $acfml->add_language('de', 'de_DE', 'Deutsch');
 
     $expected = array (
       'en' => 
@@ -33,7 +37,20 @@ class AddLanguageTest extends WP_UnitTestCase {
       ),
     );
     
-    $this->assertSame(acfml_get_languages(), $expected);
+    $this->assertSame($acfml->get_languages(), $expected);
 		
 	}
+
+  
+  public function test_get_languages_slug() {
+    
+    $acfml = new ACFMultilingual();
+    $acfml->add_language('en', 'en', 'English');
+    $acfml->add_language('de', 'de_DE', 'Deutsch');
+
+    $expected = ['en', 'de'];
+
+    $this->assertSame($acfml->get_languages('slug'), $expected);
+
+  }
 }
