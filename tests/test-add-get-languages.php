@@ -1,6 +1,6 @@
 <?php
 /**
- * Class AddLanguageTest
+ * Class AddGetLanguagesTest
  *
  * @package ACFMultilingual
  */
@@ -10,10 +10,24 @@ use ACFML\ACFMultilingual;
 /**
  * Tests add_lannguage
  */
-class GetLanguagesTest extends WP_UnitTestCase {
+class AddGetLanguagesTest extends WP_UnitTestCase {
 
   public function setUp() {
     parent::setUp();
+  }
+
+  public function test_add_language() {
+    
+    $acfml = new ACFMultilingual();  
+    $result = $acfml->add_language('en', 'en', 'English');
+
+    $expected = [
+      'slug' => 'en',
+      'locale' => 'en',
+      'name' => 'English',
+    ];
+
+    $this->assertSame($result, $expected);
   }
 
 	public function test_get_languages_full() {
