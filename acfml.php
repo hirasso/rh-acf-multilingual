@@ -21,6 +21,7 @@ define( 'ACFML_URL', plugins_url('/', __FILE__) );
 
 require_once(ACFML_PATH . 'vendor/autoload.php');
 require_once(ACFML_PATH . 'inc/class.acf-multilingual.php');
+require_once(ACFML_PATH . 'api.php');
 
 /**
  * acfml

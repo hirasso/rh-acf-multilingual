@@ -47,10 +47,7 @@ class ACF_Multilingual {
    *
    * @return void
    */
-  public function initialize() {
-
-    // include API
-    $this->include('inc/api.php');
+  public function initialize() {    
 
     // Include and instanciate admin class
     $this->include('inc/class.admin.php');
