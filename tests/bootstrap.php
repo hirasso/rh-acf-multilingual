@@ -30,8 +30,13 @@ function _manually_load_plugins() {
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugins' );
 
-function dump_exit($thing) {
+function var_dump_exit($thing) {
   var_dump($thing);
+  exit;
+}
+
+function var_export_exit($thing) {
+  var_export($thing);
   exit;
 }
 
