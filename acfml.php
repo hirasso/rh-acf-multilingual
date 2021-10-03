@@ -11,7 +11,7 @@
 
 if( !defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-use ACFML\ACF_Multilingual;
+use ACFML\ACFMultilingual;
 
 define( 'ACFML', true );
 define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
@@ -20,7 +20,7 @@ define( 'ACFML_URL', plugins_url('/', __FILE__) );
 
 
 require_once(ACFML_PATH . 'vendor/autoload.php');
-require_once(ACFML_PATH . 'inc/class.acf-multilingual.php');
+// require_once(ACFML_PATH . 'inc/class.acf-multilingual.php');
 require_once(ACFML_PATH . 'api.php');
 
 /**
@@ -32,15 +32,15 @@ require_once(ACFML_PATH . 'api.php');
  * Example: <?php $acfml = acfml(); ?>
  *
  * @param	void
- * @return ACF_Multilingual
+ * @return ACFMultilingual
  */
-function acfml():ACF_Multilingual {
+function acfml():ACFMultilingual {
   static $acfml;
 
   // Instantiate only once.
   if( isset($acfml) ) return $acfml;
 
-  $acfml = new ACF_Multilingual();
+  $acfml = new ACFMultilingual();
   $acfml->initialize();
 
   return $acfml;

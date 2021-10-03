@@ -11,10 +11,10 @@ class Admin {
   /**
    * Constructor
    *
-   * @param ACF_Multilingual|null $acfml
+   * @param ACFMultilingual|null $acfml
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function __construct(ACF_Multilingual $acfml) {
+  public function __construct(ACFMultilingual $acfml) {
 
     // inject main class
     $this->acfml = $acfml;

@@ -40,7 +40,7 @@ acfml_add_language(string $slug, string $locale, string $name);
 
 ## Make built-in ACF fields multilingual
 
-Optionally set ACF fields to be multilingual, so that they can be translated for every language. like e.g. `Text`, `Textarea`, `WYSIWYG`, ... (for the full list see `$multilingual_field_types` in the class `Fields_Controller`)
+Optionally set ACF fields to be multilingual, so that they can be translated for every language. like e.g. `Text`, `Textarea`, `WYSIWYG`, ... (for the full list see `$multilingual_field_types` in the class `FieldsController`)
 
 ## Multilingual post titles and slugs
 

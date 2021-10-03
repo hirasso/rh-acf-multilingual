@@ -7,17 +7,17 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 /**
  * Sitemaps
  */
-class ACFML_Sitemaps_Provider extends \WP_Sitemaps_Provider {
+class SitemapsProvider extends \WP_Sitemaps_Provider {
 
   private $acfml = null;
 
   /**
    * Constructor
    *
-   * @param ACF_Multilingual|null $acfml
+   * @param ACFMultilingual|null $acfml
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function __construct(ACF_Multilingual $acfml) {
+  public function __construct(ACFMultilingual $acfml) {
 
     // inject main class
     $this->acfml       = $acfml;

@@ -2,13 +2,11 @@
 /**
  * Class SavePostTest
  *
- * @package ACF_Multilingual
+ * @package ACFMultilingual
  */
 
-require_once(ACFML_PATH . 'inc/class.post-types-controller.php');
-
-use ACFML\ACF_Multilingual;
-use ACFML\Post_Types_Controller;
+use ACFML\ACFMultilingual;
+use ACFML\PostTypesController;
 
 /**
  * Tests add_lannguage
@@ -18,10 +16,10 @@ class SavePostTest extends WP_UnitTestCase {
   public function setUp() {
     parent::setUp();
     
-    $acfml = new ACF_Multilingual();
+    $acfml = new ACFMultilingual();
     $acfml->add_language('en', 'en', 'English');
     
-    $post_types_controller = new Post_Types_Controller($acfml);
+    $post_types_controller = new PostTypesController($acfml);
     $post_types_controller->add_post_type('post');
     
   }

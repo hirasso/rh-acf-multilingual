@@ -2,7 +2,7 @@
 /**
  * Class AddLanguageTest
  *
- * @package ACF_Multilingual
+ * @package ACFMultilingual
  */
 
 /**

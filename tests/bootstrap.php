@@ -2,7 +2,7 @@
 /**
  * PHPUnit bootstrap file
  *
- * @package Rh_Acf_Multilingual
+ * @package Rh_ACFMultilingual
  */
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
@@ -26,7 +26,7 @@ function _manually_load_plugins() {
   // require ACF, which is a dependency of ACFML
   require dirname( dirname( dirname( __FILE__ ) ) ) . '/advanced-custom-fields-pro/acf.php';
   // require the main plugin file
-	require dirname( dirname( __FILE__ ) ) . '/rh-acf-multilingual.php';
+	require dirname( dirname( __FILE__ ) ) . '/acfml.php';
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugins' );
 

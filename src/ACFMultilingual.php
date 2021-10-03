@@ -2,7 +2,7 @@
 
 namespace ACFML;
 
-class ACF_Multilingual {
+class ACFMultilingual {
 
   private $prefix = 'acfml';
   public $debug = false;
@@ -17,23 +17,23 @@ class ACF_Multilingual {
   public $admin; 
 
   /**
-   * Fields_Controller instance
+   * FieldsController instance
    *
-   * @var Fields_Controller
+   * @var FieldsController
    */
   public $fields_controller; 
 
   /**
-   * Post_Types_Controller instance
+   * PostTypesController instance
    *
-   * @var Post_Types_Controller
+   * @var PostTypesController
    */
   public $post_types_controller;
 
   /**
-   * Taxonomies_Controller instance
+   * TaxonomiesController instance
    *
-   * @var Taxonomies_Controller
+   * @var TaxonomiesController
    */
   public $taxonomies_controller; 
 
@@ -76,9 +76,9 @@ class ACF_Multilingual {
     $this->include('inc/class.fields-controller.php');
     $this->include('inc/class.post-types-controller.php');
     $this->include('inc/class.taxonomies-controller.php');
-    $this->fields_controller = new Fields_Controller($this);
-    $this->post_types_controller = new Post_Types_Controller($this);
-    $this->taxonomies_controller = new Taxonomies_Controller($this);
+    $this->fields_controller = new FieldsController($this);
+    $this->post_types_controller = new PostTypesController($this);
+    $this->taxonomies_controller = new TaxonomiesController($this);
 
     // run other functions
     $this->detect_language();
@@ -1154,7 +1154,7 @@ class ACF_Multilingual {
     if( !$this->current_language_is_default() ) return;
     $this->include('inc/class.sitemaps-provider.php');
     // registers the new provider for the sitemap
-    $provider = new ACFML_Sitemaps_Provider($this);
+    $provider = new SitemapsProvider($this);
     wp_register_sitemap_provider( 'languages', $provider );
   }
 
