@@ -13,14 +13,26 @@ class Taxonomies_Controller {
   private $field_key;
   private $taxonomies = [];
 
-  public function __construct() {
+  private $acfml = null;
+
+  /**
+   * Constructor
+   *
+   * @param ACF_Multilingual|null $acfml
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function __construct(?\ACF_Multilingual $acfml = null) {
+
+    // inject main class
+    $this->acfml = $acfml;
+    
     add_action('acf/init', [$this, 'init']);
   }
 
   public function init() {
     // variables
-    $this->prefix = acfml()->get_prefix();
-    $this->default_language = acfml()->get_default_language();
+    $this->prefix = $this->acfml->get_prefix();
+    $this->default_language = $this->acfml->get_default_language();
 
     $this->field_name = "{$this->prefix}_{$this->field_postfix}";
     $this->field_key = "field_{$this->field_name}";
@@ -164,7 +176,7 @@ class Taxonomies_Controller {
   public function get_term($term, $taxonomy) {
     global $pagenow;
     if( $pagenow === 'term.php' ) return $term;
-    $language = acfml()->get_current_language();
+    $language = $this->acfml->get_current_language();
     if( $custom_name = get_field($this->field_name, $term) ) {
       $term->name = $custom_name;
     }
@@ -200,7 +212,7 @@ class Taxonomies_Controller {
    * 
    */
   public function pre_get_terms( $query ) {
-    if( acfml()->current_language_is_default() ) return;
+    if( $this->acfml->current_language_is_default() ) return;
     $slug = $query->query_vars['slug'];
     if( is_array($slug) ) $slug = $slug[0];
     if( $slug ) {

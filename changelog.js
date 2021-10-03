@@ -110,7 +110,6 @@ async function generateChangelog() {
     let messages = commit.message.split('- ');
     messages = messages.filter(message => Boolean(message));
     messages = messages.map(message => {
-      message = message.trim();
       message = `${message} (#${shortHash})`
       return message;
     });

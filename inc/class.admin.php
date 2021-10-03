@@ -5,11 +5,20 @@ namespace ACFML;
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class Admin {
-  
-  private $prefix;
 
-  public function __construct() {
-    $this->prefix = acfml()->get_prefix();
+  private $acfml = null;
+
+  /**
+   * Constructor
+   *
+   * @param ACF_Multilingual|null $acfml
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function __construct(?\ACF_Multilingual $acfml = null) {
+
+    // inject main class
+    $this->acfml = $acfml;
+    
     add_action('admin_init', [$this, 'maybe_show_notice_acf_missing']);
     add_action('admin_notices', [$this, 'show_added_notices']);
   }
@@ -84,7 +93,7 @@ class Admin {
     // if the messsage is naked, wrap it inside a <p>-tag
     if( strpos($message, '<p>') === false ) $message = "<p>$message</p>";
     // parse the args
-    $args = acfml()->to_object(wp_parse_args($args, [
+    $args = $this->acfml->to_object(wp_parse_args($args, [
       'type' => 'warning', 
       'is_dismissible' => false,
       'key' => ''
@@ -116,14 +125,14 @@ class Admin {
    * @return void
    */
   public function maybe_show_notice_flush_rewrite_rules(): void {
-    $languages = acfml()->get_languages();
+    $languages = $this->acfml->get_languages();
     
-    if( !acfml()->settings_have_changed('rewrite_rules') ) return;
+    if( !$this->acfml->settings_have_changed('rewrite_rules') ) return;
 
     // add nag to flush the rewrite rules
     $this->add_notice(
       'flush-rewrite-rules',
-      acfml()->get_template('notice-flush-rewrite-rules', null, false)
+      $this->acfml->get_template('notice-flush-rewrite-rules', null, false)
     ); 
   }
 
@@ -144,7 +153,7 @@ class Admin {
         'is_dismissible' => true
       ]
     );
-    acfml()->save_hashed_settings('rewrite_rules');
+    $this->acfml->save_hashed_settings('rewrite_rules');
     // flush the rules
     flush_rewrite_rules();
   }
@@ -157,7 +166,7 @@ class Admin {
    */
   public function add_admin_bar_menu(\WP_Admin_Bar $wp_adminbar) {
 
-    $current_language = acfml()->get_language_info(acfml()->get_current_language());
+    $current_language = $this->acfml->get_language_info($this->acfml->get_current_language());
 
     $icon = "<span class='ab-icon acfml-ab-icon dashicons dashicons-translation'></span>";
     $title = $current_language['name'];
@@ -169,7 +178,7 @@ class Admin {
       'meta'  => [ 'title' => __( 'Switch your admin language', 'acfml' ) ],
     ]);
 
-    $switcher = acfml()->get_language_switcher([
+    $switcher = $this->acfml->get_language_switcher([
       'format' => 'raw'
     ]);
 
@@ -198,7 +207,7 @@ class Admin {
     $lang_GET = $_GET['lang'] ?? null;
     // bail early if no 'lang' param found in $_GET
     if( !$lang_GET ) return;
-    $languages = acfml()->get_languages();
+    $languages = $this->acfml->get_languages();
     // bail early if the requested language is not installed
     if( !array_key_exists($lang_GET, $languages) ) return;
     $language = $languages[$lang_GET];

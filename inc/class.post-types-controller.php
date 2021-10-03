@@ -22,11 +22,22 @@ class Post_Types_Controller {
   private $lang_active_field_name = "acfml_lang_active";
   private $lang_active_field_key;
 
-  public function __construct() {
+  private $acfml = null;
+
+  /**
+   * Constructor
+   *
+   * @param ACF_Multilingual|null $acfml
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function __construct(?\ACF_Multilingual $acfml = null) {
+    
+    // inject main class
+    $this->acfml = $acfml;
 
     // variables
-    $this->prefix = acfml()->get_prefix();
-    $this->default_language = acfml()->get_default_language();
+    $this->prefix = $this->acfml->get_prefix();
+    $this->default_language = $this->acfml->get_default_language();
     
     $this->field_group_key    = "group_{$this->title_field_name}";
     $this->title_field_key    = "field_{$this->title_field_name}";
@@ -80,7 +91,7 @@ class Post_Types_Controller {
     // add the post type and it's arguments to the array
     $this->multilingual_post_types[$post_type] = $args;
     // parse translated post type labels
-    $language = acfml()->get_current_language();
+    $language = $this->acfml->get_current_language();
     $pt_object = get_post_type_object($post_type);
     if( $labels = $args[$language]['labels'] ?? null ) {
       $pt_object->labels = $labels;
@@ -234,7 +245,7 @@ class Post_Types_Controller {
     ));
 
     // prepare slug fields for each language
-    foreach( acfml()->get_languages('slug') as $lang ) {
+    foreach( $this->acfml->get_languages('slug') as $lang ) {
       
       add_filter("acf/prepare_field/key=field_acfml_slug_$lang", function($field) use ($lang) {
         global $post;
@@ -250,7 +261,7 @@ class Post_Types_Controller {
             'is_sample' => true
           ]);
         } else {
-          $prepend = acfml()->home_url('/', $lang);
+          $prepend = $this->acfml->home_url('/', $lang);
         }
         
         if( !$field['value'] && $lang === $this->default_language ) $field['placeholder'] = $post->post_name;
@@ -329,7 +340,7 @@ class Post_Types_Controller {
    * @return boolean
    */
   public function is_language_public(string $lang, int $post_id):bool {
-    if( acfml()->is_default_language($lang) ) return true;
+    if( $this->acfml->is_default_language($lang) ) return true;
     return get_field("acfml_lang_active_$lang", $post_id) !== '0';
   }
 
@@ -419,7 +430,7 @@ class Post_Types_Controller {
     // during the slug generation
     $cached_locale = get_locale();
 
-    $languages = acfml()->get_languages('slug');
+    $languages = $this->acfml->get_languages('slug');
 
     // get the \WP_Post object
     $post = get_post($post_id);
@@ -448,7 +459,7 @@ class Post_Types_Controller {
       $raw_slug = get_field("{$this->slug_field_name}_{$lang}", $post_id);
       if( !$raw_slug ) $raw_slug = $post_titles[$lang];
       // set global locale to current $lang, so that sanitize_title can run on full power
-      $locale = acfml()->get_language_info($lang)['locale'];
+      $locale = $this->acfml->get_language_info($lang)['locale'];
       // sanitize the slug
       $slug = sanitize_title($raw_slug);
       // reset global locale
@@ -492,7 +503,7 @@ class Post_Types_Controller {
     $meta_key = "{$this->slug_field_name}_{$lang}";
     $reserved_root_slugs = $wp_rewrite->feeds ?? [];
     $reserved_root_slugs = array_merge($reserved_root_slugs, ['embed']);
-    $reserved_root_slugs = array_merge($reserved_root_slugs, acfml()->get_languages('slug'));
+    $reserved_root_slugs = array_merge($reserved_root_slugs, $this->acfml->get_languages('slug'));
     $count = 0;
 
     // allow for filtering bad post slugs
@@ -571,9 +582,9 @@ class Post_Types_Controller {
       return;
     }
     
-    $language = acfml()->get_current_language();
+    $language = $this->acfml->get_current_language();
     
-    if( acfml()->is_default_language($language) ) return;
+    if( $this->acfml->is_default_language($language) ) return;
     
     $post_types = $this->guess_post_types($query);
     /**
@@ -686,8 +697,8 @@ class Post_Types_Controller {
   public function query__get_page_by_path(string $query): string {
     global $wpdb;
     
-    $language = acfml()->get_current_language();
-    if( acfml()->is_default_language($language) ) return $query;
+    $language = $this->acfml->get_current_language();
+    if( $this->acfml->is_default_language($language) ) return $query;
     // detect correct query and find $in_string and $post_type_in_string
     preg_match('/SELECT ID, post_name, post_parent, post_type.+post_name IN \((?<slugs_in_string>.*?)\).+ post_type IN \((?<post_type_in_string>.*?)\)/ms', $query, $matches);
     // return the query if it doesn't match
@@ -746,7 +757,7 @@ class Post_Types_Controller {
    * @return array
    */
   public function get_post_urls( \WP_Post $post ): array {
-    $languages = acfml()->get_languages('slug');
+    $languages = $this->acfml->get_languages('slug');
 
     $urls = [];
 
@@ -767,29 +778,29 @@ class Post_Types_Controller {
    */
   public function get_post_link( \WP_Post $post, String $language, array $args = [] ): string {
     
-    $args = acfml()->to_object(wp_parse_args($args, [
+    $args = $this->acfml->to_object(wp_parse_args($args, [
       'check_lang_active' => true,
       'is_sample' => false
     ]));
 
     if( $args->is_sample ) $post->post_status = 'publish';
 
-    $fallback_url = apply_filters('acfml/post_link_fallback', acfml()->home_url('/', $language));
+    $fallback_url = apply_filters('acfml/post_link_fallback', $this->acfml->home_url('/', $language));
 
     $post_type_object = get_post_type_object($post->post_type);
     $ancestors = array_reverse(get_ancestors($post->ID, $post->post_type, 'post_type'));
     $segments = [];
     $postname_rewrite_tag = "";
 
-    acfml()->remove_link_filters();
+    $this->acfml->remove_link_filters();
     // get the unfiltered permalink
     $permalink_native = get_permalink($post);
     // get the permalink for the post, leaving the %postname% tag untouched
     $link_template = get_permalink($post, true);
-    acfml()->add_link_filters();
+    $this->acfml->add_link_filters();
 
     // return the default permalink if the language is the default one
-    if( acfml()->is_default_language($language) ) return $permalink_native;
+    if( $this->acfml->is_default_language($language) ) return $permalink_native;
 
     // remove possible parent page uri from attachment urls
     if( $post->post_type === 'attachment' && $post->post_parent ) {
@@ -798,16 +809,16 @@ class Post_Types_Controller {
     }
 
     // convert the permalink's base to the requested $language
-    $link_template = acfml()->simple_convert_url($link_template, $language);
+    $link_template = $this->acfml->simple_convert_url($link_template, $language);
 
     // if the post is the front page, return home page in requested language
-    if( $this->post_is_front_page($post->ID) ) return acfml()->home_url('/', $language);
+    if( $this->post_is_front_page($post->ID) ) return $this->acfml->home_url('/', $language);
 
     // check if the language for the requested post is public
     $acfml_lang_active = get_field("acfml_lang_active_$language", $post->ID);
     
     if( 
-      !acfml()->is_default_language($language) 
+      !$this->acfml->is_default_language($language) 
       && $args->check_lang_active 
       && !is_null($acfml_lang_active)
       && intval($acfml_lang_active) === 0 ) {
@@ -869,7 +880,7 @@ class Post_Types_Controller {
   public function get_post_slug( \WP_Post $post, string $language ): ?string {
     if( !$this->is_multilingual_post_type($post->post_type) ) return $post->post_name;
     $slug = get_field("{$this->slug_field_name}_{$language}", $post->ID);
-    if( !$slug && acfml()->is_default_language($language) ) return $post->post_name;
+    if( !$slug && $this->acfml->is_default_language($language) ) return $post->post_name;
     return $slug;
   }
 
@@ -906,19 +917,19 @@ class Post_Types_Controller {
    */
   public function get_post_type_archive_link( string $post_type, string $language ): ?string {
 
-    acfml()->remove_link_filters();
+    $this->acfml->remove_link_filters();
     $link = get_post_type_archive_link($post_type);
-    acfml()->add_link_filters();
+    $this->acfml->add_link_filters();
 
     $path = trim(str_replace(home_url(), '', $link), '/');
 
-    $default_archive_slug = $this->get_post_type_archive_slug($post_type, acfml()->get_default_language());
+    $default_archive_slug = $this->get_post_type_archive_slug($post_type, $this->acfml->get_default_language());
     $archive_slug = $this->get_post_type_archive_slug($post_type, $language);
     if( !$archive_slug ) return $link;
 
     $path = preg_replace("#$default_archive_slug$#", $archive_slug, $path);
     $path = user_trailingslashit($path);
-    $link = acfml()->home_url("/$path", $language);
+    $link = $this->acfml->home_url("/$path", $language);
     $link = apply_filters('acfml/post_type_archive_link', $link, $post_type, $language);
     return $link;
   }
@@ -930,8 +941,8 @@ class Post_Types_Controller {
    * @return string
    */
   public function query__find_post_by_old_slug($query) {
-    $language = acfml()->get_current_language();
-    if( acfml()->is_default_language($language) ) return $query;
+    $language = $this->acfml->get_current_language();
+    if( $this->acfml->is_default_language($language) ) return $query;
     if( strpos($query, '_wp_old_slug') === false ) return $query;
     $query = str_replace('_wp_old_slug', "_wp_old_slug_$language", $query);
     return $query;
@@ -948,7 +959,7 @@ class Post_Types_Controller {
       return;
     }
 
-    foreach( acfml()->get_languages('slug') as $lang ) {
+    foreach( $this->acfml->get_languages('slug') as $lang ) {
       // get old slugs
       $old_slug_meta_key = "_wp_old_slug_$lang";
       $old_slugs = (array) get_post_meta( $post_id, $old_slug_meta_key );
@@ -978,7 +989,7 @@ class Post_Types_Controller {
    */
   public function prepare_old_slug_redirect() {
     global $wp_query;
-    if( acfml()->current_language_is_default() ) return;
+    if( $this->acfml->current_language_is_default() ) return;
     if( !is_404() ) return;
     $wp_query->query_vars['name'] = $wp_query->query['name'] ?? '';
   }
@@ -1033,12 +1044,12 @@ class Post_Types_Controller {
    */
   public function maybe_show_notice_needs_resave_posts() {
 
-    foreach( acfml()->get_languages('slug') as $lang ) {
+    foreach( $this->acfml->get_languages('slug') as $lang ) {
       $posts = $this->find_posts_with_missing_data($lang, 1);
       if( count($posts) ) {
-        acfml()->admin->add_notice(
+        $this->acfml->admin->add_notice(
           'resave-posts',
-          acfml()->get_template('notice-needs-resave-posts', null, false),
+          $this->acfml->get_template('notice-needs-resave-posts', null, false),
         );
         break;
       }
@@ -1053,12 +1064,12 @@ class Post_Types_Controller {
    */
   public function maybe_resave_posts() {
     // check nonce
-    if( !acfml()->admin->verify_nonce('acfml_nonce_resave_posts') ) return;
+    if( !$this->acfml->admin->verify_nonce('acfml_nonce_resave_posts') ) return;
     
     $resaved_posts_count = $this->resave_posts();
 
     // add success message
-    acfml()->admin->add_notice(
+    $this->acfml->admin->add_notice(
       'resave-posts',
       wp_sprintf( 
         __('ACF Multilingual successfully processed %s %s.', 'acfml'), 
@@ -1081,7 +1092,7 @@ class Post_Types_Controller {
   public function resave_posts(): int {
     // find posts with empty slugs for each language
     $post_ids = [];
-    foreach( acfml()->get_languages('slug') as $lang ) {
+    foreach( $this->acfml->get_languages('slug') as $lang ) {
       $posts = $this->find_posts_with_missing_data($lang, -1);
       $post_ids = array_unique(array_merge($post_ids, $posts));
     }
