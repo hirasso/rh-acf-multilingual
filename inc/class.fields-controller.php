@@ -2,6 +2,8 @@
 
 namespace ACFML;
 
+use ACF_Multilingual;
+
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class Fields_Controller {
@@ -13,11 +15,19 @@ class Fields_Controller {
 
   private $prefix;
 
+  private $acfml = null;
+
   /**
    * Constructor
+   *
+   * @param ACF_Multilingual|null $acfml
+   * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function __construct() {
-    $this->prefix = acfml()->get_prefix();
+  public function __construct(?\ACF_Multilingual $acfml = null) {
+
+    // inject main class
+    $this->acfml = $acfml;
+    $this->prefix = $this->acfml->get_prefix();
     $this->add_hooks();
   }
 
@@ -97,9 +107,9 @@ class Fields_Controller {
 
     $ui_style = $this->get_field_ui_style($field);
 
-    $default_language = acfml()->get_default_language();
+    $default_language = $this->acfml->get_default_language();
     $sub_fields = [];
-    $languages = acfml()->get_languages();
+    $languages = $this->acfml->get_languages();
     foreach( $languages as $lang => $language_info ) {
       
       // prepare wrapper
@@ -119,7 +129,7 @@ class Fields_Controller {
         'acfml_multilingual' => 0,
         'acfml_multilingual_subfield' => 1,
         'acfml_field_language' => $lang,
-        'acfml_field_is_hidden' => $ui_style === 'tabs' && !acfml()->is_default_language($lang),
+        'acfml_field_is_hidden' => $ui_style === 'tabs' && !$this->acfml->is_default_language($lang),
         'wrapper' => $wrapper,
       ]);
       
@@ -168,7 +178,7 @@ class Fields_Controller {
     // bail early if no value or array
     if( !$value || is_array($value) ) return $value;
     
-    $default_language = acfml()->get_default_language();
+    $default_language = $this->acfml->get_default_language();
     // This field's value will be autofilled by the monolingual value
     $hook_name = "acf/load_value/key={$field['key']}_$default_language";
     // A self-erasing hook, since filters would add up 
@@ -216,8 +226,8 @@ class Fields_Controller {
    */
   public function format_multilingual_value( $value, $post_id, $field ) {
     if( !$this->is_acfml_group($field) ) return $value;
-    $language = acfml()->get_current_language();
-    $value = !empty($value[$language]) ? $value[$language] : ($value[acfml()->get_default_language()] ?? null);
+    $language = $this->acfml->get_current_language();
+    $value = !empty($value[$language]) ? $value[$language] : ($value[$this->acfml->get_default_language()] ?? null);
     return $value;
   }
 
@@ -249,7 +259,7 @@ class Fields_Controller {
    */
   public function after_update_multilingual_value( $value, $post_id, $field, $value_before ) {
     if( !$this->is_acfml_group($field) ) return $value;
-    $default_language = acfml()->get_default_language();
+    $default_language = $this->acfml->get_default_language();
     $value = get_field("{$field['name']}_$default_language", $post_id, false);
     return $value;
   }
@@ -274,7 +284,7 @@ class Fields_Controller {
   public function render_multilingual_field( $field ): void {
     if( !$this->is_acfml_group($field) ) return;
     $default_field_language = $this->get_active_language_tab($field);
-    $languages = acfml()->get_languages();
+    $languages = $this->acfml->get_languages();
     if( count($languages) < 2 ) return;
     if( ($field['acfml_show_ui'] ?? true) === false ) return;
     if( $this->get_field_ui_style($field) === 'tabs' ) {
@@ -312,8 +322,8 @@ class Fields_Controller {
    * @return string
    */
   private function get_active_language_tab(array $field): string {
-    $cookie = (array) acfml()->get_admin_cookie('acfml_language_tabs');
-    return $cookie[$field['key']] ?? acfml()->get_default_language();
+    $cookie = (array) $this->acfml->get_admin_cookie('acfml_language_tabs');
+    return $cookie[$field['key']] ?? $this->acfml->get_default_language();
   }
 
   /**
@@ -337,7 +347,7 @@ class Fields_Controller {
     if( $switch_with = $field['acfml_ui_listen_to'] ?? null ) {
       $wrapper['data-acfml-ui-listen-to'] = $switch_with;
     }
-    if( !empty($field['acfml_multilingual_subfield']) && acfml()->is_default_language($field['_name']) ) {
+    if( !empty($field['acfml_multilingual_subfield']) && $this->acfml->is_default_language($field['_name']) ) {
       $wrapper['class'] .= ' acfml-is-default-language';
     }
     if( !empty($field['acfml_field_language']) ) {

@@ -9,12 +9,18 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  */
 class ACFML_Sitemaps_Provider extends \WP_Sitemaps_Provider {
 
+  private $acfml = null;
+
   /**
-   * WP_Sitemaps_Posts constructor.
+   * Constructor
    *
-   * @since 5.5.0
+   * @param ACF_Multilingual|null $acfml
+   * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function __construct() {
+  public function __construct(?\ACF_Multilingual $acfml = null) {
+
+    // inject main class
+    $this->acfml       = $acfml;
     $this->name        = 'languages';
     $this->object_type = 'language';
   }
@@ -33,15 +39,15 @@ class ACFML_Sitemaps_Provider extends \WP_Sitemaps_Provider {
     $url_list = [];
     $index_url = $wp_sitemaps->index->get_index_url();
     // get language information
-    $languages = acfml()->get_languages('slug');
-    $default_language = acfml()->get_default_language();
-    $current_language = acfml()->get_current_language();
+    $languages = $this->acfml->get_languages('slug');
+    $default_language = $this->acfml->get_default_language();
+    $current_language = $this->acfml->get_current_language();
 
     foreach( $languages as $lang ) {
       // don't generate a link to the default language
       if( $lang === $default_language ) continue;
       $sitemaps_entry = array(
-        'loc' => esc_url( acfml()->simple_convert_url($index_url, $lang) ),
+        'loc' => esc_url( $this->acfml->simple_convert_url($index_url, $lang) ),
       );
       $url_list[] = $sitemaps_entry;
     }

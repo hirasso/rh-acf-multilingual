@@ -54,7 +54,7 @@ class ACF_Multilingual {
 
     // Include and instanciate admin class
     $this->include('inc/class.admin.php');
-    $this->admin = new ACFML\Admin();
+    $this->admin = new ACFML\Admin($this);
     
     // hook into after_setup_theme to initialize
     add_action('after_setup_theme', [$this, 'maybe_fully_initialize'], 11);
@@ -79,9 +79,9 @@ class ACF_Multilingual {
     $this->include('inc/class.fields-controller.php');
     $this->include('inc/class.post-types-controller.php');
     $this->include('inc/class.taxonomies-controller.php');
-    $this->fields_controller = new ACFML\Fields_Controller();
-    $this->post_types_controller = new ACFML\Post_Types_Controller();
-    $this->taxonomies_controller = new ACFML\Taxonomies_Controller();
+    $this->fields_controller = new ACFML\Fields_Controller($this);
+    $this->post_types_controller = new ACFML\Post_Types_Controller($this);
+    $this->taxonomies_controller = new ACFML\Taxonomies_Controller($this);
 
     // run other functions
     $this->detect_language();
@@ -1157,7 +1157,7 @@ class ACF_Multilingual {
     if( !$this->current_language_is_default() ) return;
     $this->include('inc/class.sitemaps-provider.php');
     // registers the new provider for the sitemap
-    $provider = new ACFML\ACFML_Sitemaps_Provider();
+    $provider = new ACFML\ACFML_Sitemaps_Provider($this);
     wp_register_sitemap_provider( 'languages', $provider );
   }
 
@@ -1205,8 +1205,8 @@ class ACF_Multilingual {
    */
   public function get_hashed_settings(): string {
     $settings = [
-      'languages' => acfml()->get_languages('slug'),
-      'post_types' => acfml()->post_types_controller->get_multilingual_post_types('full', false)
+      'languages' => $this->get_languages('slug'),
+      'post_types' => $this->post_types_controller->get_multilingual_post_types('full', false)
     ];
     $hash = hash( "sha512", json_encode($settings) );
     return $hash;
