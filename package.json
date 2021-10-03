@@ -9,7 +9,8 @@
     "bundle": "node parcel-bundler.js -f \"assets-src/*.js\" -o \"assets\"",
     "generate-pot": "node ./lang/acfml-pot.js",
     "watch": "npm run bundle -- --url https://acf-multilingual.test --sync",
-    "build": "npm run bundle -- --production"
+    "build": "npm run bundle -- --production",
+    "test:php": "./vendor/bin/phpunit"
   },
   "babel": {
     "presets": [
