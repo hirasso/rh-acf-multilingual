@@ -49,8 +49,7 @@ class ACFMultilingual {
    */
   public function initialize() {    
 
-    // Include and instanciate admin class
-    $this->include('inc/class.admin.php');
+    // Instanciate admin class
     $this->admin = new Admin($this);
     
     // hook into after_setup_theme to initialize
@@ -72,10 +71,7 @@ class ACFMultilingual {
     // bail early if there are no languages
     if( !count($languages) ) return;
     
-    // Include and instanciate classes
-    $this->include('inc/class.fields-controller.php');
-    $this->include('inc/class.post-types-controller.php');
-    $this->include('inc/class.taxonomies-controller.php');
+    // Instanciate classes
     $this->fields_controller = new FieldsController($this);
     $this->post_types_controller = new PostTypesController($this);
     $this->taxonomies_controller = new TaxonomiesController($this);
@@ -101,7 +97,7 @@ class ACFMultilingual {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
     add_action('admin_init', [$this, 'download_language_packs'], 11);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], 999);
-
+    
     add_filter('locale', [$this, 'filter_frontend_locale']);
     add_action('wp_head', [$this, 'wp_head']);
 
@@ -198,7 +194,7 @@ class ACFMultilingual {
    * @return void
    */
   public function flush_rewrite_rules(): void {
-    flush_rewrite_rules(true);
+    flush_rewrite_rules();
   }
 
   /**
@@ -582,7 +578,7 @@ class ACFMultilingual {
    * @param string $language    the slug of the language, e.g. 'en' or 'de'
    * @return void
    */
-  private function switch_to_language($language): bool {
+  public function switch_to_language($language): bool {
     $languages = $this->get_languages('slug');
     if( !in_array($language, $languages) ) return false;
     $this->language = $language;
@@ -594,7 +590,7 @@ class ACFMultilingual {
    *
    * @return void
    */
-  private function reset_language(): void {
+  public function reset_language(): void {
     $this->language = defined('ACFML_CURRENT_LANGUAGE') ? ACFML_CURRENT_LANGUAGE : $this->get_default_language();
   }
 
@@ -868,6 +864,7 @@ class ACFMultilingual {
         $key = "(?:$regex_languages_pages)?/?" . ltrim($key, '^');
         $new_rules[$key] = $val;
     }
+    
     return $new_rules;
   }
 
@@ -1152,7 +1149,6 @@ class ACFMultilingual {
    */
   public function add_sitemaps_provider(): void {
     if( !$this->current_language_is_default() ) return;
-    $this->include('inc/class.sitemaps-provider.php');
     // registers the new provider for the sitemap
     $provider = new SitemapsProvider($this);
     wp_register_sitemap_provider( 'languages', $provider );
