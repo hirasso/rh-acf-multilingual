@@ -567,22 +567,23 @@ class ACFMultilingual {
    * Switch to a langauge
    *
    * @param string $language    the slug of the language, e.g. 'en' or 'de'
-   * @return void
+   * @return string|null
    */
-  public function switch_to_language($language): bool {
+  public function switch_to_language($language): ?string {
     $languages = $this->get_languages('slug');
-    if( !in_array($language, $languages) ) return false;
+    if( !in_array($language, $languages) ) return null;
     $this->language = $language;
-    return true;
+    return $this->language;
   }
 
   /**
    * Resets the current language to the defined value
    *
-   * @return void
+   * @return string
    */
-  public function reset_language(): void {
+  public function reset_language(): string {
     $this->language = defined('ACFML_CURRENT_LANGUAGE') ? ACFML_CURRENT_LANGUAGE : $this->get_default_language();
+    return $this->language;
   }
 
   /**
@@ -1028,7 +1029,7 @@ class ACFMultilingual {
    * @param string|null $language
    * @return \WP_Query|null
    */
-  public function resolve_url(?string $url = null): ?\WP_Query {
+  private function resolve_url(?string $url = null): ?\WP_Query {
     global $wp, $wp_the_query;
     
     // parse defaults
