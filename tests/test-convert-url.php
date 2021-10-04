@@ -27,6 +27,7 @@ class ConvertAndResolveUrlsTest extends WP_UnitTestCase {
     $acfml->maybe_fully_initialize();
 
     $acfml->post_types_controller->add_post_type('post');
+    $acfml->post_types_controller->add_post_type('page');
     $this->set_permalink_structure('/%postname%/');
     $this->acfml = $acfml;
   }
@@ -40,24 +41,50 @@ class ConvertAndResolveUrlsTest extends WP_UnitTestCase {
 
   }
 
-  public function test_resolve_url_post_type_post() {
-
-    $post = self::factory()->post->create_and_get();
-    update_field('acfml_post_title_de', 'Eintragstitel', $post->ID);
-    $post_name_de = str_replace('post-title', 'eintragstitel', $post->post_name);
-    update_field('acfml_slug_de', $post_name_de, $post->ID);
-
-    $resolved_post_ids = [
-      'en' => $this->acfml->resolve_url(home_url("/$post->post_name/"))->get_queried_object_id(),
-      'de' => $this->acfml->resolve_url(home_url("/de/$post_name_de/"))->get_queried_object_id(),
-    ];
-
-    $expected_post_ids = [
-      'en' => $post->ID,
-      'de' => $post->ID 
-    ];
+  public function test_get_translated_post_permalink() {
     
-    $this->assertSame($resolved_post_ids, $expected_post_ids);
+    // Create a test post. The generated post_name should be 'test-resolve-url'
+    $post = self::factory()->post->create_and_get([
+      'post_title' => 'Test: Post Permalink'
+    ]);
+    // Manually insert the required fields for 'de'
+    update_field('acfml_slug_de', 'test-eintrags-link', $post->ID);
+
+    $this->acfml->switch_to_language('de');
+    $result = get_permalink($post->ID);
+    $expected = home_url("/de/test-eintrags-link/");
+    $this->acfml->reset_language();
+
+    $this->assertSame($result, $expected);
+    
+  }
+
+  public function test_get_translated_page_permalink() {
+    $granny = self::factory()->post->create_and_get([
+      'post_type' => 'page',
+      'post_title' => 'Granny',
+    ]);
+    update_field('acfml_slug_de', 'grossmutter', $granny->ID);
+    $mum = self::factory()->post->create_and_get([
+      'post_type' => 'page',
+      'post_title' => 'Mum',
+      'post_parent' => $granny->ID
+    ]);
+    update_field('acfml_slug_de', 'mutter', $mum->ID);
+    $child = self::factory()->post->create_and_get([
+      'post_type' => 'page',
+      'post_title' => 'Child',
+      'post_parent' => $mum->ID
+    ]);
+    update_field('acfml_slug_de', 'kind', $child->ID);
+    
+    $this->acfml->switch_to_language('de');
+    $result = get_permalink($child->ID);
+    $expected = home_url("/de/grossmutter/mutter/kind/");
+    $this->acfml->reset_language();
+
+    $this->assertSame($result, $expected);
+    
   }
 
 }
