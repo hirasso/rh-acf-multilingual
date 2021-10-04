@@ -189,15 +189,6 @@ class ACFMultilingual {
   }
 
   /**
-   * flush_rewrite_rules
-   *
-   * @return void
-   */
-  public function flush_rewrite_rules(): void {
-    flush_rewrite_rules();
-  }
-
-  /**
    * Admin init
    *
    * @return void
@@ -251,7 +242,7 @@ class ACFMultilingual {
    *
    * @return string
    */
-  public function get_cookie_hash_for_current_uri() {
+  private function get_cookie_hash_for_current_uri() {
     $uri = $_SERVER['REQUEST_URI'];
     $uri = remove_query_arg('message', $uri);
     return hash("sha512", $uri);
