@@ -41,6 +41,15 @@ class ConvertAndResolveUrlsTest extends WP_UnitTestCase {
 
   }
 
+  public function test_simple_convert_url_starts_with_default_language_slug() {
+
+    $expected = 'http://example.org/english-path/';
+    $result  = $this->acfml->simple_convert_url('http://example.org/english-path/', 'en');
+
+    $this->assertSame($result, $expected);
+
+  }
+
   public function test_get_translated_post_permalink() {
     
     // Create a test post. The generated post_name should be 'test-resolve-url'
@@ -86,5 +95,6 @@ class ConvertAndResolveUrlsTest extends WP_UnitTestCase {
     $this->assertSame($result, $expected);
     
   }
+
 
 }
