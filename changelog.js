@@ -11,7 +11,8 @@ const blacklist = [
   'update TODO',
   'cleanup',
   'cleanupp',
-  'add documentation'
+  'add documentation',
+  'test_'
 ];
 
 /**
