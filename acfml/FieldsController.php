@@ -11,6 +11,8 @@ class FieldsController {
     'text', 'textarea', 'url', 'image', 'file', 'wysiwyg', 'post_object', 'true_false'
   ];
 
+  private $available_ui_styles = ['tabs', 'columns'];
+
   private $prefix;
 
   private $acfml = null;
@@ -131,8 +133,6 @@ class FieldsController {
         'wrapper' => $wrapper,
       ]);
       
-      // if( $ui_style === 'simple' ) $sub_field['prepend'] = strtoupper($lang);
-      
       // add the subfield
       $sub_fields[] = $sub_field;
     }
@@ -155,6 +155,7 @@ class FieldsController {
         'width' => $field['wrapper']['width'],
         'class' => implode(' ', $field_classes),
         'id' => $field['wrapper']['id'],
+        'data-acfml-ui-style' => $ui_style,
       ],
     ]);
     return $field;
@@ -270,7 +271,50 @@ class FieldsController {
    * @author Rasso Hilber <mail@rassohilber.com>
    */
   private function get_field_ui_style($field) {
-    return $field['acfml_ui_style'] ?? 'tabs';
+    $ui_style = $field['acfml_ui_style'] ?? 'tabs';
+    if( !$this->validate_ui_style($ui_style) ) {
+      throw new \ErrorException(
+        sprintf(
+          __("[ACFML] Unknown field UI style '%s'. Please use %s."), 
+          $ui_style,
+          $this->make_array_readable($this->available_ui_styles)
+        )
+      );
+    }
+    return $ui_style;
+  }
+
+  /**
+   * Checks an UI style for available styles
+   *
+   * @param string $ui_style
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function validate_ui_style(string $ui_style): bool {
+    return in_array($ui_style, $this->available_ui_styles);
+  }
+
+  /**
+   * Convert an array to a readable string
+   *
+   * @param array $array
+   * @param bool $quote_items
+   * @return string
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function make_array_readable(array $array, bool $quote_items = true): string {
+
+    if( $quote_items ) {
+      $array = array_map(function($item) {
+        return "'$item'";
+      }, $array);
+    }
+
+    if( count($array) < 2 ) return implode(', ', $array);
+
+    $last = array_pop($array);
+    return implode(', ', $array) . ' or ' . $last;
   }
 
   /**
@@ -351,6 +395,7 @@ class FieldsController {
     if( !empty($field['acfml_field_language']) ) {
       $wrapper['data-acfml-field-language'] = $field['acfml_field_language'];
     }
+    
     return $wrapper;
   }
   
