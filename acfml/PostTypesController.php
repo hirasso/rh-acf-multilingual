@@ -880,7 +880,7 @@ class PostTypesController {
    */
   public function get_post_slug( \WP_Post $post, string $language ): ?string {
     if( !$this->is_multilingual_post_type($post->post_type) ) return $post->post_name;
-    $slug = get_field("{$this->slug_field_name}_{$language}", $post->ID);
+    $slug = urldecode_deep(get_field("{$this->slug_field_name}_{$language}", $post->ID));
     if( !$slug && $this->acfml->is_default_language($language) ) return $post->post_name;
     return $slug;
   }
@@ -1129,13 +1129,13 @@ class PostTypesController {
   /**
    * Applies 'urldecode' to loaded ACFML slugs
    *
-   * @param mixex $value
+   * @param mixed $value
    * @return mixed
    * @author Rasso Hilber <mail@rassohilber.com>
    */
   public function load_value_acfml_slug($value) {
-    if( !is_array($value) ) return $value;
-    return array_map('urldecode', $value);
+    if( empty($value) ) return $value;
+    return urldecode_deep($value);
   }
 
 }

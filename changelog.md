@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-10-15)
 
-- Fix: Don't switch fields with UI style `colums` on doubleclick (#c15986f)
+- apply urldecode_deep to slugs (#3d1443c)
+- Fix: Don't switch fields with UI style `colums` on doubleclick (#4d0a731)
 - add dir="rtl" to fields in rtl languages (#145629d)
 - use key instead of name for load_value (#7f3d32b)
 - Apply `urldecode` to loaded acfml_slugs (#0bf6719)
