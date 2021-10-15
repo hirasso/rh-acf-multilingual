@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-10-15)
 
-- add dir="rtl" to fields in rtl languages (#f18b70e)
+- Fix: Don't switch fields with UI style `colums` on doubleclick (#c15986f)
+- add dir="rtl" to fields in rtl languages (#145629d)
 - use key instead of name for load_value (#7f3d32b)
 - Apply `urldecode` to loaded acfml_slugs (#0bf6719)
 - Change UI style from 'simple' to 'colums' (#5a0193b)

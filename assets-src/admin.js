@@ -29,13 +29,13 @@ export default class ACFML {
       const $el = $(e.target);
       $el.blur();
       const language = $el.attr('data-language');
-      this.switchLanguage($el.parents('.acfml-multilingual-field:first'), language);
+      this.switchLanguage($el.parents('.acfml-ui-style--tabs:first'), language);
     });
     $(document).on('dblclick', '.acfml-tab', e => {
       e.preventDefault();
       const $el = $(e.target);
       const language = $el.attr('data-language');
-      this.switchLanguage($('.acfml-multilingual-field:not([data-acfml-ui-listen-to])'), language);
+      this.switchLanguage($('.acfml-ui-style--tabs:not([data-acfml-ui-listen-to])'), language);
     });
     // store active language tabs before submitting a form
     $('form#post').one( 'submit', (e) => this.beforeSubmitPostForm(e) );
