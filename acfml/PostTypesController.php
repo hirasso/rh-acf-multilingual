@@ -64,7 +64,7 @@ class PostTypesController {
     add_filter("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
     add_action("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
     add_filter("acf/update_value/key={$this->title_field_key}_{$this->default_language}", [$this, "update_value_default_post_title"], 10, 4 );
-    add_filter("acf/load_value/name=acfml_slug", [$this, 'load_value_acfml_slug']);
+    add_filter("acf/load_value/key=$this->slug_field_key", [$this, 'load_value_acfml_slug']);
 
     add_action('save_post', [$this, 'save_post'], 20);
 

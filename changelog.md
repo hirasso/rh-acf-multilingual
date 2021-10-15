@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-10-15)
 
-- Apply `urldecode` to loaded acfml_slugs (#23fa26e)
+- use key instead of name for load_value (#c412716)
+- Apply `urldecode` to loaded acfml_slugs (#0bf6719)
 - Change UI style from 'simple' to 'colums' (#5a0193b)
 - Exclude test commits from changelog (#0bd231e)
 - Add return values to `switch_to_language` and `reset_language` (#78c53d9)
