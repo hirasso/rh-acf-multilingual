@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-10-15)
 
-- use key instead of name for load_value (#c412716)
+- add dir="rtl" to fields in rtl languages (#f18b70e)
+- use key instead of name for load_value (#7f3d32b)
 - Apply `urldecode` to loaded acfml_slugs (#0bf6719)
 - Change UI style from 'simple' to 'colums' (#5a0193b)
 - Exclude test commits from changelog (#0bd231e)

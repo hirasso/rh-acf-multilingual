@@ -115,6 +115,15 @@ class FieldsController {
       // prepare wrapper
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfml-field';
+      if( !in_array($field['name'], [
+        'acfml_post_title', 
+        'acfml_slug', 
+        'acfml_lang_active'
+        ]) ) {
+        $wrapper['dir'] = $language_info['direction'];
+      }
+      
+      
       if( $lang === $active_language_tab || $ui_style !== 'tabs' ) $wrapper['class'] .= ' acfml-is-visible';
       if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang}";
       $wrapper['width'] = '';

@@ -349,13 +349,40 @@ class ACFMultilingual {
    * @return array
    */
   public function add_language(string $slug, ?string $locale = null, ?string $name = null): array {
+    
+    if( !$locale ) $locale = $slug;
+    if( !$name ) $name = $slug;
+
     $language = [
       'slug' => $slug,
-      'locale' => $locale ?? $slug,
-      'name' => $name ?? $slug
+      'locale' => $locale,
+      'name' => $name,
+      'direction' => $this->get_language_direction($locale)
     ];
+
     $this->languages[$slug] = $language;
     return $language;
+  }
+
+  /**
+   * Get the direction for a locale. 
+   * 
+   * Switching the locale seems to be an expensive operation,
+   * so this is being stored in the language information when 
+   * being added
+   *
+   * @param string $locale
+   * @return string
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function get_language_direction( string $locale ): string {
+    $direction = 'ltr';
+    
+    switch_to_locale($locale);
+    if( is_rtl() ) $direction = 'rtl';
+    restore_previous_locale();
+
+    return $direction;
   }
 
   /**
