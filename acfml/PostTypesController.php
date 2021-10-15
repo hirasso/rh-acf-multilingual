@@ -64,6 +64,7 @@ class PostTypesController {
     add_filter("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
     add_action("acf/validate_value/key={$this->title_field_key}_{$this->default_language}", [$this, "validate_value_default_post_title"], 10, 4 );
     add_filter("acf/update_value/key={$this->title_field_key}_{$this->default_language}", [$this, "update_value_default_post_title"], 10, 4 );
+    add_filter("acf/load_value/name=acfml_slug", [$this, 'load_value_acfml_slug']);
 
     add_action('save_post', [$this, 'save_post'], 20);
 
@@ -271,7 +272,7 @@ class PostTypesController {
         $post_link = $this->get_post_link($post, $lang);
 
         if( $field['value'] && $this->is_language_public($lang, $post->ID) && in_array($post->post_status, ['publish'] ) ) {
-          $field['append'] .= sprintf("<a class='button' href='$post_link' target='_blank'>%s</a>", __('View'));
+          $field['append'] .= sprintf("<a class='button' href='%s' target='_blank'>%s</a>", $post_link, __('View'));
         }
         return $field;
       });
@@ -1123,6 +1124,18 @@ class PostTypesController {
     foreach( $post_ids as $post_id ) {
       $this->save_post($post_id);
     }
+  }
+
+  /**
+   * Applies 'urldecode' to loaded ACFML slugs
+   *
+   * @param mixex $value
+   * @return mixed
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function load_value_acfml_slug($value) {
+    if( !is_array($value) ) return $value;
+    return array_map('urldecode', $value);
   }
 
 }
