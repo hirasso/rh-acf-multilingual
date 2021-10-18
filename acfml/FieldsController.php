@@ -120,7 +120,7 @@ class FieldsController {
         'acfml_slug', 
         'acfml_lang_active'
         ]) ) {
-        $wrapper['dir'] = $language_info['direction'];
+        $wrapper['dir'] = $language_info['text_direction'];
       }
       
       

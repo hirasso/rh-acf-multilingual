@@ -1,5 +1,6 @@
 #### 0.0.5 (2021-10-18)
 
+- Optimize locale and [dir=rtl] (#4d969a8)
 - optimize load_value_acfml_slug (#d218200)
 - Admin UI optimizations for `[dir=rtl]` (#e751aa1)
 - Store active language tabs on `beforeunload` (#b965df2)

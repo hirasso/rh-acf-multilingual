@@ -51,7 +51,7 @@ class ACFMultilingual {
 
     // Instanciate admin class
     $this->admin = new Admin($this);
-    
+
     // hook into after_setup_theme to initialize
     add_action('after_setup_theme', [$this, 'maybe_fully_initialize'], 11);
 
@@ -82,8 +82,11 @@ class ACFMultilingual {
     $this->admin->add_hooks();
     $this->add_hooks();
 
-    // Switch locale manually, since the 'locale' filter is running too late for some functionality
-    if( !is_admin() ) \switch_to_locale($this->get_frontend_locale());
+    // Set locale manually, since the 'locale' filter is running too late for some functionality
+    // @TODO is there a safer, more standard way to change/get the correct wp_locale?
+    global $wp_locale;
+    $text_direction = $this->get_language_info($this->get_current_language())['text_direction'];
+    $wp_locale->text_direction = $text_direction;
 
   }
 
@@ -357,7 +360,7 @@ class ACFMultilingual {
       'slug' => $slug,
       'locale' => $locale,
       'name' => $name,
-      'direction' => $this->get_language_direction($locale)
+      'text_direction' => $this->get_text_direction($locale)
     ];
 
     $this->languages[$slug] = $language;
@@ -375,7 +378,7 @@ class ACFMultilingual {
    * @return string
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  private function get_language_direction( string $locale ): string {
+  private function get_text_direction( string $locale ): string {
     $direction = 'ltr';
     
     switch_to_locale($locale);
