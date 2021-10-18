@@ -37,8 +37,7 @@ export default class ACFML {
       const language = $el.attr('data-language');
       this.switchLanguage($('.acfml-ui-style--tabs:not([data-acfml-ui-listen-to])'), language);
     });
-    // store active language tabs before submitting a form
-    $('form#post').one( 'submit', () => this.storeActiveLanguageTabs() );
+    // store active language tabs before submitting a form or reloading the page
     window.addEventListener('beforeunload', () => this.storeActiveLanguageTabs());
     this.removeFromStore('acfml_language_tabs');
   }
