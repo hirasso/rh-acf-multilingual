@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-10-18)
 
-- Admin UI optimizations for `[dir=rtl]` (#20c0072)
+- optimize load_value_acfml_slug (#abb8729)
+- Admin UI optimizations for `[dir=rtl]` (#e751aa1)
 - Store active language tabs on `beforeunload` (#b965df2)
 - apply urldecode_deep to slugs (#bf70bf7)
 - Fix: Don't switch fields with UI style `colums` on doubleclick (#4d0a731)

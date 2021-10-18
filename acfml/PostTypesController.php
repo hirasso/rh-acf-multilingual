@@ -851,11 +851,11 @@ class PostTypesController {
     // add slugs for all ancestors to segments
     foreach( $ancestors as $ancestor_id ) {
       $ancestor = get_post($ancestor_id);
-      $segments[] = $this->get_post_slug($ancestor, $language);
+      $segments[] = esc_html( $this->get_post_slug($ancestor, $language) );
     }
 
     // add slug for requested post to segments
-    $segments[] = $this->get_post_slug($post, $language);
+    $segments[] = esc_html( $this->get_post_slug($post, $language) );
 
     // remove empty segments
     $segments = array_filter($segments, function($segment) {
@@ -880,9 +880,9 @@ class PostTypesController {
    */
   public function get_post_slug( \WP_Post $post, string $language ): ?string {
     if( !$this->is_multilingual_post_type($post->post_type) ) return $post->post_name;
-    $slug = urldecode_deep(get_field("{$this->slug_field_name}_{$language}", $post->ID));
-    if( !$slug && $this->acfml->is_default_language($language) ) return $post->post_name;
-    return $slug;
+    $slug = get_field("{$this->slug_field_name}_{$language}", $post->ID);
+    if( !$slug && $this->acfml->is_default_language($language) ) $slug = $post->post_name;
+    return map_deep($slug, 'urldecode');
   }
 
   /**
@@ -1135,7 +1135,8 @@ class PostTypesController {
    */
   public function load_value_acfml_slug($value) {
     if( empty($value) ) return $value;
-    return urldecode_deep($value);
+    $value = map_deep(map_deep($value, 'urldecode'), 'esc_html');
+    return $value;
   }
 
 }
