@@ -1,6 +1,7 @@
 #### 0.0.5 (2021-10-18)
 
-- Store active language tabs on `beforeunload` (#c814b0f)
+- Admin UI optimizations for `[dir=rtl]` (#20c0072)
+- Store active language tabs on `beforeunload` (#b965df2)
 - apply urldecode_deep to slugs (#bf70bf7)
 - Fix: Don't switch fields with UI style `colums` on doubleclick (#4d0a731)
 - add dir="rtl" to fields in rtl languages (#145629d)

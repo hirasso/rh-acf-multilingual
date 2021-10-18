@@ -136,15 +136,22 @@
   padding: 0;
   position: relative;
   z-index: 2;
+  overflow: hidden;
 }
 .acfml-slug .acf-input-append .button {
   border-radius: 0;
   margin: -1px;
-  &:last-child {
-    border-radius: 0 3px 3px 0;
-  }
+  border: none;
 }
-
+.acfml-slug .acf-input-append .button:last-child {
+  border-radius: 0 3px 3px 0;
+}
+[dir=rtl] .acfml-slug .acf-input-append .button:last-child {
+  border-radius: 3px 0 0 3px;
+}
+.acfml-slug .acf-input-prepend {
+  direction: ltr;
+}
 /*
 * Category edit screens
 */
