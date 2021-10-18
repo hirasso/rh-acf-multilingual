@@ -38,7 +38,8 @@ export default class ACFML {
       this.switchLanguage($('.acfml-ui-style--tabs:not([data-acfml-ui-listen-to])'), language);
     });
     // store active language tabs before submitting a form
-    $('form#post').one( 'submit', (e) => this.beforeSubmitPostForm(e) );
+    $('form#post').one( 'submit', () => this.storeActiveLanguageTabs() );
+    window.addEventListener('beforeunload', () => this.storeActiveLanguageTabs());
     this.removeFromStore('acfml_language_tabs');
   }
 
@@ -108,10 +109,10 @@ export default class ACFML {
   }
 
   /**
-   * Stores active language tabs for acf fields before submitting a form
+   * Stores active language tabs for acf fields
    * @param {object} e 
    */
-  beforeSubmitPostForm(e) {
+  storeActiveLanguageTabs() {
     let acfml_language_tabs = {};
     $('.acfml-multilingual-field').each((i, el) => {
       const key = $(el).attr('data-key');
