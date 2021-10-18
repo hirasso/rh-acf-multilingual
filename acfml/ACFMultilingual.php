@@ -82,11 +82,10 @@ class ACFMultilingual {
     $this->admin->add_hooks();
     $this->add_hooks();
 
-    // Set locale manually, since the 'locale' filter is running too late for some functionality
-    // @TODO is there a safer, more standard way to change/get the correct wp_locale?
+    // Set $wp_locale manually, since the 'locale' filter is running too late
     global $wp_locale;
-    $text_direction = $this->get_language_info($this->get_current_language())['text_direction'];
-    $wp_locale->text_direction = $text_direction;
+    load_default_textdomain($this->get_frontend_locale());
+    $wp_locale = new \WP_Locale();
 
   }
 
