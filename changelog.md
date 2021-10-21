@@ -1,6 +1,7 @@
 #### 1.0.5 (2021-10-21)
 
-- Add text direction to WYSIWYG editors (#cafb54a)
+- Optimize language tabs in `.media-frame` (#ce71e41)
+- Add text direction to WYSIWYG editors (#558523e)
 - Add `acfml.config.json` (#c576244)
 
 #### 0.0.5 (2021-10-18)

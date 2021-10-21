@@ -52,7 +52,8 @@
 [dir=rtl] .acfml-tabs {
   flex-direction: row-reverse;
 }
-.acfml-tab {
+.acfml-tab,
+.media-frame .acfml-tab {
   cursor: pointer;
   display: block;
   color: rgb(68,68,68);
@@ -68,6 +69,11 @@
     border-color: #0071a1;
     z-index: 2;
   }
+  &.is-active {
+    border-color: #007cba;
+    background: #008dd4;
+    color: white !important;
+  }
 }
 .acfml-tab + .acfml-tab {
   border-left: none;
@@ -77,11 +83,6 @@
 }
 .acfml-tab:last-of-type {
   border-radius: 0 3px 3px 0;
-}
-.acfml-tab.is-active {
-  border-color: #007cba;
-  background: #008dd4;
-  color: white;
 }
 .acfml-info-icon {
   color: rgba(0,0,0,0.3);
