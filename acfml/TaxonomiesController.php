@@ -94,6 +94,7 @@ class TaxonomiesController {
       'acfml_multilingual' => true,
       'required' => true,
       'parent' => $this->field_group_key,
+      'acfml_suppress_filters' => true,
       'wrapper' => [
         'class' => str_replace('_', '-', $this->field_name)
       ]
@@ -108,6 +109,19 @@ class TaxonomiesController {
    */
   public function get_multilingual_taxonomies() {
     return $this->taxonomies;
+  }
+
+  /**
+   * Adds taxonomies
+   *
+   * @param object|null $taxonomies
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function add_taxonomies(object $taxonomies) {
+    foreach( $taxonomies as $taxonomy_name => $args ) {
+      $this->add_taxonomy($taxonomy_name);
+    } 
   }
 
   /**

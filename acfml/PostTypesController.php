@@ -75,6 +75,20 @@ class PostTypesController {
   }
 
   /**
+   * Adds multilingual post types
+   *
+   * @param object $post_types
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function add_post_types(object $post_types) {
+    foreach( $post_types as $post_type_name => $args ) {
+      if( $args ) $args = $this->acfml->to_array($args);
+      $this->add_post_type($post_type_name, $args);
+    }
+  }
+
+  /**
    * Add a post type for translating the title and slugs
    *
    * @param string $post_type

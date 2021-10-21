@@ -40,13 +40,6 @@ function acfml_home_url(string $path = '', ?string $lang = null): string {
 }
 
 /**
- * This function is documented in acfml.php > add_language
- */
-function acfml_add_language(string $slug, ?string $locale = null, ?string $name = null): array {
-  return acfml()->add_language($slug, $locale, $name);
-}
-
-/**
  * This function is documented in acfml.php > get_curret_language
  */
 function acfml_get_current_language() {
@@ -60,28 +53,3 @@ function acfml_get_languages(?string $format = null) {
   return acfml()->get_languages($format);
 }
 
-/**
- * This function is documented in class.post-types-controller.php > add_post_type
- */
-function acfml_add_post_type($post_type, ?array $args = []) {
-  if( did_action('init') || doing_action('init') ) {
-    acfml()->post_types_controller->add_post_type($post_type, $args);
-  } else {
-    add_action('init', function () use ($post_type, $args) {
-      acfml()->post_types_controller->add_post_type($post_type, $args);
-    }, 11); // after default 'init' hook
-  }
-}
-
-/**
-* This function is documented in class.taxonomies-controller.php > add_taxonomy
-*/
-function acfml_add_taxonomy( $taxonomy ) {
-  if( did_action('init') || doing_action('init') ) {
-    acfml()->taxonomies_controller->add_taxonomy($taxonomy);
-  } else {
-    add_action('init', function () use ($taxonomy) {
-      acfml()->taxonomies_controller->add_taxonomy($taxonomy);
-    }, 11); // after default 'init' hook
-  }
-}

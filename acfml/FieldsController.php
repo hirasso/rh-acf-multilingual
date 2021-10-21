@@ -118,7 +118,8 @@ class FieldsController {
       if( !in_array($field['name'], [
         'acfml_post_title', 
         'acfml_slug', 
-        'acfml_lang_active'
+        'acfml_lang_active',
+        'acfml_term_name'
         ]) ) {
         $wrapper['dir'] = $language_info['text_direction'];
       }

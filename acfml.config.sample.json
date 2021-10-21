@@ -1,0 +1,24 @@
+{
+  "languages": {
+    "en": {
+      "locale": "en",
+      "name": "English"
+    },
+    "de": {
+      "locale": "de",
+      "name": "Deutsch"
+    }
+  },
+  "post_types": {
+    "page": {},
+    "project": {
+      "de": {
+        "rewrite_slug": "projekt",
+        "archive_slug": "projekte"
+      }
+    }
+  },
+  "taxonomies": {
+    "filters": {}
+  }
+}

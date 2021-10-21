@@ -1,7 +1,6 @@
-Features:
-  ❍ New UI layout option to display fields next to each other and disable language switching buttons
-  ✔ RTL support
-  ❍ Filter Link field
+19.10.2021:
+  ❍ Optimize Tabs UI in Attachment Popups
+  
 
 Taxonomies:
   ❍ Multilingual Slugs for categories/post_tags/custom taxonomies
@@ -10,6 +9,8 @@ Taxonomies:
     ❍ Make rewrite base slugs translatable (e.g. category -> kategorie)
 
 Archive:
+  ✔ New UI layout option to display fields next to each other and disable language switching buttons @project(Features)
+  ✔ RTL support @project(Features)
   ✔ Filter for canonical_redirect @project(07.11.2020)
   ✔ Generator for Language Switcher @project(07.11.2020)
   ✔ Admin-JS and Styles @project(07.11.2020)

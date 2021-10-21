@@ -38,6 +38,13 @@ class ACFMultilingual {
   public $taxonomies_controller; 
 
   /**
+   * Config Instance
+   * 
+   * @var Config
+   */
+  public $config;
+
+  /**
    * Empty constructor
    */
   public function  __construct() {}
@@ -50,43 +57,60 @@ class ACFMultilingual {
   public function initialize() {    
 
     // Instanciate admin class
+    $this->config = new Config($this);
+    $this->config->load();
+    
+    $this->add_languages($this->config->languages);
+    
+    // bail early if there are no languages set
+    if( empty($this->get_languages()) ) return;
+
+    // Instanciate admin class
     $this->admin = new Admin($this);
 
+    // bail early if ACF is not defined
+    if( !defined('ACF') ) return;
+
+    $this->detect_language();
+    $this->load_textdomain();
+
+    add_filter('locale', [$this, 'filter_frontend_locale']);
+    add_action('init', [$this, 'add_multilingual_object_types'], 11);
+
     // hook into after_setup_theme to initialize
-    add_action('after_setup_theme', [$this, 'maybe_fully_initialize'], 11);
+    add_action('after_setup_theme', [$this, 'after_setup_theme'], 11);
 
   }
 
   /**
-   * Fully initializes if there where languages registered before
+   * Fully initializes the plugin after the theme has been set up
    *
    * @return void
    */
-  public function maybe_fully_initialize() {
-    
-    // bail early if ACF is not defined
-    if( !defined('ACF') ) return;
-
-    $languages = $this->get_languages();
-    // bail early if there are no languages
-    if( !count($languages) ) return;
+  public function after_setup_theme() {
     
     // Instanciate classes
     $this->fields_controller = new FieldsController($this);
     $this->post_types_controller = new PostTypesController($this);
     $this->taxonomies_controller = new TaxonomiesController($this);
 
+    $this->add_text_directions_to_languages();
+    
     // run other functions
-    $this->detect_language();
-    $this->load_textdomain();
     $this->admin->add_hooks();
     $this->add_hooks();
 
-    // Set $wp_locale manually, since the 'locale' filter is running too late
-    global $wp_locale;
-    load_default_textdomain($this->get_frontend_locale());
-    $wp_locale = new \WP_Locale();
+  }
 
+  /**
+   * Add multilingual object types
+   *
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function add_multilingual_object_types() {
+    if( $this->config->post_types ) $this->post_types_controller->add_post_types($this->config->post_types);
+    if( $this->config->taxonomies ) $this->taxonomies_controller->add_taxonomies($this->config->taxonomies);
   }
 
   /**
@@ -99,8 +123,7 @@ class ACFMultilingual {
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
     add_action('admin_init', [$this, 'download_language_packs'], 11);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], 999);
-    
-    add_filter('locale', [$this, 'filter_frontend_locale']);
+
     add_action('wp_head', [$this, 'wp_head']);
 
     $this->add_link_filters();
@@ -343,6 +366,33 @@ class ACFMultilingual {
   }
 
   /**
+   * Add languages
+   *
+   * @param object|null $languages
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function add_languages(?object $languages): void {
+    if( empty($languages) ) return;
+    foreach( $languages as $key => $language ) {
+      $this->add_language($key, $language->slug ?? null, $language->name ?? null);
+    }
+  }
+
+  /**
+   * Adds text directions to languages
+   *
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function add_text_directions_to_languages(): void {
+    $this->languages = array_map(function($language){
+      $language['text_direction'] = $this->get_text_direction($language['locale']);
+      return $language;
+    }, $this->get_languages());
+  }
+
+  /**
    * Register a language
    *
    * @param string $slug          e.g. 'en' or 'de'
@@ -359,7 +409,7 @@ class ACFMultilingual {
       'slug' => $slug,
       'locale' => $locale,
       'name' => $name,
-      'text_direction' => $this->get_text_direction($locale)
+      'text_direction' => null
     ];
 
     $this->languages[$slug] = $language;
@@ -1250,6 +1300,19 @@ class ACFMultilingual {
   public function save_hashed_settings(string $postfix): void {
     // update settings hash
     update_option("acfml_hashed_settings_$postfix", $this->get_hashed_settings());
+  }
+
+  /**
+   * Converts an object to an array
+   *
+   * @param [object] $object
+   * @return array
+   */
+  public function to_array( $object ) {
+    if( !$object ) {
+      $object = (object) [];
+    }
+    return json_decode( json_encode( $object ), true );
   }
 
 }

@@ -1,6 +1,10 @@
+#### 1.0.5 (2021-10-21)
+
+- Add `acfml.config.json` (#8429a3e)
+
 #### 0.0.5 (2021-10-18)
 
-- Reload $wp_locale late (#5b66f26)
+- Reload $wp_locale late (#c8f6430)
 - Optimize locale and [dir=rtl] (#8660bc5)
 - optimize load_value_acfml_slug (#d218200)
 - Admin UI optimizations for `[dir=rtl]` (#e751aa1)

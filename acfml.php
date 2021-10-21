@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: ACF Multilingual
- * Version: 0.0.5
+ * Version: 1.0.5
  * Author: Rasso Hilber
  * Description: A lightweight solution to support multiple languages with WordPress and Advanced Custom Fields
  * Author URI: https://rassohilber.com
