@@ -78,6 +78,9 @@ export default class ACFML {
       if( !$parent.length ) return init;
       const fieldNameClass = $parent.attr('data-name').split('_').join('-');
       init.body_class += ` acf-wysiwyg--${fieldNameClass}`;
+      // https://www.tiny.cloud/docs-3x/reference/Configuration3x/Configuration3x@directionality/
+      const textDirection = field.get('acfmlTextDirection');
+      init.directionality = textDirection;
       return init;
     })
   }

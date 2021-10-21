@@ -122,6 +122,7 @@ class FieldsController {
         'acfml_term_name'
         ]) ) {
         $wrapper['dir'] = $language_info['text_direction'];
+        $wrapper['data-acfml-text-direction'] = $language_info['text_direction'];
       }
       
       

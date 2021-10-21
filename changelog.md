@@ -1,5 +1,6 @@
 #### 1.0.5 (2021-10-21)
 
+- Add text direction to WYSIWYG editors (#cafb54a)
 - Add `acfml.config.json` (#c576244)
 
 #### 0.0.5 (2021-10-18)
