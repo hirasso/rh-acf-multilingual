@@ -55,6 +55,9 @@ class ACFMultilingual {
    * @return void
    */
   public function initialize() {    
+    
+    // bail early if in WP CLI
+    if( $this->is_wp_cli() ) return;
 
     // Instanciate admin class
     $this->config = new Config($this);
@@ -1313,6 +1316,16 @@ class ACFMultilingual {
       $object = (object) [];
     }
     return json_decode( json_encode( $object ), true );
+  }
+
+  /**
+   * Detect if running WP-CLI
+   *
+   * @return boolean
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function is_wp_cli(): bool {
+    return defined( 'WP_CLI' ) && WP_CLI;
   }
 
 }

@@ -1,6 +1,7 @@
-#### 1.0.5 (2021-10-21)
+#### 1.0.5 (2021-10-27)
 
-- Optimize language tabs in `.media-frame` (#ce71e41)
+- Don't initialize in WP_CLI (#a78a11c)
+- Optimize language tabs in `.media-frame` (#e892c14)
 - Add text direction to WYSIWYG editors (#558523e)
 - Add `acfml.config.json` (#c576244)
 
