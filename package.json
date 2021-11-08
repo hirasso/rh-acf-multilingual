@@ -7,7 +7,7 @@
   "scripts": {
     "preinstall": "git config core.hooksPath .githooks",
     "bundle": "node parcel-bundler.js -f \"assets-src/*.js\" -o \"assets\"",
-    "generate-pot": "node ./lang/acfml-pot.js",
+    "generate-pot": "node ./lang/generate-pot.js",
     "watch": "npm run bundle -- --url https://acf-multilingual.test --sync",
     "build": "npm run bundle -- --production",
     "install-wp-tests": "echo https://make.wordpress.org/cli/handbook/misc/plugin-unit-tests/#3-initialize-the-testing-environment-locally",
