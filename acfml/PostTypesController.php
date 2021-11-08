@@ -101,7 +101,7 @@ class PostTypesController {
     $unsupported_post_types = ["attachment"];
     if( in_array($post_type, $unsupported_post_types) ) return;
     if( !post_type_exists($post_type) ) throw new \ErrorException(
-      sprintf(__('[ACFML] Error: Could not add post type "%s", it does not exist'), $post_type)
+      sprintf(__('[ACFML] Error: Could not add post type "%s", it does not exist', 'acfml'), $post_type)
     );
     // add the post type and it's arguments to the array
     $this->multilingual_post_types[$post_type] = $args;

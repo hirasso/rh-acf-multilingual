@@ -286,7 +286,7 @@ class FieldsController {
     if( !$this->validate_ui_style($ui_style) ) {
       throw new \ErrorException(
         sprintf(
-          __("[ACFML] Unknown field UI style '%s'. Please use %s."), 
+          __("[ACFML] Unknown field UI style '%s'. Please use %s.", 'acfml'), 
           $ui_style,
           $this->make_array_readable($this->available_ui_styles)
         )

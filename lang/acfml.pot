@@ -41,6 +41,14 @@ msgstr ""
 msgid "Multilingual?"
 msgstr ""
 
+#: ../acfml/FieldsController.php:289
+msgid "[ACFML] Unknown field UI style '%s'. Please use %s."
+msgstr ""
+
+#: ../acfml/PostTypesController.php:104
+msgid "[ACFML] Error: Could not add post type \"%s\", it does not exist"
+msgstr ""
+
 #: ../acfml/PostTypesController.php:302
 msgid "Show language in frontend?"
 msgstr ""
