@@ -1,6 +1,7 @@
 #### 1.0.5 (2021-11-08)
 
-- Render a notice for pretty permalinks (#02be10d)
+- Update german translations (#9569f09)
+- Render a notice for pretty permalinks (#0812d35)
 - Don't initialize in WP_CLI (#5e5abd2)
 - Optimize language tabs in `.media-frame` (#e892c14)
 - Add text direction to WYSIWYG editors (#558523e)
