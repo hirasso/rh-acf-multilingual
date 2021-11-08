@@ -1,6 +1,7 @@
-#### 1.0.5 (2021-10-27)
+#### 1.0.5 (2021-11-08)
 
-- Don't initialize in WP_CLI (#a78a11c)
+- Render a notice for pretty permalinks (#02be10d)
+- Don't initialize in WP_CLI (#5e5abd2)
 - Optimize language tabs in `.media-frame` (#e892c14)
 - Add text direction to WYSIWYG editors (#558523e)
 - Add `acfml.config.json` (#c576244)

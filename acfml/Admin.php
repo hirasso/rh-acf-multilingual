@@ -21,6 +21,7 @@ class Admin {
     
     add_action('admin_init', [$this, 'maybe_show_notice_acf_missing']);
     add_action('admin_notices', [$this, 'show_added_notices']);
+
   }
 
   /**
@@ -33,6 +34,7 @@ class Admin {
     add_action('admin_init', [$this, 'maybe_set_admin_language']);
     add_action('admin_init', [$this, 'maybe_show_notice_flush_rewrite_rules']);
     add_action('admin_init', [$this, 'maybe_flush_rewrite_rules']);
+    add_action('admin_init', [$this, 'maybe_show_notice_permalink_structure']);
   }
 
   /**
@@ -236,7 +238,7 @@ class Admin {
    *
    * @return void
    */
-  public function  maybe_show_notice_acf_missing() {
+  public function maybe_show_notice_acf_missing() {
     if( defined('ACF') ) return;
     $locale = determine_locale();
     $message = wp_sprintf(
@@ -245,6 +247,27 @@ class Admin {
     );
     $this->show_notice($message, [
       'type' => 'error'
+    ]);
+  }
+
+  /**
+   * Renders a notice if the permalink_structure is not set
+   *
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function maybe_show_notice_permalink_structure(): void {
+    $structure = get_option( 'permalink_structure' );
+    if( !empty($structure) ) return;
+    $message = wp_sprintf(
+      __("ACF Multilingual needs pretty permalinks to be activated. Please go to your %s and select e.g. 'Post name'.", 'acfml'),
+      wp_sprintf('<a href="%s">%s</a>', 
+        admin_url('options-permalink.php'),
+        __("permalink settings", 'acfml')
+      )
+    );
+    $this->show_notice($message, [
+      'type' => 'warning'
     ]);
   }
 
