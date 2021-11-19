@@ -58,18 +58,22 @@ class ACFMultilingual {
     
     // bail early if in WP CLI
     if( $this->is_wp_cli() ) return;
+    
+    // Instanciate admin class
+    $this->admin = new Admin($this);
 
     // Instanciate admin class
     $this->config = new Config($this);
     $this->config->load();
-    
+    if( !$this->config->is_loaded() ) {
+      $this->admin->show_notice_config_missing();
+      return;
+    }
+
     $this->add_languages($this->config->languages);
     
     // bail early if there are no languages set
     if( empty($this->get_languages()) ) return;
-
-    // Instanciate admin class
-    $this->admin = new Admin($this);
 
     // bail early if ACF is not defined
     if( !defined('ACF') ) return;
@@ -78,7 +82,6 @@ class ACFMultilingual {
     $this->load_textdomain();
 
     add_filter('locale', [$this, 'filter_frontend_locale']);
-    add_action('init', [$this, 'add_multilingual_object_types'], 11);
 
     // hook into after_setup_theme to initialize
     add_action('after_setup_theme', [$this, 'after_setup_theme'], 11);
@@ -133,6 +136,7 @@ class ACFMultilingual {
     add_action('template_redirect', [$this, 'redirect_front_page'], 1);
     add_action('template_redirect', [$this, 'redirect_default_language_urls']);
     add_action('init', [$this, 'save_language_in_cookie']);
+    add_action('init', [$this, 'add_multilingual_object_types'], 11);
 
     // ACF Field Filters
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);

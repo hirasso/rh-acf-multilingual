@@ -10,7 +10,7 @@ class Config {
   public $post_types = null;
   public $taxonomies = null;
 
-  public $is_loaded = false;
+  private $is_loaded = false;
 
   private $acfml = null;
 

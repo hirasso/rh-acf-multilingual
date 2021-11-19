@@ -1,6 +1,7 @@
-#### 1.0.5 (2021-11-08)
+#### 1.0.5 (2021-11-19)
 
-- Rename acfml-pot.js to generate-pot.js (#a1c9b16)
+- Show notice if acfml.config.json is missing (#c6cb849)
+- Rename acfml-pot.js to generate-pot.js (#de8798a)
 - Update german translations (#796ff79)
 - Render a notice for pretty permalinks (#0812d35)
 - Don't initialize in WP_CLI (#5e5abd2)

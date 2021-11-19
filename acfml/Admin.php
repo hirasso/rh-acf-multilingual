@@ -127,7 +127,6 @@ class Admin {
    * @return void
    */
   public function maybe_show_notice_flush_rewrite_rules(): void {
-    $languages = $this->acfml->get_languages();
     
     if( !$this->acfml->settings_have_changed('rewrite_rules') ) return;
 
@@ -265,6 +264,21 @@ class Admin {
         admin_url('options-permalink.php'),
         __("permalink settings", 'acfml')
       )
+    );
+    $this->show_notice($message, [
+      'type' => 'warning'
+    ]);
+  }
+
+  /**
+   * Show a notice if there is no config file
+   *
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function show_notice_config_missing() {
+    $message = wp_sprintf(
+      __("ACF Multilingual needs a config file. Please copy the file <code>acfml.config.sample.json</code> from the plugin root to your theme root, rename it to <code>acfml.config.json</code> and adjust your settings inside.", 'acfml')
     );
     $this->show_notice($message, [
       'type' => 'warning'
