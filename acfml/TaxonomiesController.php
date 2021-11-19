@@ -191,7 +191,7 @@ class TaxonomiesController {
     global $pagenow;
     if( $pagenow === 'term.php' ) return $term;
     $language = $this->acfml->get_current_language();
-    if( $custom_name = get_field($this->field_name, $term) ) {
+    if( $custom_name = get_term_meta($term->term_id, "{$this->field_name}_{$language}", true) ) {
       $term->name = $custom_name;
     }
     return $term;
