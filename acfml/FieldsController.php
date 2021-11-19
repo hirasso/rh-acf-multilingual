@@ -270,7 +270,7 @@ class FieldsController {
   public function after_update_multilingual_value( $value, $post_id, $field, $value_before ) {
     if( !$this->is_acfml_group($field) ) return $value;
     $default_language = $this->acfml->get_default_language();
-    $value = get_field("{$field['name']}_$default_language", $post_id, false);
+    $value = get_post_meta($post_id, "{$field['name']}_$default_language", true);
     return $value;
   }
 

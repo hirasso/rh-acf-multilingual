@@ -1,6 +1,7 @@
 #### 1.0.5 (2021-11-19)
 
-- Show notice if acfml.config.json is missing (#c6cb849)
+- ACF 5.11 compatibility: use `get_post_meta` instead of `get_field` (#bd7bfde)
+- Show notice if acfml.config.json is missing (#d6bee56)
 - Rename acfml-pot.js to generate-pot.js (#de8798a)
 - Update german translations (#796ff79)
 - Render a notice for pretty permalinks (#0812d35)

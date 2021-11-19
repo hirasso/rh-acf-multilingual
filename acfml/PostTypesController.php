@@ -356,7 +356,7 @@ class PostTypesController {
    */
   public function is_language_public(string $lang, int $post_id):bool {
     if( $this->acfml->is_default_language($lang) ) return true;
-    return get_field("acfml_lang_active_$lang", $post_id) !== '0';
+    return get_post_meta($post_id, "acfml_lang_active_$lang", true) !== '0';
   }
 
   /**
@@ -367,9 +367,10 @@ class PostTypesController {
    * @param string
    */
   public function single_post_title($title, $post) {
+    $lang = $this->acfml->get_current_language();
     if( !$post ) return $title;
     $post = get_post($post);
-    $acfml_title = get_field($this->title_field_name, $post->ID);
+    $acfml_title = get_post_meta($post->ID, "{$this->title_field_name}_{$lang}", true);
     return $acfml_title ? $acfml_title : $title;
   }
 
@@ -459,7 +460,7 @@ class PostTypesController {
     // prepare post titles so there is one for every language
     $post_titles = [];
     foreach( $languages as $lang ) {
-      $post_title = trim(get_field("{$this->title_field_name}_{$lang}", $post_id));
+      $post_title = trim(get_post_meta($post_id, "{$this->title_field_name}_{$lang}", true));
       if( !$post_title ) {
         $post_title = $post->post_title;
         update_field("{$this->title_field_name}_{$lang}", $post_title, $post_id);
@@ -471,7 +472,7 @@ class PostTypesController {
     $post_slugs = [];
     foreach( $languages as $lang ) {
       // get the slug from the field
-      $raw_slug = get_field("{$this->slug_field_name}_{$lang}", $post_id);
+      $raw_slug = get_post_meta($post_id, "{$this->slug_field_name}_{$lang}", true);
       if( !$raw_slug ) $raw_slug = $post_titles[$lang];
       // set global locale to current $lang, so that sanitize_title can run on full power
       $locale = $this->acfml->get_language_info($lang)['locale'];
@@ -830,7 +831,7 @@ class PostTypesController {
     if( $this->post_is_front_page($post->ID) ) return $this->acfml->home_url('/', $language);
 
     // check if the language for the requested post is public
-    $acfml_lang_active = get_field("acfml_lang_active_$language", $post->ID);
+    $acfml_lang_active = get_post_meta($post->ID, "acfml_lang_active_$language", true);
     
     if( 
       !$this->acfml->is_default_language($language) 
@@ -894,7 +895,7 @@ class PostTypesController {
    */
   public function get_post_slug( \WP_Post $post, string $language ): ?string {
     if( !$this->is_multilingual_post_type($post->post_type) ) return $post->post_name;
-    $slug = get_field("{$this->slug_field_name}_{$language}", $post->ID);
+    $slug = get_post_meta($post->ID, "{$this->slug_field_name}_{$language}", true);
     if( !$slug && $this->acfml->is_default_language($language) ) $slug = $post->post_name;
     return map_deep(urldecode_deep($slug), 'esc_html');
   }
@@ -980,8 +981,8 @@ class PostTypesController {
       $old_slugs = (array) get_post_meta( $post_id, $old_slug_meta_key );
 
       // overwrite post slugs
-      $post->post_name = get_field("acfml_slug_$lang", $post_id);
-      $post_before->post_name = get_field("acfml_slug_$lang", $post_before->ID);
+      $post->post_name = get_post_meta($post_id, "acfml_slug_$lang", true);
+      $post_before->post_name = get_post_meta($post_before->ID, "acfml_slug_$lang", true);
 
       // If we haven't added this old slug before, add it now.
       if ( ! empty( $post_before->post_name ) && ! in_array( $post_before->post_name, $old_slugs, true ) ) {
