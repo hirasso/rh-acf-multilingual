@@ -1316,9 +1316,7 @@ class ACFMultilingual {
    * @return array
    */
   public function to_array( $object ) {
-    if( !$object ) {
-      $object = (object) [];
-    }
+    if( !$object || $object === true ) return [];
     return json_decode( json_encode( $object ), true );
   }
 

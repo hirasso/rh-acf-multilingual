@@ -1,6 +1,10 @@
+#### 1.1.6 (2021-11-20)
+
+- Allow booleans for post types and taxonomies in `acfml.config.json` (#134e0e7)
+
 #### 1.1.5 (2021-11-19)
 
-- V 1.1.5 (#c8bdc96)
+- V 1.1.5 (#7cdb142)
 
 #### 1.0.5 (2021-11-19)
 
