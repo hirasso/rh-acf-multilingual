@@ -12,6 +12,7 @@
 if( !defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 use ACFML\ACFMultilingual;
+use ACFML\Config;
 
 define( 'ACFML', true );
 define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
@@ -38,7 +39,10 @@ function acfml():ACFMultilingual {
   // Instantiate only once.
   if( isset($acfml) ) return $acfml;
 
-  $acfml = new ACFMultilingual();
+  $config = new Config();
+  $config->load();
+
+  $acfml = new ACFMultilingual($config);
   $acfml->initialize();
 
   return $acfml;

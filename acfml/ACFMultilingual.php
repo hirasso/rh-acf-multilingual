@@ -47,7 +47,9 @@ class ACFMultilingual {
   /**
    * Empty constructor
    */
-  public function  __construct() {}
+  public function  __construct($config) {
+    $this->config = $config;
+  }
 
   /**
    * Intialize function. Instead of the constructor
@@ -62,9 +64,7 @@ class ACFMultilingual {
     // Instanciate admin class
     $this->admin = new Admin($this);
 
-    // Instanciate admin class
-    $this->config = new Config($this);
-    $this->config->load();
+    // Show notice if config is not loaded
     if( !$this->config->is_loaded() ) {
       $this->admin->show_notice_config_missing();
       return;

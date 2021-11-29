@@ -11,21 +11,8 @@ class Config {
   public $taxonomies = null;
 
   private $is_loaded = false;
-
-  private $acfml = null;
-
-  /**
-   * Constructor
-   *
-   * @param ACFMultilingual|null $acfml
-   * @author Rasso Hilber <mail@rassohilber.com>
-   */
-  public function __construct(ACFMultilingual $acfml) {
-
-    // inject main class
-    $this->acfml = $acfml;
-
-  }
+  
+  public function __construct() {}
 
   /**
    * Load the config file
