@@ -1,6 +1,10 @@
+#### 1.1.7 (2021-11-29)
+
+- Only require composer autoload if runnign tests (#82458d9)
+
 #### 1.1.6 (2021-11-29)
 
-- Prepare for testing new config (#d3b308c)
+- Prepare for testing new config (#68155c0)
 - Make running test:php easier (#d16f761)
 - Allow booleans for post types and taxonomies in `acfml.config.json` (#2a61e12)
 

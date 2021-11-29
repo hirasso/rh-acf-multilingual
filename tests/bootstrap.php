@@ -24,9 +24,11 @@ require_once $_tests_dir . '/includes/functions.php';
  */
 function _manually_load_plugins() {
   // require ACF, which is a dependency of ACFML
-  require dirname( dirname( dirname( __FILE__ ) ) ) . '/advanced-custom-fields-pro/acf.php';
+  require_once( dirname( dirname( dirname( __FILE__ ) ) ) . '/advanced-custom-fields-pro/acf.php' );
   // require the main plugin file
-	require dirname( dirname( __FILE__ ) ) . '/acfml.php';
+	require_once( dirname( dirname( __FILE__ ) ) . '/acfml.php' );
+  // autoload Composer packages
+  require_once( ACFML_PATH . 'vendor/autoload.php' );
   // don't autamatically load acfml in tests
   remove_action('plugins_loaded', 'acfml');
 }
