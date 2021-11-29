@@ -1,6 +1,7 @@
 #### 1.1.7 (2021-11-29)
 
-- Only require composer autoload if runnign tests (#82458d9)
+- Add composer to git (#1bdf915)
+- Only require composer autoload if runnign tests (#ba2ef44)
 
 #### 1.1.6 (2021-11-29)
 

@@ -19,7 +19,8 @@ define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
 define( 'ACFML_URL', plugins_url('/', __FILE__) );
 
-require_once(ACFML_PATH . 'api.php');
+require_once( ACFML_PATH . 'vendor/autoload.php' );
+require_once( ACFML_PATH . 'api.php' );
 
 /**
  * acfml

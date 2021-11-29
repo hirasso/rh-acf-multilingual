@@ -27,8 +27,6 @@ function _manually_load_plugins() {
   require_once( dirname( dirname( dirname( __FILE__ ) ) ) . '/advanced-custom-fields-pro/acf.php' );
   // require the main plugin file
 	require_once( dirname( dirname( __FILE__ ) ) . '/acfml.php' );
-  // autoload Composer packages
-  require_once( ACFML_PATH . 'vendor/autoload.php' );
   // don't autamatically load acfml in tests
   remove_action('plugins_loaded', 'acfml');
 }
