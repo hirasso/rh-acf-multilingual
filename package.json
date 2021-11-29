@@ -1,11 +1,12 @@
 {
-  "name": "build-frontend-assets",
+  "name": "acf-multilingual-assets",
+  "author": "Rasso Hilber",
+  "license": "ISC",
   "version": "1.0.0",
   "private": true,
-  "description": "Build process for frontend assets",
   "main": "index.js",
   "scripts": {
-    "preinstall": "git config core.hooksPath .githooks",
+    "preinstall": "npx only-allow pnpm && git config core.hooksPath .githooks",
     "bundle": "node parcel-bundler.js -f \"assets-src/*.js\" -o \"assets\"",
     "generate-pot": "node ./lang/generate-pot.js",
     "watch": "npm run bundle -- --url https://acf-multilingual.test --sync",
@@ -16,18 +17,7 @@
   "babel": {
     "presets": [
       "@babel/preset-env"
-    ],
-    "plugins": [
-      [
-        "@babel/plugin-proposal-class-properties",
-        {},
-        "class-properties"
-      ],
-      "@babel/plugin-transform-runtime"
     ]
-  },
-  "watchreload": {
-    "files": "**/*.php"
   },
   "browserslist": [
     "> 1%",
@@ -36,22 +26,20 @@
   "postcss": {
     "plugins": {
       "autoprefixer": true,
-      "postcss-logical": true
+      "postcss-logical": true,
+      "postcss-dir-pseudo-class": true
     }
   },
-  "author": "Rasso Hilber",
-  "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.9.6",
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-transform-runtime": "^7.9.6",
+    "@babel/preset-env": "^7.16.4",
     "autoprefixer": "^9.7.6",
     "browser-sync": "^2.27.5",
-    "find-parent-dir": "^0.3.0",
+    "cssnano": "^4.1.11",
     "glob": "^7.1.6",
     "minimist": "^1.2.5",
     "parcel-bundler": "^1.12.4",
-    "parcel-plugin-watch-reload": "^1.0.0",
+    "postcss-dir-pseudo-class": "^5.0.0",
     "postcss-logical": "^4.0.2",
     "rimraf": "^3.0.2",
     "sass": "^1.26.5",
