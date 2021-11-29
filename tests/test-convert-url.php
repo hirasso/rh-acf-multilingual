@@ -6,11 +6,12 @@
  */
 
 use ACFML\ACFMultilingual;
+use ACFML\Config;
 
 class ConvertAndResolveUrlsTest extends WP_UnitTestCase {
 
   /**
-  * FieldsController instance
+  * ACFML instance
   *
   * @var ACFMultilingual
   */
@@ -18,18 +19,29 @@ class ConvertAndResolveUrlsTest extends WP_UnitTestCase {
 
   public function setUp() {
     parent::setUp();
+    $this->setup_acfml_instance();
+  }
 
-    $acfml = new ACFMultilingual();
-    $acfml->add_language('en', 'en_US', 'English');
-    $acfml->add_language('de', 'de_DE', 'Deutsch');
-
-    $acfml->initialize();
-    $acfml->maybe_fully_initialize();
-
-    $acfml->post_types_controller->add_post_type('post');
-    $acfml->post_types_controller->add_post_type('page');
+  private function setup_acfml_instance() {
+    $config = $this->createMock(Config::class);
+    $config->languages = (object) [
+      'en' => (object) [
+        'locale' => 'en',
+        'name' => 'English'
+      ],
+      'de' => (object) [
+        'locale' => 'de',
+        'name' => 'Deutsch'
+      ]
+    ];
+    $config->post_types = (object) [
+      'post' => true,
+      'page' => true,
+    ];
+    $config->method('is_loaded')->willReturn(true);
+    $this->acfml = new ACFMultilingual($config);
+    $this->acfml->initialize()->fully_initialize()->add_multilingual_object_types();
     $this->set_permalink_structure('/%postname%/');
-    $this->acfml = $acfml;
   }
 
   public function test_simple_convert_url() {
@@ -50,6 +62,12 @@ class ConvertAndResolveUrlsTest extends WP_UnitTestCase {
 
   }
 
+  public function test_get_multilingual_post_types() {
+    $expected = ['post', 'page'];
+    $result = $this->acfml->post_types_controller->get_multilingual_post_types();
+    $this->assertSame($expected, $result);
+  }
+
   public function test_get_translated_post_permalink() {
     
     // Create a test post. The generated post_name should be 'test-resolve-url'
@@ -57,18 +75,20 @@ class ConvertAndResolveUrlsTest extends WP_UnitTestCase {
       'post_title' => 'Test: Post Permalink'
     ]);
     // Manually insert the required fields for 'de'
+    update_field('acfml_lang_active_de', 1, $post->ID);
     update_field('acfml_slug_de', 'test-eintrags-link', $post->ID);
 
     $this->acfml->switch_to_language('de');
-    $result = get_permalink($post->ID);
     $expected = home_url("/de/test-eintrags-link/");
+    $result = get_permalink($post->ID);
     $this->acfml->reset_language();
 
-    $this->assertSame($result, $expected);
+    $this->assertSame($expected, $result);
     
   }
 
   public function test_get_translated_page_permalink() {
+    
     $granny = self::factory()->post->create_and_get([
       'post_type' => 'page',
       'post_title' => 'Granny',
@@ -92,7 +112,7 @@ class ConvertAndResolveUrlsTest extends WP_UnitTestCase {
     $expected = home_url("/de/grossmutter/mutter/kind/");
     $this->acfml->reset_language();
 
-    $this->assertSame($result, $expected);
+    $this->assertSame($expected, $result);
     
   }
 

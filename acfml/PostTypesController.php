@@ -827,20 +827,12 @@ class PostTypesController {
 
     // convert the permalink's base to the requested $language
     $link_template = $this->acfml->simple_convert_url($link_template, $language);
-
+    
     // if the post is the front page, return home page in requested language
     if( $this->post_is_front_page($post->ID) ) return $this->acfml->home_url('/', $language);
 
-    // check if the language for the requested post is public
-    $acfml_lang_active = get_post_meta($post->ID, "acfml_lang_active_$language", true);
-    
-    if( 
-      !$this->acfml->is_default_language($language) 
-      && $args->check_lang_active 
-      && !is_null($acfml_lang_active)
-      && intval($acfml_lang_active) === 0 ) {
-        return $fallback_url;
-      }
+    // if the language for the post is not active, return fallback url
+    if( $args->check_lang_active && !$this->is_post_lang_active($language, $post) ) return $fallback_url;
 
     // determine post's rewrite tag for %postname% 
     switch( $post->post_type ) {
@@ -869,7 +861,7 @@ class PostTypesController {
       $ancestor = get_post($ancestor_id);
       $segments[] = $this->get_post_slug($ancestor, $language);
     }
-
+    
     // add slug for requested post to segments
     $segments[] = $this->get_post_slug($post, $language);
 
@@ -885,6 +877,24 @@ class PostTypesController {
     $link = str_replace($postname_rewrite_tag, $postname, $link_template);
 
     return $link;
+  }
+
+  /**
+   * Checks if a language of a post is active
+   *
+   * @param string $language
+   * @param \WP_Post $post
+   * @return boolean
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function is_post_lang_active(string $language, \WP_Post $post): bool {
+    // return true for default language
+    if( $this->acfml->is_default_language($language) ) return true;
+    // get value from DB
+    $is_active = get_field("acfml_lang_active_$language", $post->ID);
+    // return true if unset
+    if( in_array($is_active, [null, ""]) ) return true;
+    return intval($is_active) === 1;
   }
 
   /**

@@ -27,6 +27,8 @@ function _manually_load_plugins() {
   require dirname( dirname( dirname( __FILE__ ) ) ) . '/advanced-custom-fields-pro/acf.php';
   // require the main plugin file
 	require dirname( dirname( __FILE__ ) ) . '/acfml.php';
+  // don't autamatically load acfml in tests
+  remove_action('plugins_loaded', 'acfml');
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugins' );
 

@@ -47,19 +47,20 @@ class ACFMultilingual {
   /**
    * Empty constructor
    */
-  public function  __construct($config) {
+  public function __construct(Config $config) {
     $this->config = $config;
   }
 
   /**
    * Intialize function. Instead of the constructor
    *
-   * @return void
+   * @return ACFMultilingual|null
+   * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function initialize() {    
+  public function initialize(): ?ACFMultilingual {    
     
     // bail early if in WP CLI
-    if( $this->is_wp_cli() ) return;
+    if( $this->is_wp_cli() ) return null;
     
     // Instanciate admin class
     $this->admin = new Admin($this);
@@ -67,33 +68,34 @@ class ACFMultilingual {
     // Show notice if config is not loaded
     if( !$this->config->is_loaded() ) {
       $this->admin->show_notice_config_missing();
-      return;
+      return null;
     }
 
     $this->add_languages($this->config->languages);
     
     // bail early if there are no languages set
-    if( empty($this->get_languages()) ) return;
+    if( empty($this->get_languages()) ) return null;
 
     // bail early if ACF is not defined
-    if( !defined('ACF') ) return;
+    if( !defined('ACF') ) return null;
 
     $this->detect_language();
     $this->load_textdomain();
 
     add_filter('locale', [$this, 'filter_frontend_locale']);
+    
+    // hook into after_setup_theme to fully initialize
+    add_action('after_setup_theme', [$this, 'fully_initialize'], 10);
 
-    // hook into after_setup_theme to initialize
-    add_action('after_setup_theme', [$this, 'after_setup_theme'], 11);
-
+    return $this;
   }
 
   /**
    * Fully initializes the plugin after the theme has been set up
    *
-   * @return void
+   * @return ACFMultilingual
    */
-  public function after_setup_theme() {
+  public function fully_initialize(): ACFMultilingual {
     
     // Instanciate classes
     $this->fields_controller = new FieldsController($this);
@@ -106,6 +108,7 @@ class ACFMultilingual {
     $this->admin->add_hooks();
     $this->add_hooks();
 
+    return $this;
   }
 
   /**
@@ -632,7 +635,7 @@ class ACFMultilingual {
     
     $language = $this->get_default_language();
     $lang_GET = $_GET['lang'] ?? '';
-
+    
     if( wp_doing_ajax() && $lang_GET ) { // ajax requests: get language from GET parameter
       $language = $lang_GET;
     } elseif( is_admin() ) { // admin: get language from user setting
@@ -707,6 +710,7 @@ class ACFMultilingual {
     if( !$url ) $url = $this->get_current_url();
     if( !$requested_language ) $requested_language = $this->get_current_language();
 
+    
     // bail early if the URL is not internal
     if( !$this->is_internal_url($url) ) return $url;
 
@@ -720,7 +724,7 @@ class ACFMultilingual {
 
     // bail early if the URL already is in the requested language
     if( $this->get_language_in_url($url) === $requested_language ) return $url;
-    
+
     $untranslated_object_url = null;
     $translated_object_url = null;
     $wp_query = $this->resolve_url($url);
