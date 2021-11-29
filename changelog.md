@@ -1,5 +1,6 @@
-#### 1.1.6 (2021-11-20)
+#### 1.1.6 (2021-11-29)
 
+- Make running test:php easier (#0ce3ec1)
 - Allow booleans for post types and taxonomies in `acfml.config.json` (#2a61e12)
 
 #### 1.1.5 (2021-11-19)

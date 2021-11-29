@@ -12,6 +12,7 @@
     "watch": "npm run bundle -- --url https://acf-multilingual.test --sync",
     "build": "npm run bundle -- --production",
     "install-wp-tests": "echo https://make.wordpress.org/cli/handbook/misc/plugin-unit-tests/#3-initialize-the-testing-environment-locally",
+    "test:prepare": "composer install && bash bin/install-wp-tests.sh wordpress_test root 'root' localhost latest",
     "test:php": "./vendor/bin/phpunit"
   },
   "babel": {
