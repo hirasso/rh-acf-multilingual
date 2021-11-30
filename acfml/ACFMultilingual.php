@@ -80,8 +80,7 @@ class ACFMultilingual {
     // bail early if ACF is not defined
     if( !defined('ACF') ) return null;
 
-    if( is_admin() ) $this->download_language_packs();
-    
+    $this->download_language_packs();
     $this->detect_language();
     $this->load_textdomain();
 
@@ -237,6 +236,15 @@ class ACFMultilingual {
     foreach( $this->get_languages('full') as $language ) {
       $packs[] = wp_download_language_pack($language['locale']);
     }
+
+    /**
+     * After downloading new language packs, WP_Locale_Switcher needs
+     * to be re-initialized, so that it can correctly store the 
+     * new result of get_available_languages()
+     */
+    global $wp_locale_switcher;
+    $wp_locale_switcher = new \WP_Locale_Switcher();
+
     return $packs;
   }
 
@@ -443,8 +451,8 @@ class ACFMultilingual {
    */
   public function get_text_direction( string $locale ): string {
     $direction = 'ltr';
-    
-    switch_to_locale($locale);
+
+    $switched = switch_to_locale($locale);
     if( is_rtl() ) $direction = 'rtl';
     restore_previous_locale();
 

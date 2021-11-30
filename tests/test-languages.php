@@ -52,9 +52,7 @@ class AddGetLanguagesTest extends WP_UnitTestCase {
       ]
     ];
     $acfml = new ACFMultilingual($this->config);
-    $this->is_admin_true();
     $acfml->initialize();
-    $this->is_admin_false();
     $this->assertSame('rtl', $acfml->get_text_direction('ar'));
   }
 

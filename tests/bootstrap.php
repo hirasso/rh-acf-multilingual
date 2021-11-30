@@ -38,6 +38,7 @@ function _cleanup_languages_dir() {
  * Manually load the plugin being tested.
  */
 function _manually_load_plugins() {
+  // Clean up the languages dir before running tests, so we can test downloading them
   _cleanup_languages_dir();
   // require ACF, which is a dependency of ACFML
   require_once( dirname( dirname( dirname( __FILE__ ) ) ) . '/advanced-custom-fields-pro/acf.php' );
@@ -47,26 +48,6 @@ function _manually_load_plugins() {
   remove_action('plugins_loaded', 'acfml');
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugins' );
-
-
-
-/**
- * Loads required language packs,
- * so we can test with them
- *
- * @return void
- * @author Rasso Hilber <mail@rassohilber.com>
- */
-function _download_language_packs() {
-  echo "\nDownloading language packs required in tests...\n\n";
-  require_once ABSPATH . 'wp-admin/includes/file.php';
-  require_once ABSPATH . 'wp-admin/includes/translation-install.php';
-  foreach(['en_US', 'de_DE', 'fr', 'ar'] as $locale) {
-    $result = wp_download_language_pack($locale);
-  }
-  sleep(1);
-}
-// tests_add_filter('init', '_download_language_packs');
 
 function var_dump_exit($thing) {
   var_dump($thing);
