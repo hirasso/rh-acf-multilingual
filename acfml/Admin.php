@@ -48,7 +48,7 @@ class Admin {
    */
   public function add_notice( $key, $message, $args = [] ): void {
     // bail early if not in admin or in ajax
-    if( is_admin() || wp_doing_ajax() ) return;
+    if( !is_admin() || wp_doing_ajax() ) return;
     // create the $notice object
     $notice = wp_parse_args($args, [
       'key' => $key,
