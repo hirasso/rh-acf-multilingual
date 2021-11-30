@@ -19,7 +19,7 @@ class Admin {
     // inject main class
     $this->acfml = $acfml;
     
-    add_action('admin_init', [$this, 'maybe_show_notice_acf_missing']);
+    add_action('admin_init', [$this, 'maybe_add_notice_acf_missing']);
     add_action('admin_notices', [$this, 'show_added_notices']);
 
   }
@@ -32,9 +32,9 @@ class Admin {
   public function add_hooks() {
     add_action('admin_bar_menu', [$this, 'add_admin_bar_menu'], 100);
     add_action('admin_init', [$this, 'maybe_set_admin_language']);
-    add_action('admin_init', [$this, 'maybe_show_notice_flush_rewrite_rules']);
+    add_action('admin_init', [$this, 'maybe_add_notice_flush_rewrite_rules']);
     add_action('admin_init', [$this, 'maybe_flush_rewrite_rules']);
-    add_action('admin_init', [$this, 'maybe_show_notice_permalink_structure']);
+    add_action('admin_init', [$this, 'maybe_add_notice_permalink_structure']);
   }
 
   /**
@@ -46,7 +46,7 @@ class Admin {
    * @param boolean $is_complex
    * @return void
    */
-  public function add_notice( $key, $message, $args = [] ) {
+  public function add_notice( $key, $message, $args = [] ): void {
     // create the $notice object
     $notice = wp_parse_args($args, [
       'key' => $key,
@@ -126,7 +126,7 @@ class Admin {
    *
    * @return void
    */
-  public function maybe_show_notice_flush_rewrite_rules(): void {
+  public function maybe_add_notice_flush_rewrite_rules(): void {
     
     if( !$this->acfml->settings_have_changed('rewrite_rules') ) return;
 
@@ -237,14 +237,14 @@ class Admin {
    *
    * @return void
    */
-  public function maybe_show_notice_acf_missing() {
+  public function maybe_add_notice_acf_missing() {
     if( defined('ACF') ) return;
     $locale = determine_locale();
     $message = wp_sprintf(
       __("ACF Multilingual requires the plugin %s to be installed and activated.", 'acfml'),
       '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>',
     );
-    $this->show_notice($message, [
+    $this->add_notice('acf-missing', $message, [
       'type' => 'error'
     ]);
   }
@@ -255,7 +255,7 @@ class Admin {
    * @return void
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function maybe_show_notice_permalink_structure(): void {
+  public function maybe_add_notice_permalink_structure(): void {
     $structure = get_option( 'permalink_structure' );
     if( !empty($structure) ) return;
     $message = wp_sprintf(
@@ -265,7 +265,7 @@ class Admin {
         __("permalink settings", 'acfml')
       )
     );
-    $this->show_notice($message, [
+    $this->add_notice('permalink-structure', $message, [
       'type' => 'warning'
     ]);
   }
@@ -276,11 +276,11 @@ class Admin {
    * @return void
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function show_notice_config_missing() {
+  public function add_notice_config_missing() {
     $message = wp_sprintf(
       __("ACF Multilingual needs a config file. Please copy the file <code>acfml.config.sample.json</code> from the plugin root to your theme root, rename it to <code>acfml.config.json</code> and adjust your settings inside.", 'acfml')
     );
-    $this->show_notice($message, [
+    $this->add_notice('config-missing', $message, [
       'type' => 'warning'
     ]);
   }

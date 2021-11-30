@@ -67,10 +67,11 @@ class ACFMultilingual {
 
     // Show notice if config is not loaded
     if( !$this->config->is_loaded() ) {
-      $this->admin->show_notice_config_missing();
+      $this->admin->add_notice_config_missing();
       return null;
     }
 
+    // adds the languages
     $this->add_languages($this->config->languages);
     
     // bail early if there are no languages set
@@ -79,6 +80,8 @@ class ACFMultilingual {
     // bail early if ACF is not defined
     if( !defined('ACF') ) return null;
 
+    if( is_admin() ) $this->download_language_packs();
+    
     $this->detect_language();
     $this->load_textdomain();
 
@@ -101,10 +104,9 @@ class ACFMultilingual {
     $this->fields_controller = new FieldsController($this);
     $this->post_types_controller = new PostTypesController($this);
     $this->taxonomies_controller = new TaxonomiesController($this);
-
-    $this->add_text_directions_to_languages();
     
     // run other functions
+    $this->add_text_directions_to_languages();
     $this->admin->add_hooks();
     $this->add_hooks();
 
@@ -130,7 +132,6 @@ class ACFMultilingual {
   private function add_hooks() {
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_style']);
     add_action('acf/input/admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
-    add_action('admin_init', [$this, 'download_language_packs'], 11);
     add_filter('rewrite_rules_array', [$this, 'rewrite_rules_array'], 999);
 
     add_action('wp_head', [$this, 'wp_head']);
@@ -226,14 +227,17 @@ class ACFMultilingual {
   /**
    * Admin init
    *
-   * @return void
+   * @return array
    */
-  public function download_language_packs(): void {
+  public function download_language_packs(): array {
+    $packs = [];
     /** WordPress Translation Installation API */
+    require_once ABSPATH . 'wp-admin/includes/file.php';
     require_once ABSPATH . 'wp-admin/includes/translation-install.php';
     foreach( $this->get_languages('full') as $language ) {
-      wp_download_language_pack($language['locale']);
+      $packs[] = wp_download_language_pack($language['locale']);
     }
+    return $packs;
   }
 
   /**
@@ -397,7 +401,7 @@ class ACFMultilingual {
    */
   private function add_text_directions_to_languages(): void {
     $this->languages = array_map(function($language){
-      $language['text_direction'] = $this->get_text_direction($language['locale']);
+      $language['dir'] = $this->get_text_direction($language['locale']);
       return $language;
     }, $this->get_languages());
   }
@@ -419,7 +423,7 @@ class ACFMultilingual {
       'slug' => $slug,
       'locale' => $locale,
       'name' => $name,
-      'text_direction' => null
+      'dir' => null
     ];
 
     $this->languages[$slug] = $language;
@@ -437,7 +441,7 @@ class ACFMultilingual {
    * @return string
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  private function get_text_direction( string $locale ): string {
+  public function get_text_direction( string $locale ): string {
     $direction = 'ltr';
     
     switch_to_locale($locale);

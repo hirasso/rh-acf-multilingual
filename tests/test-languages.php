@@ -19,7 +19,44 @@ class AddGetLanguagesTest extends WP_UnitTestCase {
     $config->method('is_loaded')->willReturn(true);
     $this->config = $config;
   }
+
+  /**
+   * makes is_admin() return true
+   *
+   * @return boolean
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function is_admin_true() {
+    set_current_screen('edit-post');
+  }
+
+  /**
+   * resets is_admin() to false
+   *
+   * @return boolean
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  private function is_admin_false() {
+    unset( $GLOBALS['current_screen'] );
+  }
   
+  public function test_add_text_direction() {
+    $this->config->languages = (object) [
+      'en' => (object) [
+        'locale' => 'en_US',
+        'name' => 'English'
+      ],
+      'ar' => (object) [
+        'locale' => 'ar',
+        'name' => 'Arabic'
+      ]
+    ];
+    $acfml = new ACFMultilingual($this->config);
+    $this->is_admin_true();
+    $acfml->initialize();
+    $this->is_admin_false();
+    $this->assertSame('rtl', $acfml->get_text_direction('ar'));
+  }
 
   public function test_add_language() {
     $this->config->languages = (object) [
@@ -35,7 +72,7 @@ class AddGetLanguagesTest extends WP_UnitTestCase {
       'slug' => 'en',
       'locale' => 'en',
       'name' => 'English',
-      'text_direction' => 'ltr'
+      'dir' => 'ltr'
     ];
     $this->assertSame($result, $expected);
   }
@@ -61,14 +98,14 @@ class AddGetLanguagesTest extends WP_UnitTestCase {
         'slug' => 'en',
         'locale' => 'en',
         'name' => 'English',
-        'text_direction' => 'ltr',
+        'dir' => 'ltr',
       ),
       'de' => 
       array (
         'slug' => 'de',
         'locale' => 'de',
         'name' => 'Deutsch',
-        'text_direction' => 'ltr',
+        'dir' => 'ltr',
       ),
     );
     $this->assertSame($expected, $result);
@@ -156,12 +193,10 @@ class AddGetLanguagesTest extends WP_UnitTestCase {
         'name' => 'English'
       ]
     ];
-    // makes is_admin() return true
-    set_current_screen('edit-post');
+    $this->is_admin_true();
     $acfml = new ACFMultilingual($this->config);
     $acfml->initialize();
-    // resets is_admin() to false
-    unset( $GLOBALS['current_screen'] );
+    $this->is_admin_false();
     
     $this->assertSame($acfml->get_current_language(), 'en');
   }
