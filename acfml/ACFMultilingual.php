@@ -385,7 +385,7 @@ class ACFMultilingual {
   private function add_languages(?object $languages): void {
     if( empty($languages) ) return;
     foreach( $languages as $key => $language ) {
-      $this->add_language($key, $language->slug ?? null, $language->name ?? null);
+      $this->add_language($key, $language->locale ?? $key, $language->name ?? null);
     }
   }
 
