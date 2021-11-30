@@ -1346,4 +1346,22 @@ class ACFMultilingual {
     return defined( 'WP_CLI' ) && WP_CLI;
   }
 
+  /**
+   * Logs custom messages to debug.log
+   *
+   * @param [type] $log
+   * @param string $log_file
+   * @return void
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function log( $log, $log_file = 'debug.log' ) {
+    if( is_array($log) || is_object($log) ) {
+      $log = print_r($log, true);
+    }
+    $dir = WP_CONTENT_DIR;
+    if (!is_dir($dir)) mkdir($dir);
+    $path = "$dir/$log_file";
+    file_put_contents($path, "\n$log", FILE_APPEND);
+  }
+
 }
