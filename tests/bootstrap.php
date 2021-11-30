@@ -26,24 +26,19 @@ require_once $_tests_dir . '/includes/functions.php';
  * @return void
  * @author Rasso Hilber <mail@rassohilber.com>
  */
-function _delete_directory(string $path) {
+function _cleanup_languages_dir() {
   echo "\nCleaning up languages directory...\n\n";
-  // make it work in the frontend, as well
   require_once ABSPATH . 'wp-admin/includes/file.php';
-  // this variable will hold the selected filesystem class
   global $wp_filesystem;
-  // this function selects the appropriate filesystem class
   WP_Filesystem();
-  // finally, you can call the 'delete' function on the selected class,
-  // which is now stored in the global '$wp_filesystem'
-  $wp_filesystem->delete($path, true);
+  $wp_filesystem->delete(WP_LANG_DIR, true);
 }
 
 /**
  * Manually load the plugin being tested.
  */
 function _manually_load_plugins() {
-  // _delete_directory(WP_LANG_DIR);
+  _cleanup_languages_dir();
   // require ACF, which is a dependency of ACFML
   require_once( dirname( dirname( dirname( __FILE__ ) ) ) . '/advanced-custom-fields-pro/acf.php' );
   // require the main plugin file
