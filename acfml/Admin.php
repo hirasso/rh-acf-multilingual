@@ -47,6 +47,8 @@ class Admin {
    * @return void
    */
   public function add_notice( $key, $message, $args = [] ): void {
+    // bail early if not in admin or in ajax
+    if( is_admin() || wp_doing_ajax() ) return;
     // create the $notice object
     $notice = wp_parse_args($args, [
       'key' => $key,
@@ -54,7 +56,6 @@ class Admin {
       'type' => 'warning', 
       'is_dismissible' => false,
     ]);
-    
     // add the notice to the transient
     $notices = get_transient($this->get_transient_name()) ?: [];
     $notices[$key] = $notice;
@@ -77,12 +78,12 @@ class Admin {
    * @return void
    */
   public function show_added_notices() {
-    if( !defined('ACF') ) return;
     $notices = get_transient($this->get_transient_name()) ?: [];
+    delete_transient($this->get_transient_name());
+    if( !defined('ACF') ) return;
     foreach( $notices as $notice ) {
       $this->show_notice($notice['message'], $notice);
     }
-    delete_transient($this->get_transient_name());
   }
 
   /**
@@ -166,7 +167,6 @@ class Admin {
    * @return void
    */
   public function add_admin_bar_menu(\WP_Admin_Bar $wp_adminbar) {
-
     $current_language = $this->acfml->get_language_info($this->acfml->get_current_language());
 
     $icon = "<span class='ab-icon acfml-ab-icon dashicons dashicons-translation'></span>";
