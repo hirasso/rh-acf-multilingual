@@ -1,6 +1,19 @@
-#### 1.1.7 (2021-11-29)
+#### 1.1.9 (2021-12-01)
 
-- Add composer to git (#1bdf915)
+- Update acfml.config.sample.json (#fcc1397)
+- Fix check in `Admin->add_notice()` (#f58a9ec)
+- Don't add notices and warnings if not in admin (#0a8a51a)
+- Add function `log` (#45c2f68)
+- Finally fix detection of text_direction in some cases (#90d8dde)
+
+#### 1.1.8 (2021-11-30)
+
+- Add function to clean up WP_LANG_DIR when running tests (#8930c34)
+
+#### 1.1.7 (2021-11-30)
+
+- Fix wrong locale in some cases (#dd2545d)
+- Add composer to git (#ff1ddf3)
 - Only require composer autoload if runnign tests (#ba2ef44)
 
 #### 1.1.6 (2021-11-29)

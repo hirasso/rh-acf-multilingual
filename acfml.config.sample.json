@@ -1,16 +1,16 @@
 {
   "languages": {
     "en": {
-      "locale": "en",
+      "locale": "en_US",
       "name": "English"
     },
     "de": {
-      "locale": "de",
+      "locale": "de_DE",
       "name": "Deutsch"
     }
   },
   "post_types": {
-    "page": {},
+    "page": true,
     "project": {
       "de": {
         "rewrite_slug": "projekt",
@@ -19,6 +19,6 @@
     }
   },
   "taxonomies": {
-    "filters": {}
+    "filters": true
   }
 }
