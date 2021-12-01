@@ -1,6 +1,7 @@
 #### 1.1.9 (2021-12-01)
 
-- New faster approach for re-processing posts if settings changed (#3fce0e5)
+- Optimize admin notices (#30ac91b)
+- New faster approach for re-processing posts if settings changed (#c89ef86)
 - Update acfml.config.sample.json (#789485b)
 - Fix check in `Admin->add_notice()` (#f58a9ec)
 - Don't add notices and warnings if not in admin (#0a8a51a)

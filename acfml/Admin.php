@@ -19,7 +19,7 @@ class Admin {
     // inject main class
     $this->acfml = $acfml;
     
-    add_action('admin_init', [$this, 'maybe_add_notice_acf_missing']);
+    add_action('admin_notices', [$this, 'maybe_add_notice_acf_missing'], 9);
     add_action('admin_notices', [$this, 'show_added_notices']);
 
   }
@@ -80,7 +80,6 @@ class Admin {
   public function show_added_notices() {
     $notices = get_transient($this->get_transient_name()) ?: [];
     delete_transient($this->get_transient_name());
-    if( !defined('ACF') ) return;
     foreach( $notices as $notice ) {
       $this->show_notice($notice['message'], $notice);
     }
@@ -151,10 +150,7 @@ class Admin {
     // add success notice
     $this->add_notice(
       'flush-rewrite-rules',
-      wp_sprintf( 
-        __('%s Rewrite Rules successfully flushed', 'acfml'),
-        '[ACFML]'
-      ),
+      __('[ACFML] Rewrite Rules successfully flushed', 'acfml'),
       [
         'type' => 'success',
         'is_dismissible' => true
@@ -249,7 +245,6 @@ class Admin {
    */
   public function maybe_add_notice_acf_missing() {
     if( defined('ACF') ) return;
-    $locale = determine_locale();
     $message = wp_sprintf(
       __("ACF Multilingual requires the plugin %s to be installed and activated.", 'acfml'),
       '<a href="https://www.advancedcustomfields.com/" target="_blank">Advanced Custom Fields</a>',
@@ -269,7 +264,7 @@ class Admin {
     $structure = get_option( 'permalink_structure' );
     if( !empty($structure) ) return;
     $message = wp_sprintf(
-      __("ACF Multilingual needs pretty permalinks to be activated. Please go to your %s and select e.g. 'Post name'.", 'acfml'),
+      __("[ACFML] Pretty permalinks need to be activated. Please go to your %s and select e.g. 'Post name'.", 'acfml'),
       wp_sprintf('<a href="%s">%s</a>', 
         admin_url('options-permalink.php'),
         __("permalink settings", 'acfml')
@@ -288,7 +283,7 @@ class Admin {
    */
   public function add_notice_config_missing() {
     $message = wp_sprintf(
-      __("ACF Multilingual needs a config file. Please copy the file <code>acfml.config.sample.json</code> from the plugin root to your theme root, rename it to <code>acfml.config.json</code> and adjust your settings inside.", 'acfml')
+      __("[ACFML] No config file found. Please copy the file <code>acfml.config.sample.json</code> from the plugin root to your theme root, rename it to <code>acfml.config.json</code> and adjust your settings inside.", 'acfml')
     );
     $this->add_notice('config-missing', $message, [
       'type' => 'warning'

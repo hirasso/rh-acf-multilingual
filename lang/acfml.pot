@@ -13,28 +13,32 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../acfml/Admin.php:152
-msgid "Rewrite Rules successfully flushed"
+#: ../acfml/Admin.php:153
+msgid "[ACFML] Rewrite Rules successfully flushed"
 msgstr ""
 
-#: ../acfml/Admin.php:180
+#: ../acfml/Admin.php:185
 msgid "Switch your admin language"
 msgstr ""
 
-#: ../acfml/Admin.php:193
+#: ../acfml/Admin.php:198
 msgid "Switch to %s"
 msgstr ""
 
-#: ../acfml/Admin.php:245
+#: ../acfml/Admin.php:249
 msgid "ACF Multilingual requires the plugin %s to be installed and activated."
 msgstr ""
 
-#: ../acfml/Admin.php:263
-msgid "ACF Multilingual needs pretty permalinks to be activated. Please go to your %s and select e.g. 'Post name'."
+#: ../acfml/Admin.php:267
+msgid "[ACFML] Pretty permalinks need to be activated. Please go to your %s and select e.g. 'Post name'."
 msgstr ""
 
-#: ../acfml/Admin.php:266
+#: ../acfml/Admin.php:270
 msgid "permalink settings"
+msgstr ""
+
+#: ../acfml/Admin.php:286
+msgid "[ACFML] No config file found. Please copy the file <code>acfml.config.sample.json</code> from the plugin root to your theme root, rename it to <code>acfml.config.json</code> and adjust your settings inside."
 msgstr ""
 
 #: ../acfml/FieldsController.php:66
@@ -61,28 +65,20 @@ msgstr ""
 msgid "Leave empty to generate the link from title"
 msgstr ""
 
-#: ../acfml/PostTypesController.php:1090
-msgid "ACF Multilingual successfully processed %s %s."
+#: ../acfml/PostTypesController.php:1080
+msgid "[ACFML] Successfully processed %s %s."
 msgstr ""
 
-#: ../acfml/PostTypesController.php:1092
+#: ../acfml/PostTypesController.php:1082
 msgid "post"
 msgid_plural "posts"
 msgstr[0] ""
 msgstr[1] ""
 
 #: ../templates/notice-flush-rewrite-rules.php:1
-msgid "ACF Multilingual detected a change in your settings and needs to flush your rewrite rules."
+msgid "[ACFML] Your settings have changed."
 msgstr ""
 
 #: ../templates/notice-flush-rewrite-rules.php:4
-msgid "Flush Rewrite Rules Now"
-msgstr ""
-
-#: ../templates/notice-needs-resave-posts.php:1
-msgid "ACF Multilingual needs to process some of your existing posts to make them available in all languages."
-msgstr ""
-
-#: ../templates/notice-needs-resave-posts.php:4
-msgid "Process now"
+msgid "Flush Rewrite Rules and Reprocess Posts"
 msgstr ""

@@ -1077,8 +1077,7 @@ class PostTypesController {
     $this->acfml->admin->add_notice(
       'resave-posts',
       wp_sprintf( 
-        __('%s Successfully processed %s %s.', 'acfml'), 
-        '[ACFML]',
+        __('[ACFML] Successfully processed %s %s.', 'acfml'), 
         number_format_i18n($resaved_posts_count),
         _n( 'post', 'posts', $resaved_posts_count, 'acfml' )
       ),
