@@ -1309,7 +1309,7 @@ class ACFMultilingual {
   public function settings_have_changed(string $postfix): bool {
     $hashed_settings = $this->get_hashed_settings();
     // uncomment to debug
-    // delete_option('acfml_hashed_settings');
+    // delete_option("acfml_hashed_settings_$postfix");
     return !hash_equals($hashed_settings, (string) get_option("acfml_hashed_settings_$postfix"));
   }
 

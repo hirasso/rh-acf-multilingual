@@ -145,19 +145,29 @@ class Admin {
    * @return void
    */
   public function maybe_flush_rewrite_rules() {
+    // verify nonce
     if( !$this->verify_nonce('acfml_flush_rewrite_rules') ) return;
+
     // add success notice
     $this->add_notice(
       'flush-rewrite-rules',
-      __('Rewrite Rules successfully flushed', 'acfml'),
+      wp_sprintf( 
+        __('%s Rewrite Rules successfully flushed', 'acfml'),
+        '[ACFML]'
+      ),
       [
         'type' => 'success',
         'is_dismissible' => true
       ]
     );
+
+    // save the current settings
     $this->acfml->save_hashed_settings('rewrite_rules');
+
     // flush the rules
     flush_rewrite_rules();
+    // trigger action
+    do_action('acfml/flush_rewrite_rules');
   }
 
   /**

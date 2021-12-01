@@ -68,8 +68,7 @@ class PostTypesController {
 
     add_action('save_post', [$this, 'save_post'], 20);
 
-    add_action('admin_init', [$this, 'maybe_show_notice_needs_resave_posts']);
-    add_action('admin_init', [$this, 'maybe_resave_posts']);
+    add_action('acfml/flush_rewrite_rules', [$this, 'maybe_resave_posts']);
     add_action('init', [$this, 'setup_acf_fields'], 12);
     
   }
@@ -1065,41 +1064,21 @@ class PostTypesController {
   }
 
   /**
-   * Maybe show a notice that posts need to be re-saved
-   *
-   * @return void
-   */
-  public function maybe_show_notice_needs_resave_posts() {
-
-    foreach( $this->acfml->get_languages('slug') as $lang ) {
-      $posts = $this->find_posts_with_missing_data($lang, 1);
-      if( count($posts) ) {
-        $this->acfml->admin->add_notice(
-          'resave-posts',
-          $this->acfml->get_template('notice-needs-resave-posts', null, false),
-        );
-        break;
-      }
-    }
-    
-  }
-
-  /**
-   * Maybe re-save posts on admin init
+   * Maybe re-save posts
    *
    * @return void
    */
   public function maybe_resave_posts() {
-    // check nonce
-    if( !$this->acfml->admin->verify_nonce('acfml_nonce_resave_posts') ) return;
     
-    $resaved_posts_count = $this->resave_posts();
+    $resaved_posts_count = $this->resave_all_posts();
+    if( $resaved_posts_count === 0 ) return;
 
     // add success message
     $this->acfml->admin->add_notice(
       'resave-posts',
       wp_sprintf( 
-        __('ACF Multilingual successfully processed %s %s.', 'acfml'), 
+        __('%s Successfully processed %s %s.', 'acfml'), 
+        '[ACFML]',
         number_format_i18n($resaved_posts_count),
         _n( 'post', 'posts', $resaved_posts_count, 'acfml' )
       ),
@@ -1116,7 +1095,7 @@ class PostTypesController {
    * @return int resaved posts amount
    * @author Rasso Hilber <mail@rassohilber.com>
    */
-  public function resave_posts(): int {
+  public function resave_posts_with_missing_data(): int {
     // find posts with empty slugs for each language
     $post_ids = [];
     foreach( $this->acfml->get_languages('slug') as $lang ) {
@@ -1136,20 +1115,22 @@ class PostTypesController {
   /**
    * Resave ALL posts
    *
-   * @return void
+   * @return int
    */
-  public function resave_all_posts(): void {
+  public function resave_all_posts(): int {
     $post_ids = get_posts([
       'post_type' => $this->get_multilingual_post_types(),
       'posts_per_page' => -1,
       'fields' => 'ids',
     ]);
+    $amount = count($post_ids);
     // bail early if no posts were found
-    if( !count($post_ids) ) return;
+    if( !$amount ) return $amount;
     // trigger save_post for each post with empty slugs
     foreach( $post_ids as $post_id ) {
       $this->save_post($post_id);
     }
+    return $amount;
   }
 
   /**
