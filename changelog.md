@@ -1,6 +1,10 @@
+#### 1.2.0 (2021-12-02)
+
+- V 1.2.0 (#4870b61)
+
 #### 1.1.9 (2021-12-02)
 
-- Fix Admin Cookies causing a 431 (#b855ac8)
+- Fix Admin Cookies causing a 431 (#5e69580)
 - Shorten the admin cookies hash (#6cc686f)
 - Optimize admin notices (#f7707d3)
 - New faster approach for re-processing posts if settings changed (#c89ef86)
