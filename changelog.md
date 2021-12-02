@@ -1,6 +1,7 @@
 #### 1.1.9 (2021-12-02)
 
-- Shorten the admin cookies hash (#a56e72b)
+- Fix Admin Cookies causing a 431 (#b855ac8)
+- Shorten the admin cookies hash (#6cc686f)
 - Optimize admin notices (#f7707d3)
 - New faster approach for re-processing posts if settings changed (#c89ef86)
 - Update acfml.config.sample.json (#789485b)

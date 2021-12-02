@@ -39,7 +39,7 @@ export default class ACFML {
     });
     // store active language tabs before submitting a form or reloading the page
     window.addEventListener('beforeunload', () => this.storeActiveLanguageTabs());
-    this.removeFromStore('acfml_language_tabs');
+    this.deleteLanguageTabsCookies();
   }
 
   /**
@@ -136,6 +136,16 @@ export default class ACFML {
   }
 
   /**
+   * Deletes all language tabs Cookies
+   */
+  deleteLanguageTabsCookies() {
+    const storedLanguageTabs = Object.keys(Cookie.getAll()).filter(key => key.startsWith('acfml_language_tabs_'));
+    for(const key of storedLanguageTabs ) {
+      Cookie.delete(key);
+    }
+  }
+
+  /**
    * Stores something in session storage
    * 
    * @param {string} key 
@@ -151,7 +161,8 @@ export default class ACFML {
    * @param {string} key 
    */
   removeFromStore(key) {
-    Cookie.delete(this.getStorageKey(key));
+    
+    // Cookie.delete(this.getStorageKey(key));
     // sessionStorage.removeItem(this.getStorageKey(key));
   }
 
