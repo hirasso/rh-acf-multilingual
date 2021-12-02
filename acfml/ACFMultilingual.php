@@ -289,10 +289,10 @@ class ACFMultilingual {
    *
    * @return string
    */
-  private function get_cookie_hash_for_current_uri() {
+  public function get_cookie_hash_for_current_uri() {
     $uri = $_SERVER['REQUEST_URI'];
     $uri = remove_query_arg('message', $uri);
-    return hash("sha512", $uri);
+    return hash("sha256", $uri);
   }
 
   /**

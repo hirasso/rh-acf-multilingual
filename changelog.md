@@ -1,6 +1,7 @@
-#### 1.1.9 (2021-12-01)
+#### 1.1.9 (2021-12-02)
 
-- Optimize admin notices (#30ac91b)
+- Shorten the admin cookies hash (#a56e72b)
+- Optimize admin notices (#f7707d3)
 - New faster approach for re-processing posts if settings changed (#c89ef86)
 - Update acfml.config.sample.json (#789485b)
 - Fix check in `Admin->add_notice()` (#f58a9ec)
