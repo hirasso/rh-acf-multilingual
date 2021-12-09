@@ -140,6 +140,7 @@ class ACFMultilingual {
     add_action('template_redirect', [$this, 'redirect_default_language_urls']);
     add_action('init', [$this, 'save_language_in_cookie']);
     add_action('init', [$this, 'add_multilingual_object_types'], 11);
+    add_filter('language_attributes', [$this, 'language_attributes'], 10, 2);
 
     // ACF Field Filters
     add_filter('acf/format_value/type=wysiwyg', [$this, 'format_acf_field_wysiwyg'], 11);
@@ -152,6 +153,7 @@ class ACFMultilingual {
 
     // add current language to admin-ajax.php 
     add_filter('admin_url', [$this, 'convert_admin_ajax_url'], 10, 3);
+
   }
 
   /*
@@ -1362,6 +1364,23 @@ class ACFMultilingual {
     if (!is_dir($dir)) mkdir($dir);
     $path = "$dir/$log_file";
     file_put_contents($path, "\n$log", FILE_APPEND);
+  }
+
+  /**
+   * Filter the language attributes to possibly add 'dir="ltr"' 
+   *
+   * Enables full support for postcss-logical and postcss-dir-pseudo-class
+   * 
+   * @param string $output
+   * @param string $doctype
+   * @return string
+   * @author Rasso Hilber <mail@rassohilber.com>
+   */
+  public function language_attributes(string $output, string $doctype): string {
+    if( $doctype !== 'html' ) return $output;
+    if( function_exists( 'is_rtl' ) && is_rtl() ) return $output;
+    if( strpos($output, 'dir=') !== false ) return $output;
+    return "dir=\"ltr\" $output";
   }
 
 }
