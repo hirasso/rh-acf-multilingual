@@ -359,9 +359,9 @@ class FieldsController {
     <div class="acfml-tabs-wrap">
       <div class="acfml-tabs acf-js-tooltip" title="<?= __('Double-click to switch globally', $this->prefix) ?>">
       <?php foreach( $languages as $id => $language ) : ?>
-      <a href="##" class="acfml-tab <?= $language['slug'] === $default_field_language ? 'is-active' : '' ?>" data-language="<?= $language['slug'] ?>">
+      <button class="acfml-tab <?= $language['slug'] === $default_field_language ? 'is-active' : '' ?>" data-language="<?= $language['slug'] ?>">
         <?= $language['name'] ?>
-      </a>
+      </button>
       <?php endforeach; ?>
       </div>
     </div>

@@ -48,41 +48,53 @@
   display: flex;
   flex-wrap: wrap;
   position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  --acfml-border: 1px solid rgba(0,0,0,0.2);
+}
+.acfml-tabs:after {
+  content: "";
+  display: block;
+  pointer-events: none;
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  border-radius: 3px;
+  border: var(--acfml-border);
 }
 [dir=rtl] .acfml-tabs {
   flex-direction: row-reverse;
 }
 .acfml-tab,
 .media-frame .acfml-tab {
+  appearance: none;
+  border: none;
   cursor: pointer;
   display: block;
+  position: relative;
   color: rgb(68,68,68);
   text-decoration: none;
-  border: 1px solid #7e8993;
-  height: 1.8em;
-  line-height: 1.7;
-  padding: 0 0.5em;
-  z-index: 1;
+  background: transparent;
+  white-space: nowrap;
+  padding: 0.3em 0.7em 0.4em;
+  z-index: 0;
   @include hover {
-    color: #016087;
-    background: #f3f5f6;
-    border-color: #0071a1;
-    z-index: 2;
+    color: var(--acfml-button-primary-background, #016087);
+    background: rgba(0,0,0,0.05);
   }
   &.is-active {
-    border-color: #007cba;
-    background: #008dd4;
-    color: white !important;
+    background: var(--acfml-button-primary-background, #008dd4);
+    color: var(--acfml-button-primary-color, #008dd4);
+    z-index: 1;
   }
 }
-.acfml-tab + .acfml-tab {
-  border-left: none;
-}
-.acfml-tab:first-of-type {
-  border-radius: 3px 0 0 3px;
-}
-.acfml-tab:last-of-type {
-  border-radius: 0 3px 3px 0;
+.acfml-tab:not(.is-active) + .acfml-tab:not(.is-active):before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset-block: 1px;
+  inset-inline: 0 auto;
+  border-left: var(--acfml-border);
 }
 .acfml-info-icon {
   color: rgba(0,0,0,0.3);

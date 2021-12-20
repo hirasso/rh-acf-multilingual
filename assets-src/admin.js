@@ -7,11 +7,37 @@ import './scss/admin.scss';
 export default class ACFML {
 
   constructor() {
+    this.injectColorThemeVars()
     this.initMultilingualWysiwyg();
     this.initMultilingualPostTitle();
     this.initMultilingualTermName();
     this.initLanguageTabs();
     this.initValidationHandling();
+  }
+
+  /**
+   * Injects custom color theme css variables
+   */
+  injectColorThemeVars() {
+    const button = document.createElement('a')
+    button.classList.add('button', 'button-primary')
+    document.body.prepend(button)
+    const buttonStyle = window.getComputedStyle(button)
+    this.setCssVar('--acfml-button-primary-color', buttonStyle.color)
+    this.setCssVar('--acfml-button-primary-background', buttonStyle.backgroundColor)
+    button.remove()
+    const bodyStyle = window.getComputedStyle(document.body)
+    this.setCssVar('--acfml-body-background', bodyStyle.backgroundColor)
+  }
+
+  /**
+   * Sets a css var on the documentElement
+   * 
+   * @param {string} name 
+   * @param {string} value 
+   */
+  setCssVar(name, value) {
+    document.documentElement.style.setProperty(name, value)
   }
 
   /**
