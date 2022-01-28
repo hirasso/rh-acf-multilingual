@@ -1,6 +1,6 @@
 #### 1.2.2 (2021-12-20)
 
-- Support custom user color schemes (#7930ba6)
+- Support custom user color schemes (#d34d156)
 
 #### 1.2.1 (2021-12-09)
 

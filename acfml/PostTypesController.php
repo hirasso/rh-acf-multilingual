@@ -1021,49 +1021,6 @@ class PostTypesController {
   }
 
   /**
-   * Find posts with empty slug in a language
-   *
-   * @param string $language
-   * @param integer $posts_per_page
-   * @return array
-   */
-  private function find_posts_with_missing_data(string $language, $posts_per_page): array {
-    $posts = get_posts([
-      'post_type' => $this->get_multilingual_post_types(),
-      'meta_query' => [
-        'relation' => 'OR',
-        [
-          'key' => "{$this->title_field_name}_{$language}",
-          'value' => ''
-        ],
-        [
-          'key' => "{$this->title_field_name}_{$language}",
-          'compare' => 'NOT EXISTS'
-        ],
-        [
-          'key' => "{$this->slug_field_name}_{$language}",
-          'value' => ''
-        ],
-        [
-          'key' => "{$this->slug_field_name}_{$language}",
-          'compare' => 'NOT EXISTS'
-        ],
-        [
-          'key' => "acfml_lang_active_{$language}",
-          'value' => ''
-        ],
-        [
-          'key' => "acfml_lang_active_{$language}",
-          'compare' => 'NOT EXISTS'
-        ],
-      ],
-      'posts_per_page' => $posts_per_page,
-      'fields' => 'ids',
-    ]);
-    return $posts;
-  }
-
-  /**
    * Maybe re-save posts
    *
    * @return void
@@ -1086,29 +1043,6 @@ class PostTypesController {
         'is_dismissible' => true
       ]
     );
-  }
-
-  /**
-   * Re-save all posts that have data missing
-   *
-   * @return int resaved posts amount
-   * @author Rasso Hilber <mail@rassohilber.com>
-   */
-  public function resave_posts_with_missing_data(): int {
-    // find posts with empty slugs for each language
-    $post_ids = [];
-    foreach( $this->acfml->get_languages('slug') as $lang ) {
-      $posts = $this->find_posts_with_missing_data($lang, -1);
-      $post_ids = array_unique(array_merge($post_ids, $posts));
-    }
-    $count = count($post_ids);
-    // bail early if no posts were found
-    if( !$count ) return $count;
-    // trigger save_post for each post with empty slugs
-    foreach( $post_ids as $post_id ) {
-      $this->save_post($post_id);
-    }
-    return $count;
   }
 
   /**
