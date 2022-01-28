@@ -1,3 +1,7 @@
+#### 1.2.3 (2022-01-28)
+
+- Update PHPUnit (#19cdad6)
+
 #### 1.2.2 (2021-12-20)
 
 - Support custom user color schemes (#d34d156)
