@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace ACFML;
 
@@ -74,7 +74,7 @@ class FieldsController {
 
   /**
    * Load multilingual fields. If a field's 'acfml_multilingual' setting is set to 'true', then:
-   * 
+   *
    *    - create one sub-field for each language with the same type of the field (e.g. text, textarea, ...)
    *    - create a field of type 'group' that will hold the different sub-fields
    *    – if the field is set to 'required', set the sub-field for the default language to required,
@@ -85,7 +85,7 @@ class FieldsController {
    */
   public function load_multilingual_field( $field ) {
     global $post, $post_type;
-    
+
     // return of no $field
     if( !is_array($field) ) return $field;
     // return of on acf-field-group edit screen
@@ -93,7 +93,7 @@ class FieldsController {
     if( $post_type === 'acf-field-group' ) return $field;
     // bail early if the field is not multilingual
     if( empty($field['acfml_multilingual']) ) return $field;
-    
+
     $active_language_tab = $this->get_active_language_tab($field);
     $required_all = $field['acfml_all_required'] ?? false;
 
@@ -111,22 +111,21 @@ class FieldsController {
     $sub_fields = [];
     $languages = $this->acfml->get_languages();
     foreach( $languages as $lang => $language_info ) {
-      
+
       // prepare wrapper
       $wrapper = $field['wrapper'];
       $wrapper['class'] .= ' acfml-field';
       if( !in_array($field['name'], [
-        'acfml_post_title', 
-        'acfml_slug', 
+        'acfml_post_title',
+        'acfml_slug',
         'acfml_lang_active',
         'acfml_term_name'
         ]) ) {
         $wrapper['dir'] = $language_info['dir'];
         $wrapper['data-acfml-text-direction'] = $language_info['dir'];
       }
-      
-      
-      if( $lang === $active_language_tab || $ui_style !== 'tabs' ) $wrapper['class'] .= ' acfml-is-visible';
+
+      if( $ui_style === 'tabs' && $lang === $active_language_tab ) $wrapper['class'] .= ' acfml-is-visible';
       if( !empty($wrapper['id']) ) $wrapper['id'] = "{$wrapper['id']}--{$lang}";
       $wrapper['width'] = '';
       // prepare subfield
@@ -143,11 +142,11 @@ class FieldsController {
         'acfml_field_is_hidden' => $ui_style === 'tabs' && !$this->acfml->is_default_language($lang),
         'wrapper' => $wrapper,
       ]);
-      
+
       // add the subfield
       $sub_fields[] = $sub_field;
     }
-    
+
     // Add 'required'-indicator to the groups label, if it is set to required
     $label = $field['label'];
     if( $field['required'] ) $label .= " <span class=\"acf-required\">*</span>";
@@ -155,7 +154,7 @@ class FieldsController {
     $field_classes[] = "acfml-multilingual-field";
     $field_classes[] = "acfml-ui-style--$ui_style";
     // Change the $field to a group that will hold all sub-fields for all languages
-    
+
     $field = array_merge( $field, [
       'label' => $label,
       'type' => 'group',
@@ -187,11 +186,11 @@ class FieldsController {
     if( !$this->is_acfml_group($field) ) return $value;
     // bail early if no value or array
     if( !$value || is_array($value) ) return $value;
-    
+
     $default_language = $this->acfml->get_default_language();
     // This field's value will be autofilled by the monolingual value
     $hook_name = "acf/load_value/key={$field['key']}_$default_language";
-    // A self-erasing hook, since filters would add up 
+    // A self-erasing hook, since filters would add up
     // inside a repeater or flexible content field.
     // https://gist.github.com/stevegrunwell/c8307af5b88310ac1c49f6fa91f62bcb
     $self_erasing_hook = function() use ($value, $hook_name, &$self_erasing_hook) {
@@ -199,7 +198,7 @@ class FieldsController {
       return $value;
     };
     add_filter($hook_name, $self_erasing_hook);
-    
+
     return $value;
   }
 
@@ -286,7 +285,7 @@ class FieldsController {
     if( !$this->validate_ui_style($ui_style) ) {
       throw new \ErrorException(
         sprintf(
-          __("[ACFML] Unknown field UI style '%s'. Please use %s.", 'acfml'), 
+          __("[ACFML] Unknown field UI style '%s'. Please use %s.", 'acfml'),
           $ui_style,
           $this->make_array_readable($this->available_ui_styles)
         )
@@ -343,7 +342,7 @@ class FieldsController {
     if( $this->get_field_ui_style($field) === 'tabs' ) {
       $this->render_language_tabs($languages, $default_field_language);
     }
-    
+
   }
 
   /**
@@ -406,10 +405,10 @@ class FieldsController {
     if( !empty($field['acfml_field_language']) ) {
       $wrapper['data-acfml-field-language'] = $field['acfml_field_language'];
     }
-    
+
     return $wrapper;
   }
-  
+
   /**
    * Sets delayed initialization to true for hidden acfml wysiwyg fields
    *

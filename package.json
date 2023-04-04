@@ -32,18 +32,18 @@
     }
   },
   "devDependencies": {
-    "@babel/core": "^7.9.6",
+    "@babel/core": "^7.16.0",
     "@babel/preset-env": "^7.16.4",
-    "autoprefixer": "^9.7.6",
-    "browser-sync": "^2.27.5",
+    "autoprefixer": "^9.8.8",
+    "browser-sync": "^2.27.7",
     "cssnano": "^4.1.11",
-    "glob": "^7.1.6",
+    "glob": "^7.2.0",
     "minimist": "^1.2.5",
-    "parcel-bundler": "^1.12.4",
+    "parcel-bundler": "^1.12.5",
     "postcss-dir-pseudo-class": "^5.0.0",
     "postcss-logical": "^4.0.2",
     "rimraf": "^3.0.2",
-    "sass": "^1.26.5",
-    "wp-pot": "^1.9.8"
+    "sass": "^1.43.5",
+    "wp-pot": "^1.9.9"
   }
 }

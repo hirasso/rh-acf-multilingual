@@ -1,6 +1,10 @@
+#### 1.2.5 (2023-04-04)
+
+- Fix empty result from language_switcher with only two active languages and `hide_current` set to `true`. Also fix hidden fields after validation in UI styles other then "tabs" (#c683b30)
+
 #### 1.2.3 (2022-01-28)
 
-- Update PHPUnit (#19cdad6)
+- Update PHPUnit (#a22bc68)
 
 #### 1.2.2 (2021-12-20)
 

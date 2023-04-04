@@ -32,9 +32,9 @@ export default class ACFML {
 
   /**
    * Sets a css var on the documentElement
-   * 
-   * @param {string} name 
-   * @param {string} value 
+   *
+   * @param {string} name
+   * @param {string} value
    */
   setCssVar(name, value) {
     document.documentElement.style.setProperty(name, value)
@@ -70,15 +70,15 @@ export default class ACFML {
 
   /**
    * Switches the language for an .acfml-multilingual-field
-   * @param {jQuery Object} $fields 
-   * @param {String} language 
+   * @param {jQuery Object} $fields
+   * @param {String} language
    */
   switchLanguage($fields, language) {
     $fields.each((i, el) => {
       const $el = $(el);
       const $childFields = $el.find('.acf-input:first').find(".acfml-field");
       const $tabs = $el.find('.acfml-tab');
-      
+
       $tabs.removeClass('is-active');
       $tabs.filter(`[data-language=${language}]`).addClass('is-active');
       $childFields.removeClass('acfml-is-visible');
@@ -86,7 +86,7 @@ export default class ACFML {
       // find the active field
       const $activeField = $childFields.filter(`[data-name=${language}]:first`);
       $activeField.addClass('acfml-is-visible');
-      
+
       // initializes delayed WYSIWYG fields
       $activeField.find('.acf-editor-wrap.delay').trigger('mousedown');
 
@@ -138,11 +138,11 @@ export default class ACFML {
 
   /**
    * Stores active language tabs for acf fields
-   * @param {object} e 
+   * @param {object} e
    */
   storeActiveLanguageTabs() {
     let acfml_language_tabs = {};
-    $('.acfml-multilingual-field').each((i, el) => {
+    $('.acfml-multilingual-field.acfml-ui-style--tabs').each((i, el) => {
       const key = $(el).attr('data-key');
       const language = $(el).find('.acfml-field.acfml-is-visible').attr('data-name');
       acfml_language_tabs[key] = language;
@@ -156,9 +156,9 @@ export default class ACFML {
   initValidationHandling() {
     acf.addAction('invalid_field', field => {
       if( field.data.required && field.$el.hasClass('acfml-field') && !field.val() ) {
-        this.switchLanguage(field.$el.parents('.acfml-multilingual-field'), field.data.name);
+        this.switchLanguage(field.$el.parents('.acfml-multilingual-field.acfml-ui-style--tabs'), field.data.name);
       }
-    }); 
+    });
   }
 
   /**
@@ -173,9 +173,9 @@ export default class ACFML {
 
   /**
    * Stores something in session storage
-   * 
-   * @param {string} key 
-   * @param {mixed} value 
+   *
+   * @param {string} key
+   * @param {mixed} value
    */
   addToStore(key, value) {
     Cookie.set(this.getStorageKey(key), JSON.stringify(value), 1);
@@ -184,17 +184,17 @@ export default class ACFML {
 
   /**
    * Removes something from session storage
-   * @param {string} key 
+   * @param {string} key
    */
   removeFromStore(key) {
-    
+
     // Cookie.delete(this.getStorageKey(key));
     // sessionStorage.removeItem(this.getStorageKey(key));
   }
 
   /**
    * Gets something from store
-   * @param {string} key 
+   * @param {string} key
    */
   getFromStore(key) {
     // let value = sessionStorage.getItem(this.getStorageKey(key));

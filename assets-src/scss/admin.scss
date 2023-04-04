@@ -11,7 +11,7 @@
   padding-bottom: 0;
   border: none;
 }
-.acfml-multilingual-field > .acf-input > .acf-fields > .acfml-field:not(.acfml-is-visible) {
+.acfml-multilingual-field.acfml-ui-style--tabs > .acf-input > .acf-fields > .acfml-field:not(.acfml-is-visible) {
   @include visually-hidden;
 }
 [data-acfml-ui-style=columns] > .acf-input > .acf-fields {
