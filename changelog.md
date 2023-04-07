@@ -1,6 +1,10 @@
+#### 1.2.6 (2023-04-07)
+
+- Handle empty `HTTP_ACCEPT_LANGUAGE` when coming from cache (#3972e1d)
+
 #### 1.2.5 (2023-04-04)
 
-- Fix empty result from language_switcher with only two active languages and `hide_current` set to `true`. Also fix hidden fields after validation in UI styles other then "tabs" (#c683b30)
+- Fix empty result from language_switcher with only two active languages and `hide_current` set to `true`. Also fix hidden fields after validation in UI styles other then "tabs" (#a465d7d)
 
 #### 1.2.3 (2022-01-28)
 

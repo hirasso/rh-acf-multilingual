@@ -1202,7 +1202,9 @@ class ACFMultilingual {
     if( !is_front_page() || is_robots() ) return;
 
     $current_language = $this->get_current_language();
-    $user_language = strtolower(substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2));
+
+    $user_language = isset($_SERVER["HTTP_ACCEPT_LANGUAGE"]) ? strtolower(substr($_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 2)) : null;
+    if (!$user_language) return;
 
     if( $_COOKIE['acfml-language'] ?? null ) return;
 
