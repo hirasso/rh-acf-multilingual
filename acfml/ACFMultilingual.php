@@ -88,6 +88,7 @@ class ACFMultilingual {
 
     // hook into after_setup_theme to fully initialize
     add_action('after_setup_theme', [$this, 'fully_initialize'], 10);
+    add_filter('gettext', [$this, 'gettext_pick_language'], 10, 3);
 
     return $this;
   }
@@ -1385,6 +1386,22 @@ class ACFMultilingual {
     if( function_exists( 'is_rtl' ) && is_rtl() ) return $output;
     if( strpos($output, 'dir=') !== false ) return $output;
     return "dir=\"ltr\" $output";
+  }
+
+  /**
+   * Convert qtranslate-like strings to the current language:
+   *
+   *  - [:de]Website Durchsuchen[:en]Search Website[:]
+   *
+   * @param string $translation
+   * @param string $text
+   * @param string $domain
+   * @return string
+   */
+  public function gettext_pick_language(string $translation, string $text, string $domain): string {
+    $current_language = $this->get_current_language();
+    preg_match("/\[:$current_language](?P<translation>.+?)(?=(?:\[:|$))/", $translation, $matches);
+    return $matches['translation'] ?? $translation;
   }
 
 }

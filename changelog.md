@@ -1,6 +1,7 @@
 #### 1.2.6 (2023-04-07)
 
-- Handle empty `HTTP_ACCEPT_LANGUAGE` when coming from cache (#3972e1d)
+- Add filter `gettext_pick_language` to convert qtranslate-like strings to the current language (#55a3f1e)
+- Handle empty `HTTP_ACCEPT_LANGUAGE` when coming from cache (#20edbc2)
 
 #### 1.2.5 (2023-04-04)
 
