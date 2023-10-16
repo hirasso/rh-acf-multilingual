@@ -1,6 +1,7 @@
 #### 1.2.7 (2023-10-16)
 
-- Fix warning for null in `stripslashes` (#073941f)
+- Optimize stripslashes fix (#af0dae2)
+- Fix warning for null in `stripslashes` (#3be5068)
 
 #### 1.2.6 (2023-04-07)
 

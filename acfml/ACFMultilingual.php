@@ -306,8 +306,8 @@ class ACFMultilingual {
    */
   public function get_admin_cookie( string $key ): ?object {
     $cookie_name = $key . "_" . $this->get_cookie_hash_for_current_uri();
-    $cookie = $_COOKIE[$cookie_name] ?? null;
-    return json_decode( stripslashes($cookie ?? "") );
+    $cookie = $_COOKIE[$cookie_name] ?? "";
+    return json_decode( stripslashes($cookie) );
   }
 
   /**
