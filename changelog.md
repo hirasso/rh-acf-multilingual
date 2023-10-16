@@ -1,6 +1,10 @@
+#### 1.2.7 (2023-10-16)
+
+- Fix warning for null in `stripslashes` (#073941f)
+
 #### 1.2.6 (2023-04-07)
 
-- Add filter `gettext_pick_language` to convert qtranslate-like strings to the current language (#55a3f1e)
+- Add filter `gettext_pick_language` to convert qtranslate-like strings to the current language (#212fb9b)
 - Handle empty `HTTP_ACCEPT_LANGUAGE` when coming from cache (#20edbc2)
 
 #### 1.2.5 (2023-04-04)
