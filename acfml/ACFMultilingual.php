@@ -474,9 +474,6 @@ class ACFMultilingual {
 
   /**
    * Get converted URLs for all languages, based on a given URL
-   *
-   * @param string $url
-   * @return void
    */
   public function get_converted_urls( ?string $url = null ): array {
     $languages = $this->get_languages('slug');
@@ -735,7 +732,7 @@ class ACFMultilingual {
     if( $this->url_starts_with($url, content_url()) ) return $url;
 
     // Return a simple query arg language for admin urls
-    if( $this->url_starts_with($url, admin_url()) ) {
+    if( $this->url_starts_with($url, (string) admin_url()) ) {
       return add_query_arg('lang', $requested_language, $url);
     }
 
@@ -905,7 +902,7 @@ class ACFMultilingual {
    */
   public function get_language_in_url($url): ?string {
     $url = untrailingslashit($url);
-    $path = str_replace(home_url(), '', $url);
+    $path = str_replace((string) home_url(), '', $url);
     $regex_languages = implode('|', $this->get_languages('slug'));
     preg_match("%/($regex_languages)(/|$|\?|#)%", $path, $matches);
     $language = $matches[1] ?? $this->get_default_language();
@@ -1025,9 +1022,6 @@ class ACFMultilingual {
 
   /**
    * Strip protocol from URL
-   *
-   * @param [type] $url
-   * @return void
    */
   private function strip_protocol(string $url): string {
     return preg_replace('#^https?:#', '', $url);
@@ -1059,7 +1053,7 @@ class ACFMultilingual {
    */
   private function is_internal_url( string $url ): bool {
 
-    if( !$this->url_starts_with($url, home_url()) ) return false;
+    if( !$this->url_starts_with($url, (string) home_url()) ) return false;
 
     if( $this->url_points_to_physical_location($url) ) return false;
 
@@ -1119,7 +1113,7 @@ class ACFMultilingual {
    * @param string
    */
   private function get_path_from_home(string $url): string {
-    $path = str_replace(home_url(), '', $url);
+    $path = str_replace((string) home_url(), '', $url);
     $path = explode('?', $path)[0];
     $path = trim($path, '/');
     // prepare the $path

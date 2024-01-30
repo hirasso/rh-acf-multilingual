@@ -1,6 +1,10 @@
+#### 1.2.8 (2024-01-30)
+
+- Update pnpm & PHP 8.2 compatibility (#86959b6)
+
 #### 1.2.7 (2023-10-16)
 
-- Optimize stripslashes fix (#af0dae2)
+- Optimize stripslashes fix (#35a9d03)
 - Fix warning for null in `stripslashes` (#3be5068)
 
 #### 1.2.6 (2023-04-07)

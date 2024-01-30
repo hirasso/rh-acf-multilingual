@@ -1,16 +1,17 @@
-<?php 
+<?php
 
 namespace ACFML;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class TaxonomiesController {
-  
+
   private $prefix;
   private $default_language;
   private $field_postfix = "term_name";
   private $field_name;
   private $field_key;
+  private $field_group_key;
   private $taxonomies = [];
 
   private $acfml = null;
@@ -25,7 +26,7 @@ class TaxonomiesController {
 
     // inject main class
     $this->acfml = $acfml;
-    
+
     add_action('acf/init', [$this, 'init']);
   }
 
@@ -59,9 +60,9 @@ class TaxonomiesController {
    * @return void
    */
   public function add_title_field_group() {
-    
+
     $taxonomies = $this->get_multilingual_taxonomies();
-    
+
     // bail early if no post types support `multilingual-title`
     if( !count($taxonomies) ) return;
     // generate location rules for multilingual titles
@@ -75,7 +76,7 @@ class TaxonomiesController {
         ]
       ];
     }
-    
+
     acf_add_local_field_group([
       'key' => $this->field_group_key,
       'title' => __('Name'),
@@ -121,7 +122,7 @@ class TaxonomiesController {
   public function add_taxonomies(object $taxonomies) {
     foreach( $taxonomies as $taxonomy_name => $args ) {
       $this->add_taxonomy($taxonomy_name);
-    } 
+    }
   }
 
   /**
@@ -223,7 +224,7 @@ class TaxonomiesController {
    *
    * @param \WP_Term_Query $query
    * @return void
-   * 
+   *
    */
   public function pre_get_terms( $query ) {
     if( $this->acfml->current_language_is_default() ) return;
@@ -232,6 +233,6 @@ class TaxonomiesController {
     if( $slug ) {
       // @todo: maybe add taxonomy support?!
     }
-    
+
   }
 }
