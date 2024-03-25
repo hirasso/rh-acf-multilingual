@@ -656,10 +656,14 @@ class PostTypesController {
     if( $orderby === 'title' ) {
       // accounts for simple 'title'
       $orderby = ['acfml_post_title' => $order];
-    } elseif( is_array($orderby) && array_key_exists('title', $orderby) ) {
+    } elseif(is_array($orderby) && array_key_exists('title', $orderby) ) {
       // accounts for something like ['menu_order' => 'asc', 'title' => 'DESC' ]
       $orderby['acfml_post_title'] = $orderby['title'];
       unset( $orderby['title'] );
+    } elseif(is_array($orderby) && array_key_exists('post_title', $orderby) ) {
+      // accounts for something like ['menu_order' => 'asc', 'post_title' => 'DESC' ]
+      $orderby['acfml_post_title'] = $orderby['post_title'];
+      unset( $orderby['post_title'] );
     } elseif( in_array('title', explode(' ', $orderby) ) ) {
       // accounts for crazy strings like 'menu_order title'
       $orderby_fields = explode(' ', $orderby);

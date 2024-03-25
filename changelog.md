@@ -1,6 +1,10 @@
+#### 1.2.9 (2024-03-25)
+
+- Handle `post_title` in `$orderby` setting (#0efd0fe)
+
 #### 1.2.8 (2024-01-30)
 
-- Update pnpm & PHP 8.2 compatibility (#86959b6)
+- Update pnpm & PHP 8.2 compatibility (#6c8cf6f)
 
 #### 1.2.7 (2023-10-16)
 
