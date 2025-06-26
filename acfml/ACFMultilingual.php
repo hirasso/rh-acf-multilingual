@@ -59,9 +59,6 @@ class ACFMultilingual {
    */
   public function initialize(): ?ACFMultilingual {
 
-    // bail early if in WP CLI
-    if( $this->is_wp_cli() ) return null;
-
     // Instanciate admin class
     $this->admin = new Admin($this);
 
@@ -644,6 +641,9 @@ class ACFMultilingual {
    * @return void
    */
   public function detect_language(): void {
+    // WP_CLI doesn't have a language
+    if ($this->is_wp_cli()) return;
+
     // return early if language was already detected
     if( $this->language ) return;
 
