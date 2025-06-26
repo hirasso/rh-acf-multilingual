@@ -1,6 +1,13 @@
-#### 1.2.9 (2024-03-25)
+#### 1.3.0 (2025-06-26)
 
-- Handle `post_title` in `$orderby` setting (#0efd0fe)
+- ignore (#a034d46)
+- Do not detect the lanugage in WP_CLI, but keep `wp rewrite flush` working (#aa58b12)
+
+#### 1.2.9 (2024-04-08)
+
+- Merged in feature/composer-packe-type (pull request #8) (#c4d3b9a)
+- Add type field to ease installation with composer (#3bf5543)
+- Handle `post_title` in `$orderby` setting (#007be4b)
 
 #### 1.2.8 (2024-01-30)
 
