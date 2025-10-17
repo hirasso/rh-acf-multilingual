@@ -149,7 +149,17 @@ class FieldsController {
 
     // Add 'required'-indicator to the groups label, if it is set to required
     $label = $field['label'];
-    if( $field['required'] ) $label .= " <span class=\"acf-required\">*</span>";
+    $key = $field['key'];
+
+    if( $field['required'] ) {
+      add_filter('acf/get_field_label', function(string $label, array $field) use ($key) {
+        return $field['key'] === $key
+          ? "$label <span class=\"acf-required\">*</span>"
+          : $label;
+
+      }, 10, 2);
+    }
+
     $field_classes = explode(' ', $field['wrapper']['class']);
     $field_classes[] = "acfml-multilingual-field";
     $field_classes[] = "acfml-ui-style--$ui_style";

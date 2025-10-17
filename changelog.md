@@ -1,6 +1,11 @@
+#### 1.3.1 (2025-10-17)
+
+- Use the new filter `'acf/get_field_label'` for rendering required multilingual fields (#acd65a4)
+
 #### 1.3.0 (2025-10-17)
 
-- Fix license (#dd8ad59)
+- Do not throw if a post type from the config doesn't exist (#707da4b)
+- Fix license (#116925b)
 - Fix vendor (#e2c8cd4)
 - ignore (#ed150cd)
 - Do not detect the lanugage in WP_CLI, but keep `wp rewrite flush` working (#aa58b12)
