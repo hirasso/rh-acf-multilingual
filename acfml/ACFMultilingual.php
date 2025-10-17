@@ -925,7 +925,7 @@ class ACFMultilingual {
    * @param [type] $locale
    * @return string|null
    */
-  public function filter_frontend_locale($locale): ?string {
+  public function filter_frontend_locale(string $locale): ?string {
     if( is_admin() ) return $locale;
     return $this->get_frontend_locale();
   }
@@ -936,7 +936,7 @@ class ACFMultilingual {
    * @return string
    */
   private function get_frontend_locale(): string {
-    return str_replace('_', '-', $this->get_language_info($this->get_current_language())['locale']);
+    return $this->get_language_info($this->get_current_language())['locale'];
   }
 
   /**

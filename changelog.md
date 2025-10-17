@@ -1,6 +1,7 @@
 #### 1.3.1 (2025-10-17)
 
-- Use the new filter `'acf/get_field_label'` for rendering required multilingual fields (#acd65a4)
+- Do not convert lang_REGION to lang-REGION when filtering the locale (#4b476ac)
+- Use the new filter `'acf/get_field_label'` for rendering required multilingual fields (#6249cc7)
 
 #### 1.3.0 (2025-10-17)
 
