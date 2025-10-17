@@ -1,6 +1,7 @@
-#### 1.3.0 (2025-06-26)
+#### 1.3.0 (2025-10-17)
 
-- ignore (#a034d46)
+- Fix vendor (#666fdf7)
+- ignore (#ed150cd)
 - Do not detect the lanugage in WP_CLI, but keep `wp rewrite flush` working (#aa58b12)
 
 #### 1.2.9 (2024-04-08)
