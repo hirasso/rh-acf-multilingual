@@ -2,7 +2,7 @@
     "name": "hirasso/rh-acf-multilingual",
     "description": "Multilingual Support for WordPress with Advanced Custom Fields",
     "type": "wordpress-plugin",
-    "license": "ICL",
+    "license": "GPL-2.0-or-later",
     "authors": [
         {
             "name": "Rasso Hilber",

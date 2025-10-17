@@ -1,6 +1,7 @@
 #### 1.3.0 (2025-10-17)
 
-- Fix vendor (#666fdf7)
+- Fix license (#dd8ad59)
+- Fix vendor (#e2c8cd4)
 - ignore (#ed150cd)
 - Do not detect the lanugage in WP_CLI, but keep `wp rewrite flush` working (#aa58b12)
 
