@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: ACF Multilingual
  * Version: 2.0.0
@@ -10,18 +11,20 @@
  * Domain Path: /lang
 **/
 
-if( !defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if (!\defined('ABSPATH')) {
+    exit;
+} // Exit if accessed directly
 
 use ACFML\ACFMultilingual;
 use ACFML\Config;
 
-define( 'ACFML', true );
-define( 'ACFML_PATH', plugin_dir_path( __FILE__ ) );
-define( 'ACFML_BASENAME', plugin_basename( __FILE__ ) );
-define( 'ACFML_URL', plugins_url('/', __FILE__) );
+\define('ACFML', true);
+\define('ACFML_PATH', \plugin_dir_path(__FILE__));
+\define('ACFML_BASENAME', \plugin_basename(__FILE__));
+\define('ACFML_URL', \plugins_url('/', __FILE__));
 
-require_once( ACFML_PATH . 'vendor/autoload.php' );
-require_once( ACFML_PATH . 'api.php' );
+require_once(ACFML_PATH . 'vendor/autoload.php');
+require_once(ACFML_PATH . 'api.php');
 
 /**
  * acfml
@@ -34,19 +37,22 @@ require_once( ACFML_PATH . 'api.php' );
  * @param	void
  * @return ACFMultilingual
  */
-function acfml():ACFMultilingual {
-  static $acfml;
+function acfml(): ACFMultilingual
+{
+    static $acfml;
 
-  // Instantiate only once.
-  if( isset($acfml) ) return $acfml;
+    // Instantiate only once.
+    if (isset($acfml)) {
+        return $acfml;
+    }
 
-  $config = new Config();
-  $config->load();
+    $config = new Config();
+    $config->load();
 
-  $acfml = new ACFMultilingual($config);
-  $acfml->initialize();
+    $acfml = new ACFMultilingual($config);
+    $acfml->initialize();
 
-  return $acfml;
+    return $acfml;
 }
 
-add_action('plugins_loaded', 'acfml'); // Instantiate
+\add_action('plugins_loaded', 'acfml'); // Instantiate
