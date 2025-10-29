@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2
+
+### Patch Changes
+
+- 8ee6137: Test changelog generation via @changesets/cli
+
 ## 2.0.1
 
 ### Patch Changes
@@ -167,7 +173,7 @@
 - Merged in fix-check-post-for-null (pull request #7) (#f5b0828)
 - New Filter `format_acf_field_link` (#b8da2cb)
 - check for null value before using $post object (#2c06959)
-- Fix wrong return value  in `get_admin_cookie` (#dd87409)
+- Fix wrong return value in `get_admin_cookie` (#dd87409)
 - add api function `acfml_home_url` (#c356e7b)
 - Support for RTL and CSS logical properties in admin (#20e2fc8)
 - Remove rudimetary string translations functionality (#8299b30)
@@ -242,8 +248,8 @@
 - rename plugin file (#dfbe0f3)
 - Detect language from referrer in admin-ajax.php (#d887e77)
 - get_queried_object_from_url (#1c5ace5)
-- remove query__get_post_in, (#d1233d3)
-- query__get_post_in (#fa0d565)
+- remove query\_\_get_post_in, (#d1233d3)
+- query\_\_get_post_in (#fa0d565)
 - really only detect single get_post requests (#06d9c6d)
 - even more custom SQL (#b611fc0)
 - Alter SQL directly (#7d9bda9)
@@ -265,11 +271,11 @@
 - Make post type archives and rewrite (#819ca13)
 - Make rewrite slugs of cpt's translatable (#814fc1e)
 - make get_post_by_path smarter (#7f8f2f8)
-- sanitize_title with the correct  locale set (#22cf355)
+- sanitize_title with the correct locale set (#22cf355)
 - fix get_post_by_path (#7a363ff)
 - Also add count at the end of get_unique_post_slug (#81b9a6d)
 - Translate URLS, parse URLS, Find posts by URLS 😀 (#989de69)
-- Parse requests  for custom post types!!! (#fc8c22a)
+- Parse requests for custom post types!!! (#fc8c22a)
 - 'request' for translated slugs 🎉 (#5d32b61)
 - First draft of unique post slug (#1cbaedb)
 - Add slugs (#e086b4b)
@@ -302,4 +308,3 @@
 - convert_url (#e3feaec)
 - Frontend: Routing and Locale (#b7acb6a)
 - Initial commit (#5a2e1f0)
-
