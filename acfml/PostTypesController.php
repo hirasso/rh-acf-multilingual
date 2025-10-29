@@ -588,7 +588,7 @@ class PostTypesController {
    * @param \WP_Query $query
    * @return void
    */
-  public function pre_get_posts( $query ) {
+  public function pre_get_posts( \WP_Query $query ) {
 
     // Skip if suppress_filters is set or query is for an attachment.
     if (
@@ -603,6 +603,7 @@ class PostTypesController {
     if( $this->acfml->is_default_language($language) ) return;
 
     $post_types = $this->guess_post_types($query);
+
     /**
      * For now, an array of post types is not supported.
      * Will be improved if required by a future project
@@ -635,7 +636,6 @@ class PostTypesController {
 
     // Allow posts to be set to non-public
     $meta_query['acfml_lang_active'] = [
-      'relation' => 'OR',
       [
         'key' => "acfml_lang_active_$language",
         'value' => 1,
@@ -697,6 +697,10 @@ class PostTypesController {
     $post_type = $query->queried_object->post_type ?? $query->get('post_type');
     if( !empty($post_type) ) return is_array($post_type) ? $post_type : [$post_type];
 
+    if ($this->is_static_front_page_query($query)) {
+      return ['page'];
+    }
+
     // if the post type is not set and we are inside a taxonomy archive
     if( $query->is_tax() ) {
       $taxonomy = get_taxonomy(get_queried_object()->taxonomy);
@@ -707,6 +711,24 @@ class PostTypesController {
     return ['post'];
   }
 
+  /**
+   * Detects if the given query is the for the front page
+   * even before WP conditionals like is_front_page() are set.
+   */
+  function is_static_front_page_query(\WP_Query $query): bool
+  {
+      if (!$query->is_main_query()) {
+        return false;
+      }
+
+      $showOnFront = get_option('show_on_front');
+      $frontPageId = (int) get_option('page_on_front');
+      $pageID = (int) ($query->query_vars['page_id'] ?? 0);
+
+      return $showOnFront === 'page'
+        && $frontPageId > 0
+        && $frontPageId === $pageID;
+  }
 
   /**
    * Detect and overwrite the query for get_page_by_path
