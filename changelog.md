@@ -1,6 +1,10 @@
+#### 2.0.0 (2025-10-29)
+
+- Require PHP 8.2 (#ebc954c)
+
 #### 1.3.1 (2025-10-17)
 
-- Do not convert lang_REGION to lang-REGION when filtering the locale (#4b476ac)
+- Do not convert lang_REGION to lang-REGION when filtering the locale (#03f5eed)
 - Use the new filter `'acf/get_field_label'` for rendering required multilingual fields (#6249cc7)
 
 #### 1.3.0 (2025-10-17)

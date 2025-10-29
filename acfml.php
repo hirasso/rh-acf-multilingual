@@ -1,11 +1,12 @@
 <?php
 /**
  * Plugin Name: ACF Multilingual
- * Version: 1.3.1
+ * Version: 2.0.0
  * Author: Rasso Hilber
  * Description: A lightweight solution to support multiple languages with WordPress and Advanced Custom Fields
  * Author URI: https://rassohilber.com
  * Text Domain: acfml
+ * Requires PHP: 8.2
  * Domain Path: /lang
 **/
 
