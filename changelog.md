@@ -1,6 +1,7 @@
 #### 2.0.0 (2025-10-29)
 
-- Update and improve tooling (#1a4afb8)
+- Untrack the vendor folder (#ada627c)
+- Update and improve tooling (#a4c8e4a)
 - Support deactivating translations for a static front page (#fb1fc8d)
 - Require PHP 8.2 (#b601090)
 
