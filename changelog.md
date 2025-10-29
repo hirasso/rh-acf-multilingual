@@ -1,6 +1,7 @@
 #### 2.0.0 (2025-10-29)
 
-- Support deactivating translations for a static front page (#3f01391)
+- Update and improve tooling (#1a4afb8)
+- Support deactivating translations for a static front page (#fb1fc8d)
 - Require PHP 8.2 (#b601090)
 
 #### 1.3.1 (2025-10-17)
