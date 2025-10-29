@@ -1,4 +1,9 @@
 #!/bin/sh
+# Skip hook in CI environments
+if [ -n "$CI" ]; then
+  exit 0
+fi
+
 npm run build
 git add ./assets
 npm run format:php
