@@ -1,3 +1,5 @@
+# Changelog
+
 #### 2.0.0 (2025-10-29)
 
 - Format PHP files using laravel/pint (#6930cf1)
